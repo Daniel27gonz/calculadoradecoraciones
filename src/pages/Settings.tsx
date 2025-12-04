@@ -1,23 +1,51 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, Palette, User } from 'lucide-react';
+import { ArrowLeft, DollarSign, Palette, User, Globe, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { CurrencySelector } from '@/components/CurrencySelector';
+import { getCurrencyByCode } from '@/lib/currencies';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { mode, setMode, defaultHourlyRate, setDefaultHourlyRate } = useQuote();
+  const { user, profile, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
 
   const handleRateChange = (value: number) => {
     setDefaultHourlyRate(value);
-    toast({
-      title: "Guardado",
-      description: "Tu tarifa por hora ha sido actualizada",
-    });
+    if (user && profile) {
+      updateProfile({ default_hourly_rate: value });
+    } else {
+      toast({
+        title: "Guardado",
+        description: "Tu tarifa por hora ha sido actualizada",
+      });
+    }
   };
+
+  const handleCurrencyChange = (currencyCode: string) => {
+    if (user && profile) {
+      updateProfile({ currency: currencyCode });
+    }
+  };
+
+  const handleModeChange = (newMode: 'beginner' | 'expert') => {
+    setMode(newMode);
+    if (user && profile) {
+      updateProfile({ mode: newMode });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const currentCurrency = getCurrencyByCode(profile?.currency || 'USD');
 
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
@@ -36,6 +64,66 @@ export default function Settings() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* User Profile */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
+                  <User className="w-5 h-5 text-rose-dark" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Tu cuenta</CardTitle>
+                  <CardDescription>{user.email}</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Cerrar sesión
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* Currency Selection */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                <Globe className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Moneda</CardTitle>
+                <CardDescription>
+                  Selecciona la moneda de tu país
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {user ? (
+              <CurrencySelector
+                value={profile?.currency || 'USD'}
+                onChange={handleCurrencyChange}
+              />
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground text-sm mb-3">
+                  Inicia sesión para guardar tu moneda preferida
+                </p>
+                <Button variant="soft" onClick={() => navigate('/auth')}>
+                  Iniciar sesión
+                </Button>
+              </div>
+            )}
+            {currentCurrency && user && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Moneda actual: {currentCurrency.flag} {currentCurrency.name} ({currentCurrency.symbol})
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Mode Selection */}
         <Card>
           <CardHeader>
@@ -54,7 +142,7 @@ export default function Settings() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => setMode('beginner')}
+                onClick={() => handleModeChange('beginner')}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   mode === 'beginner' 
                     ? 'border-primary bg-rose-light/30' 
@@ -68,7 +156,7 @@ export default function Settings() {
                 </p>
               </button>
               <button
-                onClick={() => setMode('expert')}
+                onClick={() => handleModeChange('expert')}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   mode === 'expert' 
                     ? 'border-primary bg-rose-light/30' 
@@ -102,7 +190,9 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <span className="text-2xl text-muted-foreground">$</span>
+              <span className="text-2xl text-muted-foreground">
+                {currentCurrency?.symbol || '$'}
+              </span>
               <Input
                 type="number"
                 min="0"
@@ -115,27 +205,23 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Profile (placeholder) */}
-        <Card className="opacity-60">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                <User className="w-5 h-5 text-secondary-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Tu perfil</CardTitle>
-                <CardDescription>
-                  Logo, nombre de negocio y datos para PDFs
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Próximamente: Configura tu logo y datos de contacto para generar PDFs profesionales.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Login prompt for non-authenticated users */}
+        {!user && (
+          <Card className="border-primary/30 bg-rose-light/20">
+            <CardContent className="p-6 text-center">
+              <div className="text-4xl mb-4">☁️</div>
+              <h3 className="font-display text-lg font-semibold mb-2">
+                Sincroniza tus cotizaciones
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Crea una cuenta para guardar tus cotizaciones en la nube y acceder desde cualquier dispositivo.
+              </p>
+              <Button variant="gradient" onClick={() => navigate('/auth')}>
+                Crear cuenta gratis
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* App Info */}
         <div className="text-center text-sm text-muted-foreground py-8">

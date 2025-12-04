@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Calculator, Package, History, TrendingUp, Sparkles } from 'lucide-react';
+import { Calculator, Package, History, TrendingUp, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const { quotes, mode, setMode } = useQuote();
+  const { user, profile } = useAuth();
   
   const totalRevenue = quotes.reduce((sum, q) => {
     const costs = q.balloons.reduce((s, b) => s + b.pricePerUnit * b.quantity, 0) +
@@ -65,12 +67,21 @@ export default function Home() {
                 Crear Cotización
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/packages">
-                Ver Paquetes
-              </Link>
-            </Button>
+            {!user && (
+              <Button asChild variant="outline" size="lg">
+                <Link to="/auth">
+                  <User className="w-4 h-4 mr-2" />
+                  Iniciar Sesión
+                </Link>
+              </Button>
+            )}
           </div>
+
+          {user && (
+            <p className="text-sm text-muted-foreground">
+              ¡Hola, {profile?.business_name || user.email}! 👋
+            </p>
+          )}
         </div>
       </section>
 
@@ -147,6 +158,30 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Cloud Sync Promo for non-authenticated users */}
+      {!user && (
+        <section className="container max-w-4xl mx-auto px-4 mt-8">
+          <Card className="border-primary/30 bg-rose-light/20">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="text-5xl">☁️</div>
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="font-display text-lg font-semibold mb-1">
+                    Sincroniza tus cotizaciones
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Crea una cuenta gratis para guardar tus cotizaciones en la nube y acceder desde cualquier dispositivo.
+                  </p>
+                </div>
+                <Button variant="gradient" asChild>
+                  <Link to="/auth">Crear cuenta</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Decorative Elements */}
       <div className="fixed top-20 right-10 text-6xl opacity-20 animate-float pointer-events-none hidden md:block">

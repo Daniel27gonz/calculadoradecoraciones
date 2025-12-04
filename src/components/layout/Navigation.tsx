@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, Sparkles } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, Sparkles, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
@@ -14,6 +15,12 @@ const navItems = [
 export function Navigation() {
   const location = useLocation();
   const { mode } = useQuote();
+  const { user } = useAuth();
+
+  // Hide navigation on auth page
+  if (location.pathname === '/auth') {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border shadow-elevated md:top-0 md:bottom-auto md:border-t-0 md:border-b">
@@ -48,11 +55,35 @@ export function Navigation() {
           })}
         </div>
 
-        {/* Mode indicator - desktop only */}
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-lavender-light">
-          <span className="text-xs font-medium text-accent-foreground">
-            Modo: {mode === 'beginner' ? '🌸 Principiante' : '⭐ Experto'}
-          </span>
+        {/* Right side - desktop only */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Mode indicator */}
+          <div className="px-3 py-1.5 rounded-full bg-lavender-light">
+            <span className="text-xs font-medium text-accent-foreground">
+              {mode === 'beginner' ? '🌸 Principiante' : '⭐ Experto'}
+            </span>
+          </div>
+          
+          {/* User indicator */}
+          {user ? (
+            <Link 
+              to="/settings"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-light hover:bg-rose-light/80 transition-colors"
+            >
+              <User className="w-4 h-4 text-rose-dark" />
+              <span className="text-xs font-medium text-rose-dark max-w-[100px] truncate">
+                {user.email?.split('@')[0]}
+              </span>
+            </Link>
+          ) : (
+            <Link 
+              to="/auth"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <User className="w-4 h-4" />
+              <span className="text-xs font-medium">Entrar</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
