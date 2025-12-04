@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_balloons: number | null
+          estimated_hours: number | null
+          estimated_materials: Json | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          suggested_price: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_balloons?: number | null
+          estimated_hours?: number | null
+          estimated_materials?: Json | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          suggested_price?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_balloons?: number | null
+          estimated_hours?: number | null
+          estimated_materials?: Json | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          suggested_price?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          business_name: string | null
+          created_at: string
+          currency: string | null
+          default_hourly_rate: number | null
+          id: string
+          logo_url: string | null
+          mode: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string
+          currency?: string | null
+          default_hourly_rate?: number | null
+          id?: string
+          logo_url?: string | null
+          mode?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string
+          currency?: string | null
+          default_hourly_rate?: number | null
+          id?: string
+          logo_url?: string | null
+          mode?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          balloons: Json | null
+          client_name: string
+          created_at: string
+          event_date: string | null
+          event_type: string | null
+          extras: Json | null
+          id: string
+          margin_percentage: number | null
+          materials: Json | null
+          notes: string | null
+          time_phases: Json | null
+          updated_at: string
+          user_id: string
+          workers: Json | null
+        }
+        Insert: {
+          balloons?: Json | null
+          client_name: string
+          created_at?: string
+          event_date?: string | null
+          event_type?: string | null
+          extras?: Json | null
+          id?: string
+          margin_percentage?: number | null
+          materials?: Json | null
+          notes?: string | null
+          time_phases?: Json | null
+          updated_at?: string
+          user_id: string
+          workers?: Json | null
+        }
+        Update: {
+          balloons?: Json | null
+          client_name?: string
+          created_at?: string
+          event_date?: string | null
+          event_type?: string | null
+          extras?: Json | null
+          id?: string
+          margin_percentage?: number | null
+          materials?: Json | null
+          notes?: string | null
+          time_phases?: Json | null
+          updated_at?: string
+          user_id?: string
+          workers?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
