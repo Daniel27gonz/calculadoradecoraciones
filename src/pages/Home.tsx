@@ -51,8 +51,8 @@ export default function Home() {
           </div>
           
           <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-            Balloon Profit
-            <span className="text-gradient block">Calculator</span>
+            Calculadora para
+            <span className="text-gradient block">Decoradoras de Globos</span>
           </h1>
           
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
