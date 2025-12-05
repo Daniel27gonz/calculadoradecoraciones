@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, Sparkles, User } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,9 +28,9 @@ export function Navigation() {
         {/* Logo - visible only on desktop */}
         <Link to="/" className="hidden md:flex items-center gap-2">
           <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
+            <Calculator className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-xl font-semibold">Balloon Profit</span>
+          <span className="font-display text-lg font-semibold">Calculadora Para Decoradoras</span>
         </Link>
 
         {/* Nav items */}
