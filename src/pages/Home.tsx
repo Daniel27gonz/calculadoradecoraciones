@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
+import InstallPrompt from '@/components/InstallPrompt';
 
 export default function Home() {
   const { quotes, mode, setMode } = useQuote();
@@ -190,6 +191,8 @@ export default function Home() {
       <div className="fixed bottom-32 left-10 text-4xl opacity-15 animate-float pointer-events-none hidden md:block" style={{ animationDelay: '1s' }}>
         🎀
       </div>
+
+      <InstallPrompt />
     </div>
   );
 }
