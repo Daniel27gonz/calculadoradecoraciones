@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, X } from "lucide-react";
-
+import { Download, X, HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -66,9 +66,9 @@ const InstallPrompt = () => {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-sm">¡Instala la app!</h3>
-          <p className="text-white/80 text-xs truncate">
-            Accede más rápido desde tu pantalla de inicio
-          </p>
+          <Link to="/install" className="text-white/80 text-xs hover:text-white underline">
+            Ver instrucciones paso a paso
+          </Link>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <Button
