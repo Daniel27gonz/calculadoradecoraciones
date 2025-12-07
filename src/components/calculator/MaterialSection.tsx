@@ -9,21 +9,11 @@ interface MaterialSectionProps {
   onChange: (materials: Material[]) => void;
 }
 
-const suggestedMaterials = [
-  'Glue dots',
-  'Cinta',
-  'Nylon',
-  'Base',
-  'Tubo PVC',
-  'Tela',
-  'Flores',
-];
-
 export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
-  const addMaterial = (name?: string) => {
+  const addMaterial = () => {
     onChange([
       ...materials,
-      { id: crypto.randomUUID(), name: name || '', costPerUnit: 0, quantity: 1 },
+      { id: crypto.randomUUID(), name: '', costPerUnit: undefined as unknown as number, quantity: undefined as unknown as number },
     ]);
   };
 
@@ -35,42 +25,24 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
     onChange(materials.filter(m => m.id !== id));
   };
 
-  const total = materials.reduce((sum, m) => sum + m.costPerUnit * m.quantity, 0);
-
-  const unusedSuggestions = suggestedMaterials.filter(
-    name => !materials.some(m => m.name.toLowerCase() === name.toLowerCase())
-  );
+  const total = materials.reduce((sum, m) => sum + (m.costPerUnit || 0) * (m.quantity || 0), 0);
 
   return (
     <Card>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">🎀</span>
-            Materiales
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">🎀</span>
+              Materiales
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">(Materiales no reutilizables)</p>
+          </div>
           <span className="text-lg font-semibold text-primary">${total.toFixed(2)}</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Quick add buttons */}
-        {unusedSuggestions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {unusedSuggestions.slice(0, 4).map((name) => (
-              <Button
-                key={name}
-                variant="outline"
-                size="sm"
-                onClick={() => addMaterial(name)}
-                className="text-xs"
-              >
-                + {name}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        {materials.map((material, index) => (
+        {materials.map((material) => (
           <div
             key={material.id}
             className="p-4 rounded-xl bg-lavender-light/50 space-y-3 animate-fade-in"
@@ -79,8 +51,8 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
               <Input
                 value={material.name}
                 onChange={(e) => updateMaterial(material.id, { name: e.target.value })}
-                placeholder="Nombre del material"
-                className="font-medium border-none bg-transparent p-0 h-auto text-base focus-visible:ring-0"
+                placeholder="Descripción del material"
+                className="font-medium border-none bg-transparent p-0 h-auto text-base focus-visible:ring-0 flex-1"
               />
               <Button
                 variant="ghost"
@@ -94,13 +66,14 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Costo/unidad</label>
+                <label className="text-xs text-muted-foreground">Precio/unidad</label>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={material.costPerUnit}
-                  onChange={(e) => updateMaterial(material.id, { costPerUnit: Number(e.target.value) })}
+                  value={material.costPerUnit ?? ''}
+                  onChange={(e) => updateMaterial(material.id, { costPerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
+                  placeholder=""
                   className="h-10"
                 />
               </div>
@@ -110,8 +83,9 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
                 <Input
                   type="number"
                   min="0"
-                  value={material.quantity}
-                  onChange={(e) => updateMaterial(material.id, { quantity: Number(e.target.value) })}
+                  value={material.quantity ?? ''}
+                  onChange={(e) => updateMaterial(material.id, { quantity: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
+                  placeholder=""
                   className="h-10"
                 />
               </div>
@@ -119,13 +93,13 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
 
             <div className="flex justify-end">
               <span className="text-sm font-semibold text-accent-foreground">
-                Subtotal: ${(material.costPerUnit * material.quantity).toFixed(2)}
+                Subtotal: ${((material.costPerUnit || 0) * (material.quantity || 0)).toFixed(2)}
               </span>
             </div>
           </div>
         ))}
 
-        <Button variant="lavender" className="w-full" onClick={() => addMaterial()}>
+        <Button variant="lavender" className="w-full" onClick={addMaterial}>
           <Plus className="w-4 h-4" />
           Agregar material
         </Button>

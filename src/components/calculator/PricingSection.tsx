@@ -68,6 +68,14 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
               <span className="text-muted-foreground">✨ Total extras</span>
               <span className="font-medium">${summary.totalExtras.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">🚗 Transporte</span>
+              <span className="font-medium">${summary.totalTransport.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">🔧 Amortización herramientas</span>
+              <span className="font-medium">${summary.totalToolAmortization.toFixed(2)}</span>
+            </div>
           </div>
 
           <div className="h-px bg-border" />
@@ -112,8 +120,9 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
                 type="number"
                 min="0"
                 max="200"
-                value={marginPercentage}
-                onChange={(e) => onMarginChange(Number(e.target.value))}
+                value={marginPercentage ?? ''}
+                onChange={(e) => onMarginChange(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder=""
                 className="w-20 h-9 text-center"
               />
               <span className="text-muted-foreground">%</span>
