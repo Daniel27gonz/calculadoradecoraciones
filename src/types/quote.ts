@@ -1,7 +1,6 @@
 export interface Balloon {
   id: string;
-  type: 'latex' | 'foil' | 'metallic' | 'custom';
-  size: '5"' | '10"' | '12"' | '18"';
+  description: string;
   pricePerUnit: number;
   quantity: number;
 }
@@ -32,6 +31,13 @@ export interface Extra {
   cost: number;
 }
 
+export interface ToolAmortization {
+  id: string;
+  name: string;
+  cost: number;
+  recommendedUses: number;
+}
+
 export interface Quote {
   id: string;
   clientName: string;
@@ -45,6 +51,7 @@ export interface Quote {
   extras: Extra[];
   marginPercentage: number;
   notes: string;
+  transportCost: number;
 }
 
 export interface Package {
@@ -64,11 +71,11 @@ export interface CostSummary {
   totalLabor: number;
   totalTime: number;
   totalExtras: number;
+  totalTransport: number;
+  totalToolAmortization: number;
   totalCost: number;
   finalPrice: number;
   netProfit: number;
   profitPercentage: number;
   profitPerHour: number;
 }
-
-export type ExpertMode = 'beginner' | 'expert';

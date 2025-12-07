@@ -10,7 +10,6 @@ interface LaborSectionProps {
   timePhases: TimePhase[];
   onWorkersChange: (workers: Worker[]) => void;
   onTimePhasesChange: (phases: TimePhase[]) => void;
-  simplified?: boolean;
 }
 
 const phaseLabels: Record<TimePhase['phase'], string> = {
@@ -25,14 +24,13 @@ export function LaborSection({
   timePhases,
   onWorkersChange,
   onTimePhasesChange,
-  simplified,
 }: LaborSectionProps) {
   const { defaultHourlyRate } = useQuote();
 
   const addWorker = () => {
     onWorkersChange([
       ...workers,
-      { id: crypto.randomUUID(), name: '', hourlyRate: defaultHourlyRate, hours: 0 },
+      { id: crypto.randomUUID(), name: '', hourlyRate: defaultHourlyRate, hours: undefined as unknown as number },
     ]);
   };
 
@@ -50,8 +48,8 @@ export function LaborSection({
     );
   };
 
-  const totalWorkers = workers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
-  const totalTime = timePhases.reduce((sum, t) => sum + t.rate * t.hours, 0);
+  const totalWorkers = workers.reduce((sum, w) => sum + (w.hourlyRate || 0) * (w.hours || 0), 0);
+  const totalTime = timePhases.reduce((sum, t) => sum + (t.rate || 0) * (t.hours || 0), 0);
   const total = totalWorkers + totalTime;
 
   return (
@@ -81,26 +79,24 @@ export function LaborSection({
                     type="number"
                     min="0"
                     step="0.5"
-                    value={phase.hours}
-                    onChange={(e) => updatePhase(phase.phase, { hours: Number(e.target.value) })}
+                    value={phase.hours ?? ''}
+                    onChange={(e) => updatePhase(phase.phase, { hours: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder=""
                     className="w-16 h-8 text-center"
                   />
                   <span className="text-xs text-muted-foreground">hrs</span>
-                  {!simplified && (
-                    <>
-                      <span className="text-muted-foreground">×</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={phase.rate}
-                        onChange={(e) => updatePhase(phase.phase, { rate: Number(e.target.value) })}
-                        className="w-16 h-8 text-center"
-                      />
-                    </>
-                  )}
+                  <span className="text-muted-foreground">×</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={phase.rate ?? ''}
+                    onChange={(e) => updatePhase(phase.phase, { rate: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder=""
+                    className="w-16 h-8 text-center"
+                  />
                 </div>
                 <span className="text-sm font-semibold w-20 text-right text-primary">
-                  ${(phase.hours * phase.rate).toFixed(2)}
+                  ${((phase.hours || 0) * (phase.rate || 0)).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -108,70 +104,70 @@ export function LaborSection({
         </div>
 
         {/* Workers */}
-        {!simplified && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-muted-foreground">Ayudantes</h4>
-            {workers.map((worker) => (
-              <div
-                key={worker.id}
-                className="p-4 rounded-xl bg-nude/50 space-y-3 animate-fade-in"
-              >
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <Input
-                    value={worker.name}
-                    onChange={(e) => updateWorker(worker.id, { name: e.target.value })}
-                    placeholder="Nombre"
-                    className="flex-1 border-none bg-transparent p-0 h-auto focus-visible:ring-0"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeWorker(worker.id)}
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Ayudantes</h4>
+          {workers.map((worker) => (
+            <div
+              key={worker.id}
+              className="p-4 rounded-xl bg-nude/50 space-y-3 animate-fade-in"
+            >
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={worker.name}
+                  onChange={(e) => updateWorker(worker.id, { name: e.target.value })}
+                  placeholder="Nombre"
+                  className="flex-1 border-none bg-transparent p-0 h-auto focus-visible:ring-0"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeWorker(worker.id)}
+                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">$/hora</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={worker.hourlyRate}
-                      onChange={(e) => updateWorker(worker.id, { hourlyRate: Number(e.target.value) })}
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Horas</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={worker.hours}
-                      onChange={(e) => updateWorker(worker.id, { hours: Number(e.target.value) })}
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Total</label>
-                    <div className="h-9 flex items-center justify-end font-semibold text-primary">
-                      ${(worker.hourlyRate * worker.hours).toFixed(2)}
-                    </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">$/hora</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={worker.hourlyRate ?? ''}
+                    onChange={(e) => updateWorker(worker.id, { hourlyRate: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder=""
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Horas</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={worker.hours ?? ''}
+                    onChange={(e) => updateWorker(worker.id, { hours: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder=""
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Total</label>
+                  <div className="h-9 flex items-center justify-end font-semibold text-primary">
+                    ${((worker.hourlyRate || 0) * (worker.hours || 0)).toFixed(2)}
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
 
-            <Button variant="secondary" className="w-full" onClick={addWorker}>
-              <Plus className="w-4 h-4" />
-              Agregar ayudante
-            </Button>
-          </div>
-        )}
+          <Button variant="secondary" className="w-full" onClick={addWorker}>
+            <Plus className="w-4 h-4" />
+            Agregar ayudante
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

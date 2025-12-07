@@ -2,29 +2,18 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Balloon } from '@/types/quote';
 
 interface BalloonSectionProps {
   balloons: Balloon[];
   onChange: (balloons: Balloon[]) => void;
-  simplified?: boolean;
 }
 
-const balloonTypes = [
-  { value: 'latex', label: 'Látex' },
-  { value: 'foil', label: 'Foil' },
-  { value: 'metallic', label: 'Metálico' },
-  { value: 'custom', label: 'Personalizado' },
-];
-
-const balloonSizes = ['5"', '10"', '12"', '18"'];
-
-export function BalloonSection({ balloons, onChange, simplified }: BalloonSectionProps) {
+export function BalloonSection({ balloons, onChange }: BalloonSectionProps) {
   const addBalloon = () => {
     onChange([
       ...balloons,
-      { id: crypto.randomUUID(), type: 'latex', size: '12"', pricePerUnit: 0.5, quantity: 10 },
+      { id: crypto.randomUUID(), description: '', pricePerUnit: undefined as unknown as number, quantity: undefined as unknown as number },
     ]);
   };
 
@@ -36,7 +25,7 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
     onChange(balloons.filter(b => b.id !== id));
   };
 
-  const total = balloons.reduce((sum, b) => sum + b.pricePerUnit * b.quantity, 0);
+  const total = balloons.reduce((sum, b) => sum + (b.pricePerUnit || 0) * (b.quantity || 0), 0);
 
   return (
     <Card>
@@ -56,9 +45,12 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
             className="p-4 rounded-xl bg-rose-light/30 space-y-3 animate-fade-in"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
-                Globo #{index + 1}
-              </span>
+              <Input
+                value={balloon.description}
+                onChange={(e) => updateBalloon(balloon.id, { description: e.target.value })}
+                placeholder="Descripción del globo"
+                className="font-medium border-none bg-transparent p-0 h-auto text-base focus-visible:ring-0 flex-1"
+              />
               <Button
                 variant="ghost"
                 size="icon"
@@ -70,50 +62,15 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {!simplified && (
-                <Select
-                  value={balloon.type}
-                  onValueChange={(value) => updateBalloon(balloon.id, { type: value as Balloon['type'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {balloonTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {!simplified && (
-                <Select
-                  value={balloon.size}
-                  onValueChange={(value) => updateBalloon(balloon.id, { size: value as Balloon['size'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tamaño" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {balloonSizes.map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Precio/unidad</label>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={balloon.pricePerUnit}
-                  onChange={(e) => updateBalloon(balloon.id, { pricePerUnit: Number(e.target.value) })}
+                  value={balloon.pricePerUnit ?? ''}
+                  onChange={(e) => updateBalloon(balloon.id, { pricePerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
+                  placeholder=""
                   className="h-10"
                 />
               </div>
@@ -123,8 +80,9 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
                 <Input
                   type="number"
                   min="0"
-                  value={balloon.quantity}
-                  onChange={(e) => updateBalloon(balloon.id, { quantity: Number(e.target.value) })}
+                  value={balloon.quantity ?? ''}
+                  onChange={(e) => updateBalloon(balloon.id, { quantity: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
+                  placeholder=""
                   className="h-10"
                 />
               </div>
@@ -132,7 +90,7 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
 
             <div className="flex justify-end">
               <span className="text-sm font-semibold text-primary">
-                Subtotal: ${(balloon.pricePerUnit * balloon.quantity).toFixed(2)}
+                Subtotal: ${((balloon.pricePerUnit || 0) * (balloon.quantity || 0)).toFixed(2)}
               </span>
             </div>
           </div>
@@ -140,7 +98,7 @@ export function BalloonSection({ balloons, onChange, simplified }: BalloonSectio
 
         <Button variant="soft" className="w-full" onClick={addBalloon}>
           <Plus className="w-4 h-4" />
-          Agregar globos
+          Agregar globo
         </Button>
       </CardContent>
     </Card>

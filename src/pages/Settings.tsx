@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, Palette, User, Globe, LogOut } from 'lucide-react';
+import { ArrowLeft, DollarSign, User, Globe, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { ToolAmortizationSection } from '@/components/settings/ToolAmortizationSection';
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { mode, setMode, defaultHourlyRate, setDefaultHourlyRate } = useQuote();
+  const { defaultHourlyRate, setDefaultHourlyRate, toolAmortization, setToolAmortization } = useQuote();
   const { user, profile, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
 
@@ -30,13 +31,6 @@ export default function Settings() {
   const handleCurrencyChange = (currencyCode: string) => {
     if (user && profile) {
       updateProfile({ currency: currencyCode });
-    }
-  };
-
-  const handleModeChange = (newMode: 'beginner' | 'expert') => {
-    setMode(newMode);
-    if (user && profile) {
-      updateProfile({ mode: newMode });
     }
   };
 
@@ -124,55 +118,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Mode Selection */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-lavender-light flex items-center justify-center">
-                <Palette className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Modo de uso</CardTitle>
-                <CardDescription>
-                  Elige qué tan detallada quieres la interfaz
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => handleModeChange('beginner')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  mode === 'beginner' 
-                    ? 'border-primary bg-rose-light/30' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="text-3xl mb-2">🌸</div>
-                <h3 className="font-semibold">Principiante</h3>
-                <p className="text-sm text-muted-foreground">
-                  Interfaz simple, menos campos, resultados rápidos
-                </p>
-              </button>
-              <button
-                onClick={() => handleModeChange('expert')}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  mode === 'expert' 
-                    ? 'border-primary bg-rose-light/30' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="text-3xl mb-2">⭐</div>
-                <h3 className="font-semibold">Experto</h3>
-                <p className="text-sm text-muted-foreground">
-                  Control total, todos los detalles, cálculo avanzado
-                </p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Default Hourly Rate */}
         <Card>
           <CardHeader>
@@ -196,14 +141,21 @@ export default function Settings() {
               <Input
                 type="number"
                 min="0"
-                value={defaultHourlyRate}
-                onChange={(e) => handleRateChange(Number(e.target.value))}
+                value={defaultHourlyRate ?? ''}
+                onChange={(e) => handleRateChange(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder=""
                 className="text-2xl font-bold h-14 w-32"
               />
               <span className="text-muted-foreground">por hora</span>
             </div>
           </CardContent>
         </Card>
+
+        {/* Tool Amortization */}
+        <ToolAmortizationSection
+          tools={toolAmortization}
+          onChange={setToolAmortization}
+        />
 
         {/* Login prompt for non-authenticated users */}
         {!user && (
@@ -226,7 +178,7 @@ export default function Settings() {
         {/* App Info */}
         <div className="text-center text-sm text-muted-foreground py-8">
           <p className="font-display text-lg font-semibold text-foreground mb-1">
-            Balloon Profit Calculator
+            Calculadora para Decoradoras
           </p>
           <p>Versión 1.0.0</p>
           <p className="mt-2">Hecho con 💕 para decoradoras de globos</p>

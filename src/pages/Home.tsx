@@ -1,20 +1,29 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calculator, Package, History, TrendingUp, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
+import { useEffect } from 'react';
 
 export default function Home() {
-  const { quotes, mode, setMode } = useQuote();
-  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { quotes } = useQuote();
+  const { user, profile, loading } = useAuth();
   
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
   const totalRevenue = quotes.reduce((sum, q) => {
-    const costs = q.balloons.reduce((s, b) => s + b.pricePerUnit * b.quantity, 0) +
-                  q.materials.reduce((s, m) => s + m.costPerUnit * m.quantity, 0) +
-                  q.extras.reduce((s, e) => s + e.cost, 0);
-    return sum + costs * (1 + q.marginPercentage / 100);
+    const costs = q.balloons.reduce((s, b) => s + (b.pricePerUnit || 0) * (b.quantity || 0), 0) +
+                  q.materials.reduce((s, m) => s + (m.costPerUnit || 0) * (m.quantity || 0), 0) +
+                  q.extras.reduce((s, e) => s + (e.cost || 0), 0);
+    return sum + costs * (1 + (q.marginPercentage || 0) / 100);
   }, 0);
 
   const features = [
@@ -40,6 +49,22 @@ export default function Home() {
       color: 'bg-secondary text-secondary-foreground',
     },
   ];
+
+  // Show loading or nothing while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">🎈</div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
@@ -68,56 +93,12 @@ export default function Home() {
                 Crear Cotización
               </Link>
             </Button>
-            {!user && (
-              <Button asChild variant="outline" size="lg">
-                <Link to="/auth">
-                  <User className="w-4 h-4 mr-2" />
-                  Iniciar Sesión
-                </Link>
-              </Button>
-            )}
           </div>
 
-          {user && (
-            <p className="text-sm text-muted-foreground">
-              ¡Hola, {profile?.business_name || user.email}! 👋
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground">
+            ¡Hola, {profile?.business_name || user.email}! 👋
+          </p>
         </div>
-      </section>
-
-      {/* Mode Toggle */}
-      <section className="container max-w-4xl mx-auto px-4 -mt-6">
-        <Card className="overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold">Modo de uso</p>
-                <p className="text-sm text-muted-foreground">
-                  {mode === 'beginner' 
-                    ? 'Interfaz simplificada para empezar rápido' 
-                    : 'Control total sobre todos los detalles'}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={mode === 'beginner' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setMode('beginner')}
-                >
-                  🌸 Principiante
-                </Button>
-                <Button
-                  variant={mode === 'expert' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setMode('expert')}
-                >
-                  ⭐ Experto
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       {/* Quick Stats */}
@@ -159,30 +140,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      {/* Cloud Sync Promo for non-authenticated users */}
-      {!user && (
-        <section className="container max-w-4xl mx-auto px-4 mt-8">
-          <Card className="border-primary/30 bg-rose-light/20">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="text-5xl">☁️</div>
-                <div className="flex-1 text-center md:text-left">
-                  <h3 className="font-display text-lg font-semibold mb-1">
-                    Sincroniza tus cotizaciones
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Crea una cuenta gratis para guardar tus cotizaciones en la nube y acceder desde cualquier dispositivo.
-                  </p>
-                </div>
-                <Button variant="gradient" asChild>
-                  <Link to="/auth">Crear cuenta</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
 
       {/* Decorative Elements */}
       <div className="fixed top-20 right-10 text-6xl opacity-20 animate-float pointer-events-none hidden md:block">
