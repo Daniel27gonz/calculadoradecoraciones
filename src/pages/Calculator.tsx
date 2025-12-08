@@ -11,10 +11,12 @@ import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
+import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Quote, TimePhase } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrencyByCode } from '@/lib/currencies';
 
 const defaultTimePhases: TimePhase[] = [
   { phase: 'planning', hours: 0, rate: 25 },
@@ -34,16 +36,16 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   workers: [],
   timePhases: defaultTimePhases.map(p => ({ ...p, rate: hourlyRate })),
   extras: [],
+  transportItems: [],
   marginPercentage: 30,
   notes: '',
-  transportCost: 0,
 });
 
 export default function Calculator() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const { 
     quotes, 
     saveQuote, 
@@ -52,12 +54,30 @@ export default function Calculator() {
     packages 
   } = useQuote();
 
+  const [currency, setCurrency] = useState(profile?.currency || 'USD');
+  const currencyInfo = getCurrencyByCode(currency);
+  const currencySymbol = currencyInfo?.symbol || '$';
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  // Sync currency with profile
+  useEffect(() => {
+    if (profile?.currency) {
+      setCurrency(profile.currency);
+    }
+  }, [profile]);
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency);
+    if (profile) {
+      updateProfile({ currency: newCurrency });
+    }
+  };
 
   const editId = searchParams.get('edit');
   const packageId = searchParams.get('package');
@@ -94,7 +114,7 @@ export default function Calculator() {
 
   const summary = calculateCosts(quote);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!quote.clientName.trim()) {
       toast({
         title: "Falta información",
@@ -104,7 +124,7 @@ export default function Calculator() {
       return;
     }
 
-    saveQuote(quote);
+    await saveQuote(quote);
     toast({
       title: "¡Guardado!",
       description: "Tu cotización ha sido guardada exitosamente",
@@ -117,7 +137,6 @@ export default function Calculator() {
   };
 
   const handleGeneratePDF = () => {
-    // Generate PDF content
     const pdfContent = `
 COTIZACIÓN
 ==========
@@ -127,41 +146,41 @@ Fecha del evento: ${quote.eventDate || 'Por definir'}
 
 GLOBOS
 ------
-${quote.balloons.map(b => `${b.description}: ${b.quantity} x $${b.pricePerUnit} = $${((b.pricePerUnit || 0) * (b.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin globos'}
-Subtotal: $${summary.totalBalloons.toFixed(2)}
+${quote.balloons.map(b => `${b.description}: ${b.quantity} x ${currencySymbol}${b.pricePerUnit} = ${currencySymbol}${((b.pricePerUnit || 0) * (b.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin globos'}
+Subtotal: ${currencySymbol}${summary.totalBalloons.toFixed(2)}
 
 MATERIALES
 ----------
-${quote.materials.map(m => `${m.name}: ${m.quantity} x $${m.costPerUnit} = $${((m.costPerUnit || 0) * (m.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin materiales'}
-Subtotal: $${summary.totalMaterials.toFixed(2)}
+${quote.materials.map(m => `${m.name}: ${m.quantity} x ${currencySymbol}${m.costPerUnit} = ${currencySymbol}${((m.costPerUnit || 0) * (m.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin materiales'}
+Subtotal: ${currencySymbol}${summary.totalMaterials.toFixed(2)}
 
 MANO DE OBRA
 ------------
-Subtotal: $${(summary.totalLabor + summary.totalTime).toFixed(2)}
+Subtotal: ${currencySymbol}${(summary.totalLabor + summary.totalTime).toFixed(2)}
 
 EXTRAS
 ------
-${quote.extras.map(e => `${e.name}: $${e.cost}`).join('\n') || 'Sin extras'}
-Subtotal: $${summary.totalExtras.toFixed(2)}
+${quote.extras.map(e => `${e.name}: ${currencySymbol}${e.cost}`).join('\n') || 'Sin extras'}
+Subtotal: ${currencySymbol}${summary.totalExtras.toFixed(2)}
 
-TRANSPORTE
-----------
-$${summary.totalTransport.toFixed(2)}
+TRANSPORTE / GASOLINA
+---------------------
+${quote.transportItems.map(t => `${t.concept}: ${currencySymbol}${t.amount}`).join('\n') || 'Sin gastos'}
+Subtotal: ${currencySymbol}${summary.totalTransport.toFixed(2)}
 
-AMORTIZACIÓN HERRAMIENTAS
--------------------------
-$${summary.totalToolAmortization.toFixed(2)}
+DESGASTE DE HERRAMIENTAS (7%)
+-----------------------------
+${currencySymbol}${summary.toolWear.toFixed(2)}
 
 =========================
-COSTO TOTAL: $${summary.totalCost.toFixed(2)}
+COSTO TOTAL: ${currencySymbol}${summary.totalCost.toFixed(2)}
 MARGEN: ${quote.marginPercentage}%
-PRECIO FINAL: $${summary.finalPrice.toFixed(2)}
+PRECIO FINAL: ${currencySymbol}${summary.finalPrice.toFixed(2)}
 =========================
 
 ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
     `.trim();
 
-    // Create blob and download
     const blob = new Blob([pdfContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -179,7 +198,7 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
   };
 
   const handleShare = async () => {
-    const shareText = `Cotización para ${quote.clientName}\n\nPrecio final: $${summary.finalPrice.toFixed(2)}\n\nDetalles:\n- Globos: $${summary.totalBalloons.toFixed(2)}\n- Materiales: $${summary.totalMaterials.toFixed(2)}\n- Mano de obra: $${(summary.totalLabor + summary.totalTime).toFixed(2)}\n- Extras: $${summary.totalExtras.toFixed(2)}\n- Transporte: $${summary.totalTransport.toFixed(2)}`;
+    const shareText = `Cotización para ${quote.clientName}\n\nPrecio final: ${currencySymbol}${summary.finalPrice.toFixed(2)}\n\nDetalles:\n- Globos: ${currencySymbol}${summary.totalBalloons.toFixed(2)}\n- Materiales: ${currencySymbol}${summary.totalMaterials.toFixed(2)}\n- Mano de obra: ${currencySymbol}${(summary.totalLabor + summary.totalTime).toFixed(2)}\n- Transporte: ${currencySymbol}${summary.totalTransport.toFixed(2)}\n- Desgaste herramientas (7%): ${currencySymbol}${summary.toolWear.toFixed(2)}\n- Extras: ${currencySymbol}${summary.totalExtras.toFixed(2)}`;
 
     if (navigator.share) {
       try {
@@ -191,7 +210,6 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
         // User cancelled or error
       }
     } else {
-      // Fallback: copy to clipboard
       await navigator.clipboard.writeText(shareText);
       toast({
         title: "Copiado",
@@ -226,6 +244,19 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Currency Selector */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">💱</span>
+              Moneda
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CurrencySelector value={currency} onChange={handleCurrencyChange} />
+          </CardContent>
+        </Card>
+
         {/* Client Info */}
         <Card>
           <CardHeader className="pb-4">
@@ -269,11 +300,13 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
         <BalloonSection
           balloons={quote.balloons}
           onChange={(balloons) => updateQuote({ balloons })}
+          currencySymbol={currencySymbol}
         />
 
         <MaterialSection
           materials={quote.materials}
           onChange={(materials) => updateQuote({ materials })}
+          currencySymbol={currencySymbol}
         />
 
         <LaborSection
@@ -289,8 +322,8 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
         />
 
         <TransportSection
-          transportCost={quote.transportCost}
-          onChange={(transportCost) => updateQuote({ transportCost })}
+          transportItems={quote.transportItems}
+          onChange={(transportItems) => updateQuote({ transportItems })}
         />
 
         {/* Pricing */}
@@ -298,6 +331,7 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
           summary={summary}
           marginPercentage={quote.marginPercentage}
           onMarginChange={(marginPercentage) => updateQuote({ marginPercentage })}
+          currencySymbol={currencySymbol}
         />
 
         {/* Action Buttons */}

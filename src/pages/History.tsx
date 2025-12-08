@@ -1,19 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getCurrencyByCode } from '@/lib/currencies';
 
 export default function History() {
   const navigate = useNavigate();
-  const { quotes, deleteQuote, duplicateQuote, calculateCosts } = useQuote();
+  const { quotes, deleteQuote, duplicateQuote, calculateCosts, saveQuote, loadQuotes } = useQuote();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
+  // Reload quotes when component mounts
+  useEffect(() => {
+    if (user) {
+      loadQuotes();
+    }
+  }, [user]);
 
   const filteredQuotes = quotes
     .filter(q => 
@@ -26,8 +45,9 @@ export default function History() {
     navigate(`/calculator?edit=${id}`);
   };
 
-  const handleDuplicate = (id: string) => {
+  const handleDuplicate = async (id: string) => {
     const newQuote = duplicateQuote(id);
+    await saveQuote(newQuote);
     toast({
       title: "Cotización duplicada",
       description: "Se ha creado una copia de la cotización",
@@ -35,13 +55,17 @@ export default function History() {
     navigate(`/calculator?edit=${newQuote.id}`);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    deleteQuote(id);
+  const handleDelete = async (id: string, name: string) => {
+    await deleteQuote(id);
     toast({
       title: "Cotización eliminada",
       description: `"${name}" ha sido eliminada`,
     });
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
@@ -124,9 +148,9 @@ export default function History() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">${summary.finalPrice.toFixed(2)}</p>
+                          <p className="text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
                           <p className={`text-sm font-medium ${profitColor}`}>
-                            +${summary.netProfit.toFixed(2)} ({summary.profitPercentage.toFixed(0)}%)
+                            +{currencySymbol}{summary.netProfit.toFixed(2)} ({summary.profitPercentage.toFixed(0)}%)
                           </p>
                         </div>
                       </div>
@@ -134,7 +158,7 @@ export default function History() {
                       {/* Stats */}
                       <div className="grid grid-cols-4 gap-2">
                         <div className="text-center p-2 rounded-lg bg-rose-light/30">
-                          <p className="text-sm font-semibold">{quote.balloons.reduce((s, b) => s + b.quantity, 0)}</p>
+                          <p className="text-sm font-semibold">{quote.balloons.reduce((s, b) => s + (b.quantity || 0), 0)}</p>
                           <p className="text-xs text-muted-foreground">Globos</p>
                         </div>
                         <div className="text-center p-2 rounded-lg bg-lavender-light/30">
@@ -143,7 +167,7 @@ export default function History() {
                         </div>
                         <div className="text-center p-2 rounded-lg bg-secondary/50">
                           <p className="text-sm font-semibold">
-                            {quote.timePhases.reduce((s, t) => s + t.hours, 0)}h
+                            {quote.timePhases.reduce((s, t) => s + (t.hours || 0), 0)}h
                           </p>
                           <p className="text-xs text-muted-foreground">Tiempo</p>
                         </div>

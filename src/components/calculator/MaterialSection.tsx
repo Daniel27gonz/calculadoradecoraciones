@@ -7,9 +7,10 @@ import { Material } from '@/types/quote';
 interface MaterialSectionProps {
   materials: Material[];
   onChange: (materials: Material[]) => void;
+  currencySymbol?: string;
 }
 
-export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
+export function MaterialSection({ materials, onChange, currencySymbol = '$' }: MaterialSectionProps) {
   const addMaterial = () => {
     onChange([
       ...materials,
@@ -38,7 +39,7 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">(Materiales no reutilizables)</p>
           </div>
-          <span className="text-lg font-semibold text-primary">${total.toFixed(2)}</span>
+          <span className="text-lg font-semibold text-primary">{currencySymbol}{total.toFixed(2)}</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -47,18 +48,21 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
             key={material.id}
             className="p-4 rounded-xl bg-lavender-light/50 space-y-3 animate-fade-in"
           >
-            <div className="flex items-center justify-between">
-              <Input
-                value={material.name}
-                onChange={(e) => updateMaterial(material.id, { name: e.target.value })}
-                placeholder="Descripción del material"
-                className="font-medium border-none bg-transparent p-0 h-auto text-base focus-visible:ring-0 flex-1"
-              />
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 space-y-1">
+                <label className="text-xs text-muted-foreground">Descripción material</label>
+                <Input
+                  value={material.name}
+                  onChange={(e) => updateMaterial(material.id, { name: e.target.value })}
+                  placeholder="Ej: Cinta de globos 5 metros"
+                  className="h-10"
+                />
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => removeMaterial(material.id)}
-                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 text-destructive hover:bg-destructive/10 mt-5"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -93,7 +97,7 @@ export function MaterialSection({ materials, onChange }: MaterialSectionProps) {
 
             <div className="flex justify-end">
               <span className="text-sm font-semibold text-accent-foreground">
-                Subtotal: ${((material.costPerUnit || 0) * (material.quantity || 0)).toFixed(2)}
+                Subtotal: {currencySymbol}{((material.costPerUnit || 0) * (material.quantity || 0)).toFixed(2)}
               </span>
             </div>
           </div>
