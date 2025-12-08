@@ -31,6 +31,12 @@ export interface Extra {
   cost: number;
 }
 
+export interface TransportItem {
+  id: string;
+  concept: string;
+  amount: number;
+}
+
 export interface ToolAmortization {
   id: string;
   name: string;
@@ -49,9 +55,11 @@ export interface Quote {
   workers: Worker[];
   timePhases: TimePhase[];
   extras: Extra[];
+  transportItems: TransportItem[];
   marginPercentage: number;
   notes: string;
-  transportCost: number;
+  // Legacy field for backwards compatibility
+  transportCost?: number;
 }
 
 export interface Package {
@@ -72,7 +80,7 @@ export interface CostSummary {
   totalTime: number;
   totalExtras: number;
   totalTransport: number;
-  totalToolAmortization: number;
+  toolWear: number; // 7% of (materials + labor + transport)
   totalCost: number;
   finalPrice: number;
   netProfit: number;

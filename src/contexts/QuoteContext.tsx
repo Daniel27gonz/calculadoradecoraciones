@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummary, ToolAmortization } from '@/types/quote';
+import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummary, TransportItem } from '@/types/quote';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface QuoteContextType {
   // Current quote being edited
@@ -8,18 +11,15 @@ interface QuoteContextType {
   
   // Saved quotes
   quotes: Quote[];
-  saveQuote: (quote: Quote) => void;
-  deleteQuote: (id: string) => void;
+  saveQuote: (quote: Quote) => Promise<void>;
+  deleteQuote: (id: string) => Promise<void>;
   duplicateQuote: (id: string) => Quote;
+  loadQuotes: () => Promise<void>;
   
   // Packages
   packages: Package[];
   savePackage: (pkg: Package) => void;
   deletePackage: (id: string) => void;
-  
-  // Tool Amortization
-  toolAmortization: ToolAmortization[];
-  setToolAmortization: (tools: ToolAmortization[]) => void;
   
   // Calculations
   calculateCosts: (quote: Quote) => CostSummary;
@@ -111,68 +111,139 @@ const defaultPackages: Package[] = [
   },
 ];
 
-const defaultToolAmortization: ToolAmortization[] = [
-  { id: '1', name: 'Cilindro mediano', cost: 0, recommendedUses: 60 },
-  { id: '2', name: 'Cilindro grande', cost: 0, recommendedUses: 7 },
-  { id: '3', name: 'Base metálica tipo "mesita"', cost: 0, recommendedUses: 40 },
-  { id: '4', name: 'Arco de PVC completo', cost: 0, recommendedUses: 6 },
-  { id: '5', name: 'Tubos de PVC extras', cost: 0, recommendedUses: 10 },
-  { id: '6', name: 'Backdrop redondo metálico', cost: 0, recommendedUses: 80 },
-  { id: '7', name: 'Soporte telescópico para telas', cost: 0, recommendedUses: 50 },
-  { id: '8', name: 'Soporte metálico para burbuja', cost: 0, recommendedUses: 30 },
-];
-
 export function QuoteProvider({ children }: { children: ReactNode }) {
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [packages, setPackages] = useState<Package[]>(defaultPackages);
-  const [toolAmortization, setToolAmortization] = useState<ToolAmortization[]>(defaultToolAmortization);
   const [defaultHourlyRate, setDefaultHourlyRate] = useState<number>(25);
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
 
-  // Load from localStorage
-  useEffect(() => {
-    const savedQuotes = localStorage.getItem('balloon-quotes');
-    const savedPackages = localStorage.getItem('balloon-packages');
-    const savedRate = localStorage.getItem('balloon-hourly-rate');
-    const savedTools = localStorage.getItem('balloon-tool-amortization');
-    
-    if (savedQuotes) setQuotes(JSON.parse(savedQuotes));
-    if (savedPackages) setPackages(JSON.parse(savedPackages));
-    if (savedRate) setDefaultHourlyRate(Number(savedRate));
-    if (savedTools) setToolAmortization(JSON.parse(savedTools));
-  }, []);
+  // Load quotes from Supabase when user logs in
+  const loadQuotes = async () => {
+    if (!user) {
+      setQuotes([]);
+      return;
+    }
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('balloon-quotes', JSON.stringify(quotes));
-  }, [quotes]);
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-  useEffect(() => {
-    localStorage.setItem('balloon-packages', JSON.stringify(packages));
-  }, [packages]);
+      if (error) throw error;
 
-  useEffect(() => {
-    localStorage.setItem('balloon-hourly-rate', String(defaultHourlyRate));
-  }, [defaultHourlyRate]);
-
-  useEffect(() => {
-    localStorage.setItem('balloon-tool-amortization', JSON.stringify(toolAmortization));
-  }, [toolAmortization]);
-
-  const saveQuote = (quote: Quote) => {
-    setQuotes(prev => {
-      const existingIndex = prev.findIndex(q => q.id === quote.id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = { ...quote, updatedAt: new Date().toISOString() };
-        return updated;
+      if (data) {
+        const loadedQuotes: Quote[] = data.map((q: any) => ({
+          id: q.id,
+          clientName: q.client_name,
+          eventDate: q.event_date || '',
+          createdAt: q.created_at,
+          updatedAt: q.updated_at,
+          balloons: (q.balloons as Balloon[]) || [],
+          materials: (q.materials as Material[]) || [],
+          workers: (q.workers as Worker[]) || [],
+          timePhases: (q.time_phases as TimePhase[]) || [],
+          extras: (q.extras as Extra[]) || [],
+          transportItems: (q as any).transport_items || [],
+          marginPercentage: q.margin_percentage || 30,
+          notes: q.notes || '',
+        }));
+        setQuotes(loadedQuotes);
       }
-      return [...prev, quote];
-    });
+    } catch (error) {
+      console.error('Error loading quotes:', error);
+    }
   };
 
-  const deleteQuote = (id: string) => {
-    setQuotes(prev => prev.filter(q => q.id !== id));
+  useEffect(() => {
+    if (user) {
+      loadQuotes();
+    }
+  }, [user]);
+
+  // Use profile's hourly rate if available
+  useEffect(() => {
+    if (profile?.default_hourly_rate) {
+      setDefaultHourlyRate(profile.default_hourly_rate);
+    }
+  }, [profile]);
+
+  const saveQuote = async (quote: Quote) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para guardar cotizaciones",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const dbQuote = {
+        id: quote.id,
+        user_id: user.id,
+        client_name: quote.clientName,
+        event_date: quote.eventDate || null,
+        balloons: quote.balloons as any,
+        materials: quote.materials as any,
+        workers: quote.workers as any,
+        time_phases: quote.timePhases as any,
+        extras: quote.extras as any,
+        margin_percentage: quote.marginPercentage,
+        notes: quote.notes,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('quotes')
+        .upsert(dbQuote, { onConflict: 'id' });
+
+      if (error) throw error;
+
+      // Update local state
+      setQuotes(prev => {
+        const existingIndex = prev.findIndex(q => q.id === quote.id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = { ...quote, updatedAt: new Date().toISOString() };
+          return updated;
+        }
+        return [quote, ...prev];
+      });
+    } catch (error) {
+      console.error('Error saving quote:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la cotización",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteQuote = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setQuotes(prev => prev.filter(q => q.id !== id));
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la cotización",
+        variant: "destructive",
+      });
+    }
   };
 
   const duplicateQuote = (id: string): Quote => {
@@ -187,7 +258,6 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       updatedAt: new Date().toISOString(),
     };
     
-    saveQuote(newQuote);
     return newQuote;
   };
 
@@ -213,15 +283,15 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const totalLabor = quote.workers.reduce((sum, w) => sum + ((w.hourlyRate || 0) * (w.hours || 0)), 0);
     const totalTime = quote.timePhases.reduce((sum, t) => sum + ((t.rate || 0) * (t.hours || 0)), 0);
     const totalExtras = quote.extras.reduce((sum, e) => sum + (e.cost || 0), 0);
-    const totalTransport = quote.transportCost || 0;
     
-    // Calculate tool amortization per event
-    const totalToolAmortization = toolAmortization.reduce((sum, tool) => {
-      if (!tool.cost || tool.recommendedUses === 0) return sum;
-      return sum + (tool.cost / tool.recommendedUses);
-    }, 0);
+    // Calculate total transport from items
+    const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
     
-    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTime + totalExtras + totalTransport + totalToolAmortization;
+    // Calculate tool wear as 7% of (materials + labor + transport)
+    const subtotalBase = totalMaterials + totalLabor + totalTime + totalTransport;
+    const toolWear = subtotalBase * 0.07;
+    
+    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTime + totalExtras + totalTransport + toolWear;
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
     const netProfit = finalPrice - totalCost;
     const profitPercentage = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
@@ -237,7 +307,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       totalTime,
       totalExtras,
       totalTransport,
-      totalToolAmortization,
+      toolWear,
       totalCost,
       finalPrice,
       netProfit,
@@ -254,11 +324,10 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       saveQuote,
       deleteQuote,
       duplicateQuote,
+      loadQuotes,
       packages,
       savePackage,
       deletePackage,
-      toolAmortization,
-      setToolAmortization,
       calculateCosts,
       defaultHourlyRate,
       setDefaultHourlyRate,

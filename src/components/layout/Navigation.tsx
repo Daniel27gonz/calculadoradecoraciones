@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
@@ -14,7 +13,6 @@ const navItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const { mode } = useQuote();
   const { user } = useAuth();
 
   // Hide navigation on auth page
@@ -57,13 +55,6 @@ export function Navigation() {
 
         {/* Right side - desktop only */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Mode indicator */}
-          <div className="px-3 py-1.5 rounded-full bg-lavender-light">
-            <span className="text-xs font-medium text-accent-foreground">
-              {mode === 'beginner' ? '🌸 Principiante' : '⭐ Experto'}
-            </span>
-          </div>
-          
           {/* User indicator */}
           {user ? (
             <Link 

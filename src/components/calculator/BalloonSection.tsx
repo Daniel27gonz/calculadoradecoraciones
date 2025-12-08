@@ -7,9 +7,10 @@ import { Balloon } from '@/types/quote';
 interface BalloonSectionProps {
   balloons: Balloon[];
   onChange: (balloons: Balloon[]) => void;
+  currencySymbol?: string;
 }
 
-export function BalloonSection({ balloons, onChange }: BalloonSectionProps) {
+export function BalloonSection({ balloons, onChange, currencySymbol = '$' }: BalloonSectionProps) {
   const addBalloon = () => {
     onChange([
       ...balloons,
@@ -35,27 +36,30 @@ export function BalloonSection({ balloons, onChange }: BalloonSectionProps) {
             <span className="text-2xl">🎈</span>
             Globos
           </CardTitle>
-          <span className="text-lg font-semibold text-primary">${total.toFixed(2)}</span>
+          <span className="text-lg font-semibold text-primary">{currencySymbol}{total.toFixed(2)}</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {balloons.map((balloon, index) => (
+        {balloons.map((balloon) => (
           <div
             key={balloon.id}
             className="p-4 rounded-xl bg-rose-light/30 space-y-3 animate-fade-in"
           >
-            <div className="flex items-center justify-between">
-              <Input
-                value={balloon.description}
-                onChange={(e) => updateBalloon(balloon.id, { description: e.target.value })}
-                placeholder="Descripción del globo"
-                className="font-medium border-none bg-transparent p-0 h-auto text-base focus-visible:ring-0 flex-1"
-              />
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 space-y-1">
+                <label className="text-xs text-muted-foreground">Descripción globo</label>
+                <Input
+                  value={balloon.description}
+                  onChange={(e) => updateBalloon(balloon.id, { description: e.target.value })}
+                  placeholder="Ej: Globo 12 pulgadas rosa pastel"
+                  className="h-10"
+                />
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => removeBalloon(balloon.id)}
-                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 text-destructive hover:bg-destructive/10 mt-5"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -90,7 +94,7 @@ export function BalloonSection({ balloons, onChange }: BalloonSectionProps) {
 
             <div className="flex justify-end">
               <span className="text-sm font-semibold text-primary">
-                Subtotal: ${((balloon.pricePerUnit || 0) * (balloon.quantity || 0)).toFixed(2)}
+                Subtotal: {currencySymbol}{((balloon.pricePerUnit || 0) * (balloon.quantity || 0)).toFixed(2)}
               </span>
             </div>
           </div>

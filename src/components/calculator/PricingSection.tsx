@@ -8,6 +8,7 @@ interface PricingSectionProps {
   summary: CostSummary;
   marginPercentage: number;
   onMarginChange: (margin: number) => void;
+  currencySymbol?: string;
 }
 
 const marginOptions = [
@@ -17,7 +18,7 @@ const marginOptions = [
   { value: 50, label: '50%', description: 'Lujo' },
 ];
 
-export function PricingSection({ summary, marginPercentage, onMarginChange }: PricingSectionProps) {
+export function PricingSection({ summary, marginPercentage, onMarginChange, currencySymbol = '$' }: PricingSectionProps) {
   const getProfitColor = (percentage: number) => {
     if (percentage >= 40) return 'text-profit-high';
     if (percentage >= 20) return 'text-profit-medium';
@@ -50,39 +51,35 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">🎈 Total globos</span>
-              <span className="font-medium">${summary.totalBalloons.toFixed(2)}</span>
+              <span className="font-medium">{currencySymbol}{summary.totalBalloons.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">🎀 Total materiales</span>
-              <span className="font-medium">${summary.totalMaterials.toFixed(2)}</span>
+              <span className="font-medium">{currencySymbol}{summary.totalMaterials.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">👩‍🎨 Total mano de obra</span>
-              <span className="font-medium">${summary.totalLabor.toFixed(2)}</span>
+              <span className="font-medium">{currencySymbol}{(summary.totalLabor + summary.totalTime).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">⏱️ Total tiempo</span>
-              <span className="font-medium">${summary.totalTime.toFixed(2)}</span>
+              <span className="text-muted-foreground">🚗 Total gasolina / transporte</span>
+              <span className="font-medium">{currencySymbol}{summary.totalTransport.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">🔧 Desgaste de herramientas (7%)</span>
+              <span className="font-medium">{currencySymbol}{summary.toolWear.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">✨ Total extras</span>
-              <span className="font-medium">${summary.totalExtras.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🚗 Transporte</span>
-              <span className="font-medium">${summary.totalTransport.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🔧 Amortización herramientas</span>
-              <span className="font-medium">${summary.totalToolAmortization.toFixed(2)}</span>
+              <span className="font-medium">{currencySymbol}{summary.totalExtras.toFixed(2)}</span>
             </div>
           </div>
 
           <div className="h-px bg-border" />
 
           <div className="flex justify-between">
-            <span className="font-semibold">Costo Total</span>
-            <span className="text-xl font-bold text-primary">${summary.totalCost.toFixed(2)}</span>
+            <span className="font-semibold">Total Final del Evento</span>
+            <span className="text-xl font-bold text-primary">{currencySymbol}{summary.totalCost.toFixed(2)}</span>
           </div>
         </CardContent>
       </Card>
@@ -135,7 +132,7 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
             <div className="flex justify-between items-center">
               <span className="text-primary-foreground font-medium">Precio Final</span>
               <span className="text-3xl font-bold text-primary-foreground">
-                ${summary.finalPrice.toFixed(2)}
+                {currencySymbol}{summary.finalPrice.toFixed(2)}
               </span>
             </div>
           </div>
@@ -160,7 +157,7 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
             <div className="text-center p-3 rounded-lg bg-card">
               <p className="text-xs text-muted-foreground mb-1">Ganancia Neta</p>
               <p className={cn("text-2xl font-bold", getProfitColor(summary.profitPercentage))}>
-                ${summary.netProfit.toFixed(2)}
+                {currencySymbol}{summary.netProfit.toFixed(2)}
               </p>
             </div>
             <div className="text-center p-3 rounded-lg bg-card">
@@ -172,7 +169,7 @@ export function PricingSection({ summary, marginPercentage, onMarginChange }: Pr
             <div className="text-center p-3 rounded-lg bg-card">
               <p className="text-xs text-muted-foreground mb-1">Por Hora</p>
               <p className={cn("text-2xl font-bold", getProfitColor(summary.profitPercentage))}>
-                ${summary.profitPerHour.toFixed(2)}
+                {currencySymbol}{summary.profitPerHour.toFixed(2)}
               </p>
             </div>
           </div>
