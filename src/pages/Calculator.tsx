@@ -10,6 +10,7 @@ import { MaterialSection } from '@/components/calculator/MaterialSection';
 import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
+import { ToolWearSection } from '@/components/calculator/ToolWearSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -38,6 +39,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   extras: [],
   transportItems: [],
   marginPercentage: 30,
+  toolWearPercentage: 7,
   notes: '',
 });
 
@@ -136,69 +138,147 @@ export default function Calculator() {
     setQuote(prev => ({ ...prev, ...updates }));
   };
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('es-MX', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   const handleGeneratePDF = () => {
+    const currentDate = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
     const pdfContent = `
-COTIZACIÓN
-==========
+════════════════════════════════════════════════════════════════
+                    COTIZACIÓN DE DECORACIÓN
+════════════════════════════════════════════════════════════════
 
-Cliente: ${quote.clientName}
-Fecha del evento: ${quote.eventDate || 'Por definir'}
+  💜 Calculadora para Decoradoras de Globos
 
-GLOBOS
-------
-${quote.balloons.map(b => `${b.description}: ${b.quantity} x ${currencySymbol}${b.pricePerUnit} = ${currencySymbol}${((b.pricePerUnit || 0) * (b.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin globos'}
-Subtotal: ${currencySymbol}${summary.totalBalloons.toFixed(2)}
+────────────────────────────────────────────────────────────────
+                    INFORMACIÓN DEL EVENTO
+────────────────────────────────────────────────────────────────
 
-MATERIALES
-----------
-${quote.materials.map(m => `${m.name}: ${m.quantity} x ${currencySymbol}${m.costPerUnit} = ${currencySymbol}${((m.costPerUnit || 0) * (m.quantity || 0)).toFixed(2)}`).join('\n') || 'Sin materiales'}
-Subtotal: ${currencySymbol}${summary.totalMaterials.toFixed(2)}
+  👤 Cliente:         ${quote.clientName || 'Sin especificar'}
+  📅 Fecha evento:    ${quote.eventDate || 'Por definir'}
+  🗓️ Fecha cotización: ${currentDate}
 
-MANO DE OBRA
-------------
-Subtotal: ${currencySymbol}${(summary.totalLabor + summary.totalTime).toFixed(2)}
+════════════════════════════════════════════════════════════════
+                    DESGLOSE DE COSTOS
+════════════════════════════════════════════════════════════════
 
-EXTRAS
-------
-${quote.extras.map(e => `${e.name}: ${currencySymbol}${e.cost}`).join('\n') || 'Sin extras'}
-Subtotal: ${currencySymbol}${summary.totalExtras.toFixed(2)}
+────────────────────────────────────────────────────────────────
+  🎈 GLOBOS
+────────────────────────────────────────────────────────────────
+${quote.balloons.length > 0 
+  ? quote.balloons.map(b => `  • ${b.description || 'Globo'}\n    ${b.quantity} unidades × ${currencySymbol}${formatCurrency(b.pricePerUnit || 0)} = ${currencySymbol}${formatCurrency((b.pricePerUnit || 0) * (b.quantity || 0))}`).join('\n\n')
+  : '  Sin globos agregados'}
 
-TRANSPORTE / GASOLINA
----------------------
-${quote.transportItems.map(t => `${t.concept}: ${currencySymbol}${t.amount}`).join('\n') || 'Sin gastos'}
-Subtotal: ${currencySymbol}${summary.totalTransport.toFixed(2)}
+  ─────────────────────────────────────────
+  Subtotal Globos:                    ${currencySymbol}${formatCurrency(summary.totalBalloons)}
 
-DESGASTE DE HERRAMIENTAS (7%)
------------------------------
-${currencySymbol}${summary.toolWear.toFixed(2)}
+────────────────────────────────────────────────────────────────
+  🎀 MATERIALES (No reutilizables)
+────────────────────────────────────────────────────────────────
+${quote.materials.length > 0
+  ? quote.materials.map(m => `  • ${m.name || 'Material'}\n    ${m.quantity} unidades × ${currencySymbol}${formatCurrency(m.costPerUnit || 0)} = ${currencySymbol}${formatCurrency((m.costPerUnit || 0) * (m.quantity || 0))}`).join('\n\n')
+  : '  Sin materiales agregados'}
 
-=========================
-COSTO TOTAL: ${currencySymbol}${summary.totalCost.toFixed(2)}
-MARGEN: ${quote.marginPercentage}%
-PRECIO FINAL: ${currencySymbol}${summary.finalPrice.toFixed(2)}
-=========================
+  ─────────────────────────────────────────
+  Subtotal Materiales:                ${currencySymbol}${formatCurrency(summary.totalMaterials)}
 
-${quote.notes ? `\nNotas: ${quote.notes}` : ''}
+────────────────────────────────────────────────────────────────
+  👩‍🎨 MANO DE OBRA
+────────────────────────────────────────────────────────────────
+${quote.timePhases.filter(t => t.hours > 0).map(t => {
+  const phaseNames: Record<string, string> = {
+    planning: 'Planificación',
+    preparation: 'Preparación',
+    setup: 'Montaje',
+    teardown: 'Desmontaje',
+  };
+  return `  • ${phaseNames[t.phase] || t.phase}: ${t.hours}h × ${currencySymbol}${formatCurrency(t.rate)}/h = ${currencySymbol}${formatCurrency(t.hours * t.rate)}`;
+}).join('\n') || '  Sin horas registradas'}
+
+  ─────────────────────────────────────────
+  Subtotal Mano de Obra:              ${currencySymbol}${formatCurrency(summary.totalLabor + summary.totalTime)}
+
+────────────────────────────────────────────────────────────────
+  🔧 HERRAMIENTAS (Desgaste ${quote.toolWearPercentage}%)
+────────────────────────────────────────────────────────────────
+  Base de cálculo: Globos + Materiales + Mano de obra
+  Porcentaje aplicado: ${quote.toolWearPercentage}%
+
+  ─────────────────────────────────────────
+  Desgaste de Herramientas:           ${currencySymbol}${formatCurrency(summary.toolWear)}
+
+────────────────────────────────────────────────────────────────
+  🚗 TRANSPORTE / GASOLINA
+────────────────────────────────────────────────────────────────
+${quote.transportItems.length > 0
+  ? quote.transportItems.map(t => `  • ${t.concept || 'Transporte'}: ${currencySymbol}${formatCurrency(t.amount || 0)}`).join('\n')
+  : '  Sin gastos de transporte'}
+
+  ─────────────────────────────────────────
+  Subtotal Transporte:                ${currencySymbol}${formatCurrency(summary.totalTransport)}
+
+────────────────────────────────────────────────────────────────
+  ✨ EXTRAS
+────────────────────────────────────────────────────────────────
+${quote.extras.length > 0
+  ? quote.extras.map(e => `  • ${e.name || 'Extra'}: ${currencySymbol}${formatCurrency(e.cost || 0)}`).join('\n')
+  : '  Sin extras'}
+
+  ─────────────────────────────────────────
+  Subtotal Extras:                    ${currencySymbol}${formatCurrency(summary.totalExtras)}
+
+════════════════════════════════════════════════════════════════
+                         RESUMEN FINAL
+════════════════════════════════════════════════════════════════
+
+  📊 COSTO REAL DEL EVENTO:           ${currencySymbol}${formatCurrency(summary.totalCost)}
+  
+  💰 Margen de ganancia:              ${quote.marginPercentage}%
+  📈 Ganancia neta:                   ${currencySymbol}${formatCurrency(summary.netProfit)}
+
+════════════════════════════════════════════════════════════════
+       💜 PRECIO FINAL RECOMENDADO:   ${currencySymbol}${formatCurrency(summary.finalPrice)}
+════════════════════════════════════════════════════════════════
+
+${quote.notes ? `
+────────────────────────────────────────────────────────────────
+  📝 NOTAS ADICIONALES
+────────────────────────────────────────────────────────────────
+  ${quote.notes}
+` : ''}
+
+────────────────────────────────────────────────────────────────
+  Cotización generada con 💜 Calculadora para Decoradoras
+────────────────────────────────────────────────────────────────
     `.trim();
 
-    const blob = new Blob([pdfContent], { type: 'text/plain' });
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cotizacion-${quote.clientName || 'nueva'}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `cotizacion-${quote.clientName?.replace(/\s+/g, '-') || 'nueva'}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
     toast({
-      title: "PDF generado",
-      description: "La cotización ha sido descargada",
+      title: "Cotización generada",
+      description: "El archivo ha sido descargado exitosamente",
     });
   };
 
   const handleShare = async () => {
-    const shareText = `Cotización para ${quote.clientName}\n\nPrecio final: ${currencySymbol}${summary.finalPrice.toFixed(2)}\n\nDetalles:\n- Globos: ${currencySymbol}${summary.totalBalloons.toFixed(2)}\n- Materiales: ${currencySymbol}${summary.totalMaterials.toFixed(2)}\n- Mano de obra: ${currencySymbol}${(summary.totalLabor + summary.totalTime).toFixed(2)}\n- Transporte: ${currencySymbol}${summary.totalTransport.toFixed(2)}\n- Desgaste herramientas (7%): ${currencySymbol}${summary.toolWear.toFixed(2)}\n- Extras: ${currencySymbol}${summary.totalExtras.toFixed(2)}`;
+    const shareText = `💜 Cotización para ${quote.clientName}\n\n💵 Precio final: ${currencySymbol}${formatCurrency(summary.finalPrice)}\n\n📊 Desglose:\n• Globos: ${currencySymbol}${formatCurrency(summary.totalBalloons)}\n• Materiales: ${currencySymbol}${formatCurrency(summary.totalMaterials)}\n• Mano de obra: ${currencySymbol}${formatCurrency(summary.totalLabor + summary.totalTime)}\n• Herramientas (${quote.toolWearPercentage}%): ${currencySymbol}${formatCurrency(summary.toolWear)}\n• Transporte: ${currencySymbol}${formatCurrency(summary.totalTransport)}\n• Extras: ${currencySymbol}${formatCurrency(summary.totalExtras)}\n\n✨ Generado con Calculadora para Decoradoras`;
 
     if (navigator.share) {
       try {
@@ -316,6 +396,16 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
           onTimePhasesChange={(timePhases) => updateQuote({ timePhases })}
         />
 
+        {/* Tool Wear Section - after Labor */}
+        <ToolWearSection
+          totalBalloons={summary.totalBalloons}
+          totalMaterials={summary.totalMaterials}
+          totalLabor={summary.totalLabor + summary.totalTime}
+          toolWearPercentage={quote.toolWearPercentage}
+          onPercentageChange={(toolWearPercentage) => updateQuote({ toolWearPercentage })}
+          currencySymbol={currencySymbol}
+        />
+
         <ExtrasSection
           extras={quote.extras}
           onChange={(extras) => updateQuote({ extras })}
@@ -332,6 +422,7 @@ ${quote.notes ? `\nNotas: ${quote.notes}` : ''}
           marginPercentage={quote.marginPercentage}
           onMarginChange={(marginPercentage) => updateQuote({ marginPercentage })}
           currencySymbol={currencySymbol}
+          toolWearPercentage={quote.toolWearPercentage}
         />
 
         {/* Action Buttons */}

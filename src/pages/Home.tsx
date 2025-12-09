@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
+import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
 import { useEffect } from 'react';
 
 export default function Home() {
@@ -150,6 +151,7 @@ export default function Home() {
       </div>
 
       <InstallPrompt />
+      <FirstLoginInstallPrompt />
     </div>
   );
 }

@@ -149,6 +149,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           extras: (q.extras as Extra[]) || [],
           transportItems: (q as any).transport_items || [],
           marginPercentage: q.margin_percentage || 30,
+          toolWearPercentage: (q as any).tool_wear_percentage || 7,
           notes: q.notes || '',
         }));
         setQuotes(loadedQuotes);
@@ -287,9 +288,10 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Calculate total transport from items
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
     
-    // Calculate tool wear as 7% of (materials + labor + transport)
-    const subtotalBase = totalMaterials + totalLabor + totalTime + totalTransport;
-    const toolWear = subtotalBase * 0.07;
+    // Calculate tool wear based on user-selected percentage (5-10%)
+    const toolWearPercentage = quote.toolWearPercentage || 7;
+    const subtotalBase = totalBalloons + totalMaterials + totalLabor + totalTime;
+    const toolWear = subtotalBase * (toolWearPercentage / 100);
     
     const totalCost = totalBalloons + totalMaterials + totalLabor + totalTime + totalExtras + totalTransport + toolWear;
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);

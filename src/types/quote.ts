@@ -57,6 +57,7 @@ export interface Quote {
   extras: Extra[];
   transportItems: TransportItem[];
   marginPercentage: number;
+  toolWearPercentage: number;
   notes: string;
   // Legacy field for backwards compatibility
   transportCost?: number;
