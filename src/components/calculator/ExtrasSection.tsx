@@ -10,7 +10,6 @@ interface ExtrasSectionProps {
 }
 
 const suggestedExtras = [
-  { name: 'Transporte', icon: '🚗' },
   { name: 'Alquiler', icon: '🏠' },
   { name: 'Imprevistos', icon: '⚡' },
   { name: 'Impuestos', icon: '📋' },

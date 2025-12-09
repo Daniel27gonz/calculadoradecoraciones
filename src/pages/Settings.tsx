@@ -150,27 +150,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Tool Wear Info */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-lavender-light flex items-center justify-center">
-                <span className="text-xl">🔧</span>
-              </div>
-              <div>
-                <CardTitle className="text-lg">Desgaste de herramientas</CardTitle>
-                <CardDescription>
-                  Se calcula automáticamente como el 7% del subtotal
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              El desgaste de herramientas (7%) se aplica automáticamente sobre la suma de materiales, mano de obra y transporte en cada cotización.
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Login prompt for non-authenticated users */}
         {!user && (

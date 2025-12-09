@@ -9,6 +9,7 @@ interface PricingSectionProps {
   marginPercentage: number;
   onMarginChange: (margin: number) => void;
   currencySymbol?: string;
+  toolWearPercentage?: number;
 }
 
 const marginOptions = [
@@ -18,7 +19,7 @@ const marginOptions = [
   { value: 50, label: '50%', description: 'Lujo' },
 ];
 
-export function PricingSection({ summary, marginPercentage, onMarginChange, currencySymbol = '$' }: PricingSectionProps) {
+export function PricingSection({ summary, marginPercentage, onMarginChange, currencySymbol = '$', toolWearPercentage = 7 }: PricingSectionProps) {
   const getProfitColor = (percentage: number) => {
     if (percentage >= 40) return 'text-profit-high';
     if (percentage >= 20) return 'text-profit-medium';
@@ -66,7 +67,7 @@ export function PricingSection({ summary, marginPercentage, onMarginChange, curr
               <span className="font-medium">{currencySymbol}{summary.totalTransport.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🔧 Desgaste de herramientas (7%)</span>
+              <span className="text-muted-foreground">🔧 Desgaste de herramientas ({toolWearPercentage}%)</span>
               <span className="font-medium">{currencySymbol}{summary.toolWear.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
