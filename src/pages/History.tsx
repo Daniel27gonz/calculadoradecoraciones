@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { QuoteImageModal } from '@/components/QuoteImageModal';
+import { ProjectedIncomeSection } from '@/components/ProjectedIncomeSection';
+import { Quote } from '@/types/quote';
 
 export default function History() {
   const navigate = useNavigate();
@@ -17,6 +20,8 @@ export default function History() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
@@ -63,6 +68,11 @@ export default function History() {
     });
   };
 
+  const handleViewImage = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setShowImageModal(true);
+  };
+
   if (!user) {
     return null;
   }
@@ -84,6 +94,13 @@ export default function History() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Projected Income Section */}
+        <ProjectedIncomeSection
+          quotes={quotes}
+          calculateCosts={calculateCosts}
+          currencySymbol={currencySymbol}
+        />
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -187,9 +204,24 @@ export default function History() {
                       {/* Actions */}
                       <div className="flex gap-2 pt-2 border-t border-border">
                         <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewImage(quote)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          Ver
+                        </Button>
+                        <Button
+                          variant="gradient"
+                          size="sm"
+                          onClick={() => handleViewImage(quote)}
+                        >
+                          <Share2 className="w-4 h-4" />
+                          Compartir
+                        </Button>
+                        <Button
                           variant="soft"
                           size="sm"
-                          className="flex-1"
                           onClick={() => handleEdit(quote.id)}
                         >
                           <Edit2 className="w-4 h-4" />
@@ -198,14 +230,9 @@ export default function History() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
                           onClick={() => handleDuplicate(quote.id)}
                         >
                           <Copy className="w-4 h-4" />
-                          Duplicar
-                        </Button>
-                        <Button variant="outline" size="icon" disabled>
-                          <FileText className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -222,6 +249,20 @@ export default function History() {
               );
             })}
           </div>
+        )}
+
+        {/* Quote Image Modal */}
+        {selectedQuote && (
+          <QuoteImageModal
+            open={showImageModal}
+            onOpenChange={(open) => {
+              setShowImageModal(open);
+              if (!open) setSelectedQuote(null);
+            }}
+            quote={selectedQuote}
+            summary={calculateCosts(selectedQuote)}
+            currencySymbol={currencySymbol}
+          />
         )}
       </main>
     </div>
