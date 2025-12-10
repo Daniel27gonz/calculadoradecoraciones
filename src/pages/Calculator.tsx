@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, FileText, Share2 } from 'lucide-react';
+import { ArrowLeft, Save, Image, Share2 } from 'lucide-react';
+import { QuoteImageModal } from '@/components/QuoteImageModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -145,157 +146,10 @@ export default function Calculator() {
     });
   };
 
-  const handleGeneratePDF = () => {
-    const currentDate = new Date().toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const [showImageModal, setShowImageModal] = useState(false);
 
-    const pdfContent = `
-════════════════════════════════════════════════════════════════
-                    COTIZACIÓN DE DECORACIÓN
-════════════════════════════════════════════════════════════════
-
-  💜 Calculadora para Decoradoras de Globos
-
-────────────────────────────────────────────────────────────────
-                    INFORMACIÓN DEL EVENTO
-────────────────────────────────────────────────────────────────
-
-  👤 Cliente:         ${quote.clientName || 'Sin especificar'}
-  📅 Fecha evento:    ${quote.eventDate || 'Por definir'}
-  🗓️ Fecha cotización: ${currentDate}
-
-════════════════════════════════════════════════════════════════
-                    DESGLOSE DE COSTOS
-════════════════════════════════════════════════════════════════
-
-────────────────────────────────────────────────────────────────
-  🎈 GLOBOS
-────────────────────────────────────────────────────────────────
-${quote.balloons.length > 0 
-  ? quote.balloons.map(b => `  • ${b.description || 'Globo'}\n    ${b.quantity} unidades × ${currencySymbol}${formatCurrency(b.pricePerUnit || 0)} = ${currencySymbol}${formatCurrency((b.pricePerUnit || 0) * (b.quantity || 0))}`).join('\n\n')
-  : '  Sin globos agregados'}
-
-  ─────────────────────────────────────────
-  Subtotal Globos:                    ${currencySymbol}${formatCurrency(summary.totalBalloons)}
-
-────────────────────────────────────────────────────────────────
-  🎀 MATERIALES (No reutilizables)
-────────────────────────────────────────────────────────────────
-${quote.materials.length > 0
-  ? quote.materials.map(m => `  • ${m.name || 'Material'}\n    ${m.quantity} unidades × ${currencySymbol}${formatCurrency(m.costPerUnit || 0)} = ${currencySymbol}${formatCurrency((m.costPerUnit || 0) * (m.quantity || 0))}`).join('\n\n')
-  : '  Sin materiales agregados'}
-
-  ─────────────────────────────────────────
-  Subtotal Materiales:                ${currencySymbol}${formatCurrency(summary.totalMaterials)}
-
-────────────────────────────────────────────────────────────────
-  👩‍🎨 MANO DE OBRA
-────────────────────────────────────────────────────────────────
-${quote.timePhases.filter(t => t.hours > 0).map(t => {
-  const phaseNames: Record<string, string> = {
-    planning: 'Planificación',
-    preparation: 'Preparación',
-    setup: 'Montaje',
-    teardown: 'Desmontaje',
-  };
-  return `  • ${phaseNames[t.phase] || t.phase}: ${t.hours}h × ${currencySymbol}${formatCurrency(t.rate)}/h = ${currencySymbol}${formatCurrency(t.hours * t.rate)}`;
-}).join('\n') || '  Sin horas registradas'}
-
-  ─────────────────────────────────────────
-  Subtotal Mano de Obra:              ${currencySymbol}${formatCurrency(summary.totalLabor + summary.totalTime)}
-
-────────────────────────────────────────────────────────────────
-  🔧 HERRAMIENTAS (Desgaste ${quote.toolWearPercentage}%)
-────────────────────────────────────────────────────────────────
-  Base de cálculo: Globos + Materiales + Mano de obra
-  Porcentaje aplicado: ${quote.toolWearPercentage}%
-
-  ─────────────────────────────────────────
-  Desgaste de Herramientas:           ${currencySymbol}${formatCurrency(summary.toolWear)}
-
-────────────────────────────────────────────────────────────────
-  🚗 TRANSPORTE / GASOLINA
-────────────────────────────────────────────────────────────────
-${quote.transportItems.length > 0
-  ? quote.transportItems.map(t => `  • ${t.concept || 'Transporte'}: ${currencySymbol}${formatCurrency(t.amount || 0)}`).join('\n')
-  : '  Sin gastos de transporte'}
-
-  ─────────────────────────────────────────
-  Subtotal Transporte:                ${currencySymbol}${formatCurrency(summary.totalTransport)}
-
-────────────────────────────────────────────────────────────────
-  ✨ EXTRAS
-────────────────────────────────────────────────────────────────
-${quote.extras.length > 0
-  ? quote.extras.map(e => `  • ${e.name || 'Extra'}: ${currencySymbol}${formatCurrency(e.cost || 0)}`).join('\n')
-  : '  Sin extras'}
-
-  ─────────────────────────────────────────
-  Subtotal Extras:                    ${currencySymbol}${formatCurrency(summary.totalExtras)}
-
-════════════════════════════════════════════════════════════════
-                         RESUMEN FINAL
-════════════════════════════════════════════════════════════════
-
-  📊 COSTO REAL DEL EVENTO:           ${currencySymbol}${formatCurrency(summary.totalCost)}
-  
-  💰 Margen de ganancia:              ${quote.marginPercentage}%
-  📈 Ganancia neta:                   ${currencySymbol}${formatCurrency(summary.netProfit)}
-
-════════════════════════════════════════════════════════════════
-       💜 PRECIO FINAL RECOMENDADO:   ${currencySymbol}${formatCurrency(summary.finalPrice)}
-════════════════════════════════════════════════════════════════
-
-${quote.notes ? `
-────────────────────────────────────────────────────────────────
-  📝 NOTAS ADICIONALES
-────────────────────────────────────────────────────────────────
-  ${quote.notes}
-` : ''}
-
-────────────────────────────────────────────────────────────────
-  Cotización generada con 💜 Calculadora para Decoradoras
-────────────────────────────────────────────────────────────────
-    `.trim();
-
-    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cotizacion-${quote.clientName?.replace(/\s+/g, '-') || 'nueva'}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Cotización generada",
-      description: "El archivo ha sido descargado exitosamente",
-    });
-  };
-
-  const handleShare = async () => {
-    const shareText = `💜 Cotización para ${quote.clientName}\n\n💵 Precio final: ${currencySymbol}${formatCurrency(summary.finalPrice)}\n\n📊 Desglose:\n• Globos: ${currencySymbol}${formatCurrency(summary.totalBalloons)}\n• Materiales: ${currencySymbol}${formatCurrency(summary.totalMaterials)}\n• Mano de obra: ${currencySymbol}${formatCurrency(summary.totalLabor + summary.totalTime)}\n• Herramientas (${quote.toolWearPercentage}%): ${currencySymbol}${formatCurrency(summary.toolWear)}\n• Transporte: ${currencySymbol}${formatCurrency(summary.totalTransport)}\n• Extras: ${currencySymbol}${formatCurrency(summary.totalExtras)}\n\n✨ Generado con Calculadora para Decoradoras`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Cotización - ${quote.clientName}`,
-          text: shareText,
-        });
-      } catch (err) {
-        // User cancelled or error
-      }
-    } else {
-      await navigator.clipboard.writeText(shareText);
-      toast({
-        title: "Copiado",
-        description: "La cotización ha sido copiada al portapapeles",
-      });
-    }
+  const handleOpenImageModal = () => {
+    setShowImageModal(true);
   };
 
   if (!user) {
@@ -431,15 +285,20 @@ ${quote.notes ? `
             <Save className="w-5 h-5" />
             Guardar Cotización
           </Button>
-          <Button variant="outline" size="lg" className="flex-1" onClick={handleGeneratePDF}>
-            <FileText className="w-5 h-5" />
-            Generar PDF
-          </Button>
-          <Button variant="outline" size="lg" onClick={handleShare}>
-            <Share2 className="w-5 h-5" />
-            Compartir
+          <Button variant="outline" size="lg" className="flex-1" onClick={handleOpenImageModal}>
+            <Image className="w-5 h-5" />
+            Ver / Compartir Imagen
           </Button>
         </div>
+
+        {/* Quote Image Modal */}
+        <QuoteImageModal
+          open={showImageModal}
+          onOpenChange={setShowImageModal}
+          quote={quote}
+          summary={summary}
+          currencySymbol={currencySymbol}
+        />
       </main>
     </div>
   );
