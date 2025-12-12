@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { QuoteImageModal } from '@/components/QuoteImageModal';
+import { ProjectedIncomeSection } from '@/components/ProjectedIncomeSection';
 import { Quote } from '@/types/quote';
 
 export default function History() {
@@ -93,6 +94,13 @@ export default function History() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Projected Income Section */}
+        <ProjectedIncomeSection
+          quotes={quotes}
+          calculateCosts={calculateCosts}
+          currencySymbol={currencySymbol}
+        />
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
