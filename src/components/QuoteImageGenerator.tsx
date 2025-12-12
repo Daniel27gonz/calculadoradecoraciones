@@ -9,349 +9,288 @@ interface QuoteImageGeneratorProps {
   currencySymbol: string;
 }
 
-const formatCurrency = (amount: number) => {
-  return amount.toLocaleString('es-MX', {
+const formatCurrency = (amount: number, symbol: string) => {
+  return `${symbol}${amount.toLocaleString('es-MX', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })}`;
 };
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
   ({ quote, summary, currencySymbol }, ref) => {
-    const currentDate = new Date().toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const eventDateFormatted = quote.eventDate
+      ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
+      : 'Por definir';
 
-    const phaseNames: Record<string, string> = {
-      planning: 'Planificación',
-      preparation: 'Preparación',
-      setup: 'Montaje',
-      teardown: 'Desmontaje',
-    };
+    // Calculate totals for display
+    const materialsTotal = summary.totalBalloons + summary.totalMaterials;
+    const laborTotal = summary.totalLabor + summary.totalTime;
+    const transportTotal = summary.totalTransport;
+    const toolsTotal = summary.toolWear;
+    const extrasTotal = summary.totalExtras;
+    const realCost = summary.totalCost;
+    const profit = summary.netProfit;
+    const finalPrice = summary.finalPrice;
 
     return (
       <div
         ref={ref}
         style={{
-          width: '600px',
-          padding: '32px',
-          background: 'linear-gradient(135deg, #fce4ec, #e8d5e7, #f5f0e8)',
-          fontFamily: 'Quicksand, sans-serif',
-          color: '#4a3a42',
+          width: '500px',
+          padding: '40px',
+          background: '#ffffff',
+          fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+          color: '#333333',
         }}
       >
         {/* Header */}
         <div
           style={{
             textAlign: 'center',
-            marginBottom: '24px',
-            paddingBottom: '16px',
-            borderBottom: '2px solid #e8bfc7',
+            marginBottom: '32px',
+            paddingBottom: '20px',
+            borderBottom: '1px solid #f8c8d4',
           }}
         >
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>💜</div>
+          <p style={{ fontSize: '14px', color: '#999999', margin: '0 0 8px 0' }}>📍</p>
           <h1
             style={{
-              fontFamily: 'Playfair Display, serif',
-              fontSize: '24px',
+              fontSize: '28px',
               fontWeight: 600,
-              color: '#7a5a6a',
-              margin: '0 0 4px 0',
+              color: '#f5a5b8',
+              margin: '0',
+              letterSpacing: '2px',
             }}
           >
             Cotización
           </h1>
-          <p style={{ fontSize: '14px', color: '#8a7a82', margin: 0 }}>
-            Calculadora para Decoradoras
-          </p>
         </div>
 
-        {/* Client Info Card */}
+        {/* Client Info */}
         <div
           style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '16px',
-            boxShadow: '0 4px 20px -4px rgba(200, 150, 170, 0.15)',
+            marginBottom: '28px',
+            paddingBottom: '20px',
+            borderBottom: '1px solid #f8c8d4',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div>
-              <p style={{ fontSize: '12px', color: '#a09098', margin: '0 0 4px 0' }}>Cliente</p>
-              <p style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>
-                {quote.clientName || 'Sin especificar'}
-              </p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '12px', color: '#a09098', margin: '0 0 4px 0' }}>Fecha evento</p>
-              <p style={{ fontSize: '14px', fontWeight: 500, margin: 0 }}>
-                {quote.eventDate
-                  ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
-                  : 'Por definir'}
-              </p>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>👤</span>
+            <span style={{ fontSize: '14px', color: '#666666' }}>Cliente:</span>
+            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
+              {quote.clientName || 'Sin especificar'}
+            </span>
           </div>
-          <p style={{ fontSize: '11px', color: '#b0a0a8', marginTop: '12px', marginBottom: 0 }}>
-            Cotización generada el {currentDate}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>📅</span>
+            <span style={{ fontSize: '14px', color: '#333333' }}>
+              {eventDateFormatted}
+            </span>
+          </div>
         </div>
 
         {/* Cost Breakdown */}
-        <div
-          style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '16px',
-            boxShadow: '0 4px 20px -4px rgba(200, 150, 170, 0.15)',
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: 'Playfair Display, serif',
-              fontSize: '16px',
-              fontWeight: 600,
-              marginBottom: '16px',
-              color: '#6a5a62',
-            }}
-          >
-            📊 Desglose de Costos
-          </h2>
-
-          {/* Balloons */}
-          {quote.balloons.length > 0 && (
-            <div style={{ marginBottom: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#7a5a6a', margin: '0 0 6px 0' }}>
-                🎈 Globos
-              </p>
-              {quote.balloons.map((b, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '12px',
-                    padding: '4px 0',
-                    borderBottom: '1px dashed #f0e8ec',
-                  }}
-                >
-                  <span style={{ color: '#6a5a62' }}>
-                    {b.description || 'Globo'} × {b.quantity}
-                  </span>
-                  <span style={{ fontWeight: 500 }}>
-                    {currencySymbol}{formatCurrency((b.pricePerUnit || 0) * (b.quantity || 0))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
+        <div style={{ marginBottom: '28px' }}>
           {/* Materials */}
-          {quote.materials.length > 0 && (
-            <div style={{ marginBottom: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#7a5a6a', margin: '0 0 6px 0' }}>
-                🎀 Materiales
-              </p>
-              {quote.materials.map((m, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '12px',
-                    padding: '4px 0',
-                    borderBottom: '1px dashed #f0e8ec',
-                  }}
-                >
-                  <span style={{ color: '#6a5a62' }}>
-                    {m.name || 'Material'} × {m.quantity}
-                  </span>
-                  <span style={{ fontWeight: 500 }}>
-                    {currencySymbol}{formatCurrency((m.costPerUnit || 0) * (m.quantity || 0))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Labor */}
-          {quote.timePhases.some((t) => t.hours > 0) && (
-            <div style={{ marginBottom: '12px' }}>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#7a5a6a', margin: '0 0 6px 0' }}>
-                👩‍🎨 Mano de Obra
-              </p>
-              {quote.timePhases
-                .filter((t) => t.hours > 0)
-                .map((t, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '12px',
-                      padding: '4px 0',
-                      borderBottom: '1px dashed #f0e8ec',
-                    }}
-                  >
-                    <span style={{ color: '#6a5a62' }}>
-                      {phaseNames[t.phase] || t.phase}: {t.hours}h
-                    </span>
-                    <span style={{ fontWeight: 500 }}>
-                      {currencySymbol}{formatCurrency(t.hours * t.rate)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {/* Summary Lines */}
           <div
             style={{
-              marginTop: '16px',
-              paddingTop: '12px',
-              borderTop: '2px solid #f0e8ec',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #f5f5f5',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '12px',
-                padding: '4px 0',
-              }}
-            >
-              <span>Subtotal Globos</span>
-              <span>{currencySymbol}{formatCurrency(summary.totalBalloons)}</span>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>📦</span>
+              <span style={{ fontSize: '14px', color: '#555555' }}>Materiales</span>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '12px',
-                padding: '4px 0',
-              }}
-            >
-              <span>Subtotal Materiales</span>
-              <span>{currencySymbol}{formatCurrency(summary.totalMaterials)}</span>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
+              {formatCurrency(materialsTotal, currencySymbol)}
+            </span>
+          </div>
+
+          {/* Labor */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #f5f5f5',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🕑</span>
+              <span style={{ fontSize: '14px', color: '#555555' }}>Mano de obra</span>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '12px',
-                padding: '4px 0',
-              }}
-            >
-              <span>Subtotal Mano de Obra</span>
-              <span>{currencySymbol}{formatCurrency(summary.totalLabor + summary.totalTime)}</span>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
+              {formatCurrency(laborTotal, currencySymbol)}
+            </span>
+          </div>
+
+          {/* Transport */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #f5f5f5',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🚚</span>
+              <span style={{ fontSize: '14px', color: '#555555' }}>Transporte</span>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '12px',
-                padding: '4px 0',
-              }}
-            >
-              <span>Herramientas ({quote.toolWearPercentage}%)</span>
-              <span>{currencySymbol}{formatCurrency(summary.toolWear)}</span>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
+              {formatCurrency(transportTotal, currencySymbol)}
+            </span>
+          </div>
+
+          {/* Tools */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #f5f5f5',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🛠</span>
+              <span style={{ fontSize: '14px', color: '#555555' }}>Herramientas</span>
             </div>
-            {summary.totalTransport > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '12px',
-                  padding: '4px 0',
-                }}
-              >
-                <span>Transporte</span>
-                <span>{currencySymbol}{formatCurrency(summary.totalTransport)}</span>
-              </div>
-            )}
-            {summary.totalExtras > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '12px',
-                  padding: '4px 0',
-                }}
-              >
-                <span>Extras</span>
-                <span>{currencySymbol}{formatCurrency(summary.totalExtras)}</span>
-              </div>
-            )}
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
+              {formatCurrency(toolsTotal, currencySymbol)}
+            </span>
+          </div>
+
+          {/* Extras / Indirect Costs */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #f5f5f5',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>📊</span>
+              <span style={{ fontSize: '14px', color: '#555555' }}>Costos indirectos</span>
+            </div>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
+              {formatCurrency(extrasTotal, currencySymbol)}
+            </span>
           </div>
         </div>
 
-        {/* Final Price Card */}
+        {/* Real Cost */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #d4a5b9, #b5a0c9)',
-            borderRadius: '16px',
-            padding: '24px',
-            textAlign: 'center',
-            color: 'white',
-            boxShadow: '0 8px 30px -8px rgba(200, 150, 170, 0.4)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '16px 0',
+            borderTop: '1px solid #f8c8d4',
+            marginBottom: '8px',
           }}
         >
-          <p style={{ fontSize: '12px', opacity: 0.9, margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Precio Final
+          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>Costo Real:</span>
+          <span style={{ fontSize: '15px', fontWeight: 600, color: '#333333' }}>
+            {formatCurrency(realCost, currencySymbol)}
+          </span>
+        </div>
+
+        {/* Profit */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '8px 0',
+            marginBottom: '24px',
+          }}
+        >
+          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>Ganancia:</span>
+          <span style={{ fontSize: '15px', fontWeight: 600, color: '#22c55e' }}>
+            {formatCurrency(profit, currencySymbol)}
+          </span>
+        </div>
+
+        {/* Final Price */}
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '24px',
+            marginBottom: '24px',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '12px',
+              color: '#999999',
+              margin: '0 0 8px 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>💰</span>
+            <span>PRECIO FINAL</span>
           </p>
           <p
             style={{
-              fontFamily: 'Playfair Display, serif',
-              fontSize: '36px',
+              fontSize: '42px',
               fontWeight: 700,
+              color: '#f5a5b8',
+              margin: '0',
+              letterSpacing: '1px',
+            }}
+          >
+            {formatCurrency(finalPrice, currencySymbol)}
+          </p>
+        </div>
+
+        {/* Notes Section */}
+        <div style={{ marginBottom: '24px' }}>
+          <p
+            style={{
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#888888',
               margin: '0 0 8px 0',
             }}
           >
-            {currencySymbol}{formatCurrency(summary.finalPrice)}
+            Notas:
           </p>
           <div
             style={{
-              display: 'inline-block',
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '20px',
-              padding: '6px 16px',
-              fontSize: '12px',
+              minHeight: '60px',
+              padding: '12px',
+              border: '1px solid #f0e0e5',
+              borderRadius: '8px',
+              background: '#fefefe',
             }}
           >
-            Ganancia: {currencySymbol}{formatCurrency(summary.netProfit)} ({summary.profitPercentage.toFixed(0)}%)
+            {quote.notes && (
+              <p style={{ fontSize: '13px', color: '#666666', margin: 0, lineHeight: 1.6 }}>
+                {quote.notes}
+              </p>
+            )}
           </div>
         </div>
-
-        {/* Notes */}
-        {quote.notes && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '16px',
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px -4px rgba(200, 150, 170, 0.15)',
-            }}
-          >
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#7a5a6a', margin: '0 0 6px 0' }}>
-              📝 Notas
-            </p>
-            <p style={{ fontSize: '12px', color: '#6a5a62', margin: 0, lineHeight: 1.5 }}>
-              {quote.notes}
-            </p>
-          </div>
-        )}
 
         {/* Footer */}
         <p
           style={{
             textAlign: 'center',
             fontSize: '11px',
-            color: '#a09098',
-            marginTop: '20px',
+            color: '#bbbbbb',
+            marginTop: '16px',
             marginBottom: 0,
           }}
         >
