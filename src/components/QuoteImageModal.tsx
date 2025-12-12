@@ -87,8 +87,15 @@ export function QuoteImageModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Hidden generator component */}
-          <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          {/* Hidden generator component - must be visible for html2canvas */}
+          <div style={{ 
+            position: 'fixed', 
+            left: 0, 
+            top: 0, 
+            opacity: 0, 
+            pointerEvents: 'none',
+            zIndex: -1,
+          }}>
             <QuoteImageGenerator
               ref={imageRef}
               quote={quote}
