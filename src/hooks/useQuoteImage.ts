@@ -1,16 +1,34 @@
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import html2canvas from 'html2canvas';
-import { Quote, CostSummary } from '@/types/quote';
 
 export function useQuoteImage() {
   const generateImage = useCallback(async (element: HTMLElement): Promise<Blob | null> => {
     try {
-      const canvas = await html2canvas(element, {
+      // Clone the element to make it visible for capture
+      const clone = element.cloneNode(true) as HTMLElement;
+      clone.style.position = 'fixed';
+      clone.style.left = '0';
+      clone.style.top = '0';
+      clone.style.zIndex = '99999';
+      clone.style.visibility = 'visible';
+      clone.style.opacity = '1';
+      document.body.appendChild(clone);
+
+      // Wait a bit for fonts and styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         logging: false,
+        allowTaint: true,
+        width: clone.offsetWidth,
+        height: clone.offsetHeight,
       });
+
+      // Remove the clone
+      document.body.removeChild(clone);
 
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Download, Share2 } from 'lucide-react';
+import { Download, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { QuoteImageGenerator } from './QuoteImageGenerator';
 import { useQuoteImage } from '@/hooks/useQuoteImage';
 import { Quote, CostSummary } from '@/types/quote';
@@ -28,29 +28,51 @@ export function QuoteImageModal({
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (open && imageRef.current) {
+    if (open) {
+      // Reset states when modal opens
+      setImageBlob(null);
+      setImageUrl(null);
+      setHasError(false);
       setIsGenerating(true);
-      // Small delay to ensure the component is rendered
-      setTimeout(async () => {
-        if (imageRef.current) {
-          const blob = await generateImage(imageRef.current);
-          if (blob) {
-            setImageBlob(blob);
-            setImageUrl(URL.createObjectURL(blob));
+
+      // Longer delay to ensure DOM is fully rendered
+      const timer = setTimeout(async () => {
+        try {
+          if (imageRef.current) {
+            console.log('Generating image from element:', imageRef.current);
+            const blob = await generateImage(imageRef.current);
+            console.log('Generated blob:', blob);
+            if (blob) {
+              setImageBlob(blob);
+              setImageUrl(URL.createObjectURL(blob));
+            } else {
+              setHasError(true);
+            }
+          } else {
+            console.error('imageRef.current is null');
+            setHasError(true);
           }
+        } catch (error) {
+          console.error('Error generating image:', error);
+          setHasError(true);
         }
         setIsGenerating(false);
-      }, 100);
-    }
+      }, 500);
 
+      return () => clearTimeout(timer);
+    }
+  }, [open, generateImage, quote, summary]);
+
+  useEffect(() => {
     return () => {
       if (imageUrl) {
         URL.revokeObjectURL(imageUrl);
       }
     };
-  }, [open, generateImage]);
+  }, [imageUrl]);
 
   const handleDownload = () => {
     if (imageBlob) {
@@ -76,6 +98,30 @@ export function QuoteImageModal({
     }
   };
 
+  const handleRetry = () => {
+    setHasError(false);
+    setIsGenerating(true);
+    setTimeout(async () => {
+      try {
+        if (imageRef.current) {
+          const blob = await generateImage(imageRef.current);
+          if (blob) {
+            setImageBlob(blob);
+            setImageUrl(URL.createObjectURL(blob));
+          } else {
+            setHasError(true);
+          }
+        } else {
+          setHasError(true);
+        }
+      } catch (error) {
+        console.error('Error generating image:', error);
+        setHasError(true);
+      }
+      setIsGenerating(false);
+    }, 500);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -84,18 +130,22 @@ export function QuoteImageModal({
             <span className="text-xl">📸</span>
             Cotización en Imagen
           </DialogTitle>
+          <DialogDescription>
+            Vista previa de la cotización para compartir
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Hidden generator component - must be visible for html2canvas */}
-          <div style={{ 
-            position: 'fixed', 
-            left: 0, 
-            top: 0, 
-            opacity: 0, 
-            pointerEvents: 'none',
-            zIndex: -1,
-          }}>
+          {/* Generator component - visible but scrolled out of view */}
+          <div 
+            style={{ 
+              position: 'absolute',
+              left: '-9999px',
+              top: '-9999px',
+              visibility: 'visible',
+            }}
+            aria-hidden="true"
+          >
             <QuoteImageGenerator
               ref={imageRef}
               quote={quote}
@@ -118,7 +168,12 @@ export function QuoteImageModal({
                 className="max-w-full h-auto"
               />
             ) : (
-              <p className="text-muted-foreground">Error al generar la imagen</p>
+              <div className="text-center p-8">
+                <p className="text-muted-foreground mb-4">Error al generar la imagen</p>
+                <Button variant="outline" onClick={handleRetry}>
+                  Reintentar
+                </Button>
+              </div>
             )}
           </div>
 
