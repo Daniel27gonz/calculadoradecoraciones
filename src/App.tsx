@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuoteProvider } from "@/contexts/QuoteContext";
 import { Navigation } from "@/components/layout/Navigation";
+import PWAInstallPopup from "@/components/PWAInstallPopup";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Calculator from "./pages/Calculator";
@@ -14,6 +15,7 @@ import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -24,6 +26,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PWAInstallPopup />
             <Navigation />
             <Routes>
               <Route path="/" element={<Index />} />
