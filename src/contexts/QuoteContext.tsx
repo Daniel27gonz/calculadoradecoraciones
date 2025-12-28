@@ -193,6 +193,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         workers: quote.workers as any,
         time_phases: quote.timePhases as any,
         extras: quote.extras as any,
+        transport_items: quote.transportItems as any,
         margin_percentage: quote.marginPercentage,
         notes: quote.notes,
         updated_at: new Date().toISOString(),
