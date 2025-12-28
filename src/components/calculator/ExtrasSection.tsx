@@ -2,11 +2,13 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { NumericField } from '@/components/ui/numeric-field';
 import { Extra } from '@/types/quote';
 
 interface ExtrasSectionProps {
   extras: Extra[];
   onChange: (extras: Extra[]) => void;
+  currencySymbol?: string;
 }
 
 const suggestedExtras = [
@@ -15,7 +17,7 @@ const suggestedExtras = [
   { name: 'Impuestos', icon: '📋' },
 ];
 
-export function ExtrasSection({ extras, onChange }: ExtrasSectionProps) {
+export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: ExtrasSectionProps) {
   const addExtra = (name?: string) => {
     onChange([
       ...extras,
@@ -33,19 +35,27 @@ export function ExtrasSection({ extras, onChange }: ExtrasSectionProps) {
 
   const total = extras.reduce((sum, e) => sum + e.cost, 0);
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   const unusedSuggestions = suggestedExtras.filter(
     s => !extras.some(e => e.name.toLowerCase() === s.name.toLowerCase())
   );
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">✨</span>
-            Extras
+    <Card className="shadow-card">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <span className="text-xl sm:text-2xl">✨</span>
+            <span>Extras</span>
           </CardTitle>
-          <span className="text-lg font-semibold text-primary">${total.toFixed(2)}</span>
+          <div className="px-3 py-1.5 rounded-full bg-beige border border-border">
+            <span className="text-sm sm:text-base font-bold text-foreground tabular-nums">
+              {currencySymbol}{formatCurrency(total)}
+            </span>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -58,49 +68,74 @@ export function ExtrasSection({ extras, onChange }: ExtrasSectionProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => addExtra(name)}
-                className="text-xs"
+                className="text-sm h-9 px-3"
               >
-                {icon} {name}
+                <span className="mr-1.5">{icon}</span>
+                {name}
               </Button>
             ))}
+          </div>
+        )}
+
+        {extras.length === 0 && (
+          <div className="text-center py-6 text-muted-foreground text-sm">
+            No hay extras agregados
           </div>
         )}
 
         {extras.map((extra) => (
           <div
             key={extra.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-beige animate-fade-in"
+            className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in"
           >
-            <Input
-              value={extra.name}
-              onChange={(e) => updateExtra(extra.id, { name: e.target.value })}
-              placeholder="Descripción"
-              className="flex-1 border-none bg-transparent focus-visible:ring-0"
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">$</span>
+            {/* Description */}
+            <div className="flex-1 min-w-0">
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block sm:hidden">
+                Descripción
+              </label>
               <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={extra.cost}
-                onChange={(e) => updateExtra(extra.id, { cost: Number(e.target.value) })}
-                className="w-24 h-9"
+                value={extra.name}
+                onChange={(e) => updateExtra(extra.id, { name: e.target.value })}
+                placeholder="Descripción del extra"
+                className="h-11 text-base bg-background/50"
               />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => removeExtra(extra.id)}
-              className="h-8 w-8 text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            
+            {/* Cost */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 sm:w-32">
+                <NumericField
+                  label="Costo"
+                  prefix={currencySymbol}
+                  min={0}
+                  step={0.01}
+                  value={extra.cost}
+                  onChange={(e) => updateExtra(extra.id, { cost: Number(e.target.value) })}
+                  containerClassName="sm:hidden"
+                />
+                <NumericField
+                  prefix={currencySymbol}
+                  min={0}
+                  step={0.01}
+                  value={extra.cost}
+                  onChange={(e) => updateExtra(extra.id, { cost: Number(e.target.value) })}
+                  containerClassName="hidden sm:block"
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => removeExtra(extra.id)}
+                className="h-11 w-11 text-destructive hover:bg-destructive/10 shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         ))}
 
-        <Button variant="secondary" className="w-full" onClick={() => addExtra()}>
-          <Plus className="w-4 h-4" />
+        <Button variant="secondary" className="w-full h-12 text-base font-medium" onClick={() => addExtra()}>
+          <Plus className="w-5 h-5 mr-2" />
           Agregar extra
         </Button>
       </CardContent>
