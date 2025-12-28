@@ -9,7 +9,6 @@ interface PricingSectionProps {
   marginPercentage: number;
   onMarginChange: (margin: number) => void;
   currencySymbol?: string;
-  toolWearPercentage?: number;
 }
 
 const marginOptions = [
@@ -19,7 +18,9 @@ const marginOptions = [
   { value: 50, label: '50%', description: 'Lujo' },
 ];
 
-export function PricingSection({ summary, marginPercentage, onMarginChange, currencySymbol = '$', toolWearPercentage = 7 }: PricingSectionProps) {
+const TOOL_WEAR_PERCENTAGE = 7;
+
+export function PricingSection({ summary, marginPercentage, onMarginChange, currencySymbol = '$' }: PricingSectionProps) {
   const getProfitColor = (percentage: number) => {
     if (percentage >= 40) return 'text-profit-high';
     if (percentage >= 20) return 'text-profit-medium';
@@ -38,49 +39,90 @@ export function PricingSection({ summary, marginPercentage, onMarginChange, curr
     return 'Revisar precios ⚠️';
   };
 
+  // Formatear moneda
+  const formatCurrency = (amount: number) => {
+    return `${currencySymbol}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
     <div className="space-y-4">
-      {/* Cost Summary */}
-      <Card>
-        <CardHeader className="pb-4">
+      {/* Cost Summary - Hoja de Cotización */}
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-4 bg-gradient-to-r from-primary/10 to-primary/5">
           <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
-            Resumen de Costos
+            <span className="text-2xl">📋</span>
+            Hoja de Cotización
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🎈 Total globos</span>
-              <span className="font-medium">{currencySymbol}{summary.totalBalloons.toFixed(2)}</span>
+        <CardContent className="p-0">
+          {/* Tabla de costos responsiva */}
+          <div className="divide-y divide-border">
+            {/* Globos */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">🎈</span>
+                <span className="text-sm sm:text-base font-medium">Total globos</span>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.totalBalloons)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🎀 Total materiales</span>
-              <span className="font-medium">{currencySymbol}{summary.totalMaterials.toFixed(2)}</span>
+            
+            {/* Materiales */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">🎀</span>
+                <span className="text-sm sm:text-base font-medium">Total materiales</span>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.totalMaterials)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">👩‍🎨 Total mano de obra</span>
-              <span className="font-medium">{currencySymbol}{(summary.totalLabor + summary.totalTime).toFixed(2)}</span>
+            
+            {/* Mano de obra */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">👩‍🎨</span>
+                <span className="text-sm sm:text-base font-medium">Total mano de obra</span>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.totalLabor)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🚗 Total gasolina / transporte</span>
-              <span className="font-medium">{currencySymbol}{summary.totalTransport.toFixed(2)}</span>
+            
+            {/* Transporte */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">🚗</span>
+                <span className="text-sm sm:text-base font-medium">Total transporte</span>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.totalTransport)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">🔧 Desgaste de herramientas ({toolWearPercentage}%)</span>
-              <span className="font-medium">{currencySymbol}{summary.toolWear.toFixed(2)}</span>
+            
+            {/* Desgaste de herramientas */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors bg-muted/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">🔧</span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span className="text-sm sm:text-base font-medium">Desgaste herramientas</span>
+                  <span className="text-xs text-muted-foreground">({TOOL_WEAR_PERCENTAGE}% automático)</span>
+                </div>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.toolWear)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">✨ Total extras</span>
-              <span className="font-medium">{currencySymbol}{summary.totalExtras.toFixed(2)}</span>
+            
+            {/* Extras */}
+            <div className="flex justify-between items-center px-4 py-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">✨</span>
+                <span className="text-sm sm:text-base font-medium">Total extras</span>
+              </div>
+              <span className="font-semibold text-sm sm:text-base tabular-nums">{formatCurrency(summary.totalExtras)}</span>
             </div>
           </div>
 
-          <div className="h-px bg-border" />
-
-          <div className="flex justify-between">
-            <span className="font-semibold">Total Final del Evento</span>
-            <span className="text-xl font-bold text-primary">{currencySymbol}{summary.totalCost.toFixed(2)}</span>
+          {/* Total General */}
+          <div className="p-4 bg-gradient-to-r from-primary to-primary/80">
+            <div className="flex justify-between items-center">
+              <span className="text-primary-foreground font-bold text-base sm:text-lg">Total General</span>
+              <span className="text-2xl sm:text-3xl font-bold text-primary-foreground tabular-nums">
+                {formatCurrency(summary.totalCost)}
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
