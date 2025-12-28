@@ -2,6 +2,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { NumericField } from '@/components/ui/numeric-field';
 import { Balloon } from '@/types/quote';
 
 interface BalloonSectionProps {
@@ -28,80 +29,98 @@ export function BalloonSection({ balloons, onChange, currencySymbol = '$' }: Bal
 
   const total = balloons.reduce((sum, b) => sum + (b.pricePerUnit || 0) * (b.quantity || 0), 0);
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">🎈</span>
-            Globos
+    <Card className="shadow-card">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <span className="text-xl sm:text-2xl">🎈</span>
+            <span>Globos</span>
           </CardTitle>
-          <span className="text-lg font-semibold text-primary">{currencySymbol}{total.toFixed(2)}</span>
+          <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+            <span className="text-sm sm:text-base font-bold text-primary tabular-nums">
+              {currencySymbol}{formatCurrency(total)}
+            </span>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {balloons.map((balloon) => (
+        {balloons.length === 0 && (
+          <div className="text-center py-6 text-muted-foreground text-sm">
+            No hay globos agregados
+          </div>
+        )}
+        
+        {balloons.map((balloon, index) => (
           <div
             key={balloon.id}
-            className="p-4 rounded-xl bg-rose-light/30 space-y-3 animate-fade-in"
+            className="p-4 rounded-xl bg-rose-light/40 border border-rose/20 space-y-4 animate-fade-in"
           >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 space-y-1">
-                <label className="text-xs text-muted-foreground">Descripción globo</label>
+            {/* Header with delete button */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Descripción del globo
+                </label>
                 <Input
                   value={balloon.description}
                   onChange={(e) => updateBalloon(balloon.id, { description: e.target.value })}
                   placeholder="Ej: Globo 12 pulgadas rosa pastel"
-                  className="h-10"
+                  className="h-11 text-base"
                 />
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => removeBalloon(balloon.id)}
-                className="h-8 w-8 text-destructive hover:bg-destructive/10 mt-5"
+                className="h-9 w-9 text-destructive hover:bg-destructive/10 shrink-0 mt-6"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Precio/unidad</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={balloon.pricePerUnit ?? ''}
-                  onChange={(e) => updateBalloon(balloon.id, { pricePerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
-                  placeholder=""
-                  className="h-10"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Cantidad</label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={balloon.quantity ?? ''}
-                  onChange={(e) => updateBalloon(balloon.id, { quantity: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) })}
-                  placeholder=""
-                  className="h-10"
-                />
-              </div>
+            {/* Numeric fields grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <NumericField
+                label="Precio/unidad"
+                prefix={currencySymbol}
+                min={0}
+                step={0.01}
+                value={balloon.pricePerUnit ?? ''}
+                onChange={(e) => updateBalloon(balloon.id, { 
+                  pricePerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                })}
+                placeholder="0.00"
+              />
+              <NumericField
+                label="Cantidad"
+                min={0}
+                value={balloon.quantity ?? ''}
+                onChange={(e) => updateBalloon(balloon.id, { 
+                  quantity: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                })}
+                placeholder="0"
+              />
             </div>
 
-            <div className="flex justify-end">
-              <span className="text-sm font-semibold text-primary">
-                Subtotal: {currencySymbol}{((balloon.pricePerUnit || 0) * (balloon.quantity || 0)).toFixed(2)}
-              </span>
+            {/* Subtotal */}
+            <div className="flex justify-end pt-2 border-t border-rose/10">
+              <div className="text-right">
+                <span className="text-xs text-muted-foreground block mb-0.5">Subtotal</span>
+                <span className="text-base sm:text-lg font-bold text-primary tabular-nums">
+                  {currencySymbol}{formatCurrency((balloon.pricePerUnit || 0) * (balloon.quantity || 0))}
+                </span>
+              </div>
             </div>
           </div>
         ))}
 
-        <Button variant="soft" className="w-full" onClick={addBalloon}>
-          <Plus className="w-4 h-4" />
+        <Button variant="soft" className="w-full h-12 text-base font-medium" onClick={addBalloon}>
+          <Plus className="w-5 h-5 mr-2" />
           Agregar globo
         </Button>
       </CardContent>

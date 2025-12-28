@@ -248,17 +248,20 @@ export default function Calculator() {
           timePhases={quote.timePhases}
           onWorkersChange={(workers) => updateQuote({ workers })}
           onTimePhasesChange={(timePhases) => updateQuote({ timePhases })}
+          currencySymbol={currencySymbol}
         />
 
 
         <ExtrasSection
           extras={quote.extras}
           onChange={(extras) => updateQuote({ extras })}
+          currencySymbol={currencySymbol}
         />
 
         <TransportSection
           transportItems={quote.transportItems}
           onChange={(transportItems) => updateQuote({ transportItems })}
+          currencySymbol={currencySymbol}
         />
 
         {/* Pricing */}
