@@ -279,25 +279,35 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   };
 
   const calculateCosts = (quote: Quote): CostSummary => {
+    // Calcular cada concepto individualmente
     const totalBalloons = quote.balloons.reduce((sum, b) => sum + ((b.pricePerUnit || 0) * (b.quantity || 0)), 0);
     const totalMaterials = quote.materials.reduce((sum, m) => sum + ((m.costPerUnit || 0) * (m.quantity || 0)), 0);
-    const totalLabor = quote.workers.reduce((sum, w) => sum + ((w.hourlyRate || 0) * (w.hours || 0)), 0);
-    const totalTime = quote.timePhases.reduce((sum, t) => sum + ((t.rate || 0) * (t.hours || 0)), 0);
+    
+    // Mano de obra = trabajadores + tiempo por fases
+    const laborFromWorkers = quote.workers.reduce((sum, w) => sum + ((w.hourlyRate || 0) * (w.hours || 0)), 0);
+    const laborFromPhases = quote.timePhases.reduce((sum, t) => sum + ((t.rate || 0) * (t.hours || 0)), 0);
+    const totalLabor = laborFromWorkers + laborFromPhases;
+    const totalTime = 0; // Ya incluido en totalLabor para evitar duplicados
+    
     const totalExtras = quote.extras.reduce((sum, e) => sum + (e.cost || 0), 0);
     
-    // Calculate total transport from items
+    // Transporte
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
     
-    // Calculate tool wear based on user-selected percentage (5-10%)
-    const toolWearPercentage = quote.toolWearPercentage || 7;
-    const subtotalBase = totalBalloons + totalMaterials + totalLabor + totalTime;
-    const toolWear = subtotalBase * (toolWearPercentage / 100);
+    // Desgaste de herramientas: 7% fijo sobre (globos + materiales + mano de obra)
+    const TOOL_WEAR_PERCENTAGE = 7;
+    const subtotalForToolWear = totalBalloons + totalMaterials + totalLabor;
+    const toolWear = subtotalForToolWear * (TOOL_WEAR_PERCENTAGE / 100);
     
-    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTime + totalExtras + totalTransport + toolWear;
+    // Total = suma de todos los conceptos
+    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTransport + toolWear + totalExtras;
+    
+    // Precio final con margen
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
     const netProfit = finalPrice - totalCost;
     const profitPercentage = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
     
+    // Horas totales para calcular ganancia por hora
     const totalHours = quote.timePhases.reduce((sum, t) => sum + (t.hours || 0), 0) + 
                        quote.workers.reduce((sum, w) => sum + (w.hours || 0), 0);
     const profitPerHour = totalHours > 0 ? netProfit / totalHours : 0;
