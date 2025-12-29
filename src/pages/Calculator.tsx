@@ -11,7 +11,7 @@ import { MaterialSection } from '@/components/calculator/MaterialSection';
 import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
-
+import { ToolWearSection } from '@/components/calculator/ToolWearSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -261,6 +261,15 @@ export default function Calculator() {
         <TransportSection
           transportItems={quote.transportItems}
           onChange={(transportItems) => updateQuote({ transportItems })}
+          currencySymbol={currencySymbol}
+        />
+
+        <ToolWearSection
+          totalBalloons={summary.totalBalloons}
+          totalMaterials={summary.totalMaterials}
+          totalLabor={summary.totalLabor}
+          toolWearPercentage={quote.toolWearPercentage}
+          onPercentageChange={(toolWearPercentage) => updateQuote({ toolWearPercentage })}
           currencySymbol={currencySymbol}
         />
 
