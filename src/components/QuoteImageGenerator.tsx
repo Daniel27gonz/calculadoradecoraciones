@@ -162,7 +162,7 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🛠</span>
               <span style={{ fontSize: '14px', color: '#555555' }}>
-                Herramientas ({quote.toolWearPercentage ?? 0}%)
+                Herramientas (Desgaste {quote.toolWearPercentage ?? 0}%)
               </span>
             </div>
             <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
