@@ -104,16 +104,17 @@ export default function Home() {
             </Button>
             <Button asChild
               variant="outline" 
-              size="xl" 
-              className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+              size="default"
+              className="w-full sm:w-auto text-xs sm:text-base px-3 sm:px-6 py-2 sm:py-3 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
             >
               <a
                 href="/whatsapp-redirect.html"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2"
               >
-                <MessageCircle className="w-5 h-5" />
-                Únete a nuestra Comunidad Privada de Decoradoras 🎀
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="truncate">Únete a nuestra Comunidad Privada 🎀</span>
               </a>
             </Button>
           </div>
