@@ -151,6 +151,7 @@ export function QuoteImageModal({
               quote={quote}
               summary={summary}
               currencySymbol={currencySymbol}
+              marginPercentage={quote.marginPercentage}
             />
           </div>
 

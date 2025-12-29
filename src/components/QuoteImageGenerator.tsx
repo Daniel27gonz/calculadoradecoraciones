@@ -7,6 +7,7 @@ interface QuoteImageGeneratorProps {
   quote: Quote;
   summary: CostSummary;
   currencySymbol: string;
+  marginPercentage?: number;
 }
 
 const formatCurrency = (amount: number, symbol: string) => {
@@ -17,7 +18,7 @@ const formatCurrency = (amount: number, symbol: string) => {
 };
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
-  ({ quote, summary, currencySymbol }, ref) => {
+  ({ quote, summary, currencySymbol, marginPercentage }, ref) => {
     const eventDateFormatted = quote.eventDate
       ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
       : 'Por definir';
@@ -214,7 +215,9 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             marginBottom: '24px',
           }}
         >
-          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>Ganancia:</span>
+          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>
+            Ganancia ({marginPercentage ?? quote.marginPercentage ?? 0}%):
+          </span>
           <span style={{ fontSize: '15px', fontWeight: 600, color: '#22c55e' }}>
             {formatCurrency(profit, currencySymbol)}
           </span>
