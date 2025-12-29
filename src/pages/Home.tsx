@@ -94,15 +94,14 @@ export default function Home() {
                 Crear Cotización
               </Link>
             </Button>
-            <Button asChild variant="outline" size="xl" className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950">
-              <a 
-                href="https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Únete a la Comunidad 🎀
-              </a>
+            <Button 
+              variant="outline" 
+              size="xl" 
+              className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+              onClick={() => window.open('https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm', '_blank', 'noopener,noreferrer')}
+            >
+              <MessageCircle className="w-5 h-5" />
+              Únete a la Comunidad 🎀
             </Button>
           </div>
 
