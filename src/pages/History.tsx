@@ -202,45 +202,55 @@ export default function History() {
                       )}
 
                       {/* Actions */}
-                      <div className="flex gap-2 pt-2 border-t border-border">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewImage(quote)}
-                        >
-                          <Eye className="w-4 h-4" />
-                          Ver
-                        </Button>
-                        <Button
-                          variant="gradient"
-                          size="sm"
-                          onClick={() => handleViewImage(quote)}
-                        >
-                          <Share2 className="w-4 h-4" />
-                          Compartir
-                        </Button>
-                        <Button
-                          variant="soft"
-                          size="sm"
-                          onClick={() => handleEdit(quote.id)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDuplicate(quote.id)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
+                      <div className="pt-2 border-t border-border space-y-2">
+                        {/* Primary actions row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleViewImage(quote)}
+                          >
+                            <Eye className="w-4 h-4 shrink-0" />
+                            <span className="truncate">Ver</span>
+                          </Button>
+                          <Button
+                            variant="gradient"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleViewImage(quote)}
+                          >
+                            <Share2 className="w-4 h-4 shrink-0" />
+                            <span className="truncate">Compartir</span>
+                          </Button>
+                          <Button
+                            variant="soft"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleEdit(quote.id)}
+                          >
+                            <Edit2 className="w-4 h-4 shrink-0" />
+                            <span className="truncate">Editar</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleDuplicate(quote.id)}
+                          >
+                            <Copy className="w-4 h-4 shrink-0" />
+                            <span className="truncate">Duplicar</span>
+                          </Button>
+                        </div>
+                        {/* Delete action - separate row for visibility */}
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10"
+                          size="sm"
+                          className="w-full text-destructive hover:bg-destructive/10"
                           onClick={() => handleDelete(quote.id, quote.clientName)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 shrink-0" />
+                          <span>Eliminar cotización</span>
                         </Button>
                       </div>
                     </div>
