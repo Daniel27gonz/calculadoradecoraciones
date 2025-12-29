@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Redirigiendo a WhatsApp</title>
+    <meta
+      name="description"
+      content="Redirección segura para unirte al grupo privado de WhatsApp."
+    />
+    <link rel="canonical" href="/whatsapp-redirect.html" />
+
+    <!-- Fallback sin JS -->
+    <meta http-equiv="refresh" content="0; url=https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm" />
+
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 24px;
+      }
+      .card {
+        max-width: 520px;
+        width: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+      }
+      p {
+        margin: 0;
+        opacity: 0.8;
+        line-height: 1.4;
+      }
+      a {
+        display: inline-block;
+        margin-top: 12px;
+        word-break: break-word;
+      }
+    </style>
+
+    <script>
+      // Intenta salir del contexto embebido y delegar al navegador/sistema.
+      // Usamos replace para no dejar esta página en el historial.
+      (function () {
+        var url = "https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm";
+        try {
+          window.location.replace(url);
+        } catch (e) {
+          window.location.href = url;
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Abriendo WhatsApp…</h1>
+      <p>
+        Si no se abre automáticamente, toca este enlace:
+      </p>
+      <a href="https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm" target="_blank" rel="noopener noreferrer">
+        https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm
+      </a>
+    </main>
+  </body>
+</html>
