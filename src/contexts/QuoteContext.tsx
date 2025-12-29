@@ -195,6 +195,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         extras: quote.extras as any,
         transport_items: quote.transportItems as any,
         margin_percentage: quote.marginPercentage,
+        tool_wear_percentage: quote.toolWearPercentage,
         notes: quote.notes,
         updated_at: new Date().toISOString(),
       };
@@ -295,10 +296,10 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Transporte
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
     
-    // Desgaste de herramientas: 7% fijo sobre (globos + materiales + mano de obra)
-    const TOOL_WEAR_PERCENTAGE = 7;
+    // Desgaste de herramientas: usa el porcentaje de la cotización
+    const toolWearPercentage = quote.toolWearPercentage || 7;
     const subtotalForToolWear = totalBalloons + totalMaterials + totalLabor;
-    const toolWear = subtotalForToolWear * (TOOL_WEAR_PERCENTAGE / 100);
+    const toolWear = subtotalForToolWear * (toolWearPercentage / 100);
     
     // Total = suma de todos los conceptos
     const totalCost = totalBalloons + totalMaterials + totalLabor + totalTransport + toolWear + totalExtras;
