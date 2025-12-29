@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Package, History, TrendingUp, Sparkles, User } from 'lucide-react';
+import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -93,6 +93,16 @@ export default function Home() {
                 <Calculator className="w-5 h-5" />
                 Crear Cotización
               </Link>
+            </Button>
+            <Button asChild variant="outline" size="xl" className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950">
+              <a 
+                href="https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Únete a la Comunidad 🎀
+              </a>
             </Button>
           </div>
 
