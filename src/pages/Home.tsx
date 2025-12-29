@@ -6,11 +6,12 @@ import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { getCurrencyByCode } from '@/lib/currencies';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { quotes } = useQuote();
+  const { quotes, calculateCosts } = useQuote();
   const { user, profile, loading } = useAuth();
   
   // Redirect to auth if not logged in
@@ -20,12 +21,19 @@ export default function Home() {
     }
   }, [user, loading, navigate]);
 
-  const totalRevenue = quotes.reduce((sum, q) => {
-    const costs = q.balloons.reduce((s, b) => s + (b.pricePerUnit || 0) * (b.quantity || 0), 0) +
-                  q.materials.reduce((s, m) => s + (m.costPerUnit || 0) * (m.quantity || 0), 0) +
-                  q.extras.reduce((s, e) => s + (e.cost || 0), 0);
-    return sum + costs * (1 + (q.marginPercentage || 0) / 100);
-  }, 0);
+  // Obtener el símbolo de moneda del perfil del usuario
+  const currencySymbol = useMemo(() => {
+    const currency = getCurrencyByCode(profile?.currency || 'USD');
+    return currency?.symbol || '$';
+  }, [profile?.currency]);
+
+  // Calcular ingresos proyectados usando la misma lógica que calculateCosts
+  const totalRevenue = useMemo(() => {
+    return quotes.reduce((sum, quote) => {
+      const costs = calculateCosts(quote);
+      return sum + costs.finalPrice;
+    }, 0);
+  }, [quotes, calculateCosts]);
 
   const features = [
     {
@@ -127,7 +135,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Ingresos proyectados</p>
-                  <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{currencySymbol}{totalRevenue.toLocaleString('es-LA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               </div>
             </CardContent>
