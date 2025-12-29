@@ -105,7 +105,7 @@ export default function Home() {
                 rel="noopener noreferrer"
               >
                 <MessageCircle className="w-5 h-5" />
-                Únete a la Comunidad 🎀
+                Acceso al Grupo Privado de Decoradoras
               </a>
             </Button>
           </div>
