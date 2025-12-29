@@ -277,6 +277,7 @@ export default function Calculator() {
         <PricingSection
           summary={summary}
           marginPercentage={quote.marginPercentage}
+          toolWearPercentage={quote.toolWearPercentage}
           onMarginChange={(marginPercentage) => updateQuote({ marginPercentage })}
           currencySymbol={currencySymbol}
         />

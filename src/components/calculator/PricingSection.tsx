@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface PricingSectionProps {
   summary: CostSummary;
   marginPercentage: number;
+  toolWearPercentage: number;
   onMarginChange: (margin: number) => void;
   currencySymbol?: string;
 }
@@ -26,10 +27,11 @@ const marginOptions = [{
   label: '50%',
   description: 'Lujo'
 }];
-const TOOL_WEAR_PERCENTAGE = 7;
+
 export function PricingSection({
   summary,
   marginPercentage,
+  toolWearPercentage,
   onMarginChange,
   currencySymbol = '$'
 }: PricingSectionProps) {
@@ -100,7 +102,7 @@ export function PricingSection({
             <CostLine icon="🎀" label="Total materiales" amount={summary.totalMaterials} />
             <CostLine icon="👩‍🎨" label="Total mano de obra" amount={summary.totalLabor} />
             <CostLine icon="🚗" label="Total transporte" amount={summary.totalTransport} />
-            <CostLine icon="🔧" label="Desgaste herramientas" sublabel={`${TOOL_WEAR_PERCENTAGE}% automático`} amount={summary.toolWear} highlighted />
+            <CostLine icon="🔧" label={`Desgaste herramientas (${toolWearPercentage}%)`} amount={summary.toolWear} highlighted />
             <CostLine icon="✨" label="Total extras" amount={summary.totalExtras} />
           </div>
 
