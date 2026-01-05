@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 interface Profile {
   id: string;
   user_id: string;
+  name: string | null;
   business_name: string | null;
   logo_url: string | null;
   currency: string;
@@ -18,7 +19,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -82,10 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -102,6 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive"
       });
       return { error };
+    }
+
+    // Update profile with name after signup
+    if (data.user) {
+      setTimeout(async () => {
+        await supabase
+          .from('profiles')
+          .update({ name })
+          .eq('user_id', data.user!.id);
+      }, 500);
     }
 
     toast({
