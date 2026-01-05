@@ -1,19 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Sparkles, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 
-const loginSchema = z.object({
-  email: z.string().email('Por favor ingresa un correo válido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
-});
-
-const signupSchema = z.object({
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'El nombre es muy largo'),
+const authSchema = z.object({
   email: z.string().email('Por favor ingresa un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
 });
@@ -24,10 +18,9 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: ''
   });
@@ -43,17 +36,11 @@ export default function Auth() {
     e.preventDefault();
     setErrors({});
 
-    // Validate based on mode
-    const schema = isLogin ? loginSchema : signupSchema;
-    const dataToValidate = isLogin 
-      ? { email: formData.email, password: formData.password }
-      : formData;
-    
-    const result = schema.safeParse(dataToValidate);
+    // Validate
+    const result = authSchema.safeParse(formData);
     if (!result.success) {
-      const fieldErrors: { name?: string; email?: string; password?: string } = {};
+      const fieldErrors: { email?: string; password?: string } = {};
       result.error.errors.forEach(err => {
-        if (err.path[0] === 'name') fieldErrors.name = err.message;
         if (err.path[0] === 'email') fieldErrors.email = err.message;
         if (err.path[0] === 'password') fieldErrors.password = err.message;
       });
@@ -69,7 +56,7 @@ export default function Auth() {
         navigate('/');
       }
     } else {
-      const { error } = await signUp(formData.email, formData.password, formData.name);
+      const { error } = await signUp(formData.email, formData.password);
       if (!error) {
         navigate('/');
       }
@@ -119,26 +106,6 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name - Only for signup */}
-              {!isLogin && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nombre</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Tu nombre"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-10"
-                    />
-                  </div>
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
-                  )}
-                </div>
-              )}
-
               {/* Email */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Correo electrónico</label>
