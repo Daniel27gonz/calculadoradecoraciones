@@ -65,6 +65,7 @@ export type Database = {
           id: string
           logo_url: string | null
           mode: string | null
+          name: string | null
           updated_at: string
           user_id: string
         }
@@ -76,6 +77,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           mode?: string | null
+          name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -87,6 +89,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           mode?: string | null
+          name?: string | null
           updated_at?: string
           user_id?: string
         }
