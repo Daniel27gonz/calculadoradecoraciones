@@ -13,7 +13,7 @@ const navItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Hide navigation on auth page
   if (location.pathname === '/auth') {
@@ -62,8 +62,8 @@ export function Navigation() {
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-light hover:bg-rose-light/80 transition-colors"
             >
               <User className="w-4 h-4 text-rose-dark" />
-              <span className="text-xs font-medium text-rose-dark max-w-[100px] truncate">
-                {user.email?.split('@')[0]}
+              <span className="text-xs font-medium text-rose-dark max-w-[120px] truncate">
+                {profile?.name || user.email?.split('@')[0]}
               </span>
             </Link>
           ) : (

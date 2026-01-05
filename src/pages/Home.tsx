@@ -120,7 +120,7 @@ export default function Home() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            ¡Hola, {profile?.business_name || user.email}! 👋
+            ¡Hola, {profile?.name || profile?.business_name || user.email?.split('@')[0]}! 👋
           </p>
         </div>
       </section>
