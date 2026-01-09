@@ -5,23 +5,25 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+export type DevicePlatform = 'ios' | 'android' | 'desktop' | 'unknown';
+
 interface PWAState {
   isInstalled: boolean;
   isStandalone: boolean;
-  isIOS: boolean;
-  isAndroid: boolean;
+  platform: DevicePlatform;
   canInstall: boolean;
   isOnline: boolean;
+  serviceWorkerReady: boolean;
 }
 
 export function usePWA() {
   const [state, setState] = useState<PWAState>({
     isInstalled: false,
     isStandalone: false,
-    isIOS: false,
-    isAndroid: false,
+    platform: 'unknown',
     canInstall: false,
     isOnline: navigator.onLine,
+    serviceWorkerReady: false,
   });
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -35,15 +37,28 @@ export function usePWA() {
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as any).standalone === true;
     
-    console.log('[usePWA] 📱 Platform detection:', { isIOS, isAndroid, isStandalone });
+    let platform: DevicePlatform = 'desktop';
+    if (isIOS) platform = 'ios';
+    else if (isAndroid) platform = 'android';
+    
+    console.log('[usePWA] 📱 Platform detection:', { platform, isStandalone });
 
     setState(prev => ({
       ...prev,
-      isIOS,
-      isAndroid,
+      platform,
       isStandalone,
       isInstalled: isStandalone || sessionStorage.getItem('pwa-installed') === 'true',
     }));
+
+    // Check if Service Worker is ready
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(() => {
+        console.log('[usePWA] ✅ Service Worker is ready');
+        setState(prev => ({ ...prev, serviceWorkerReady: true }));
+      }).catch((error) => {
+        console.error('[usePWA] ⚠️ Service Worker not ready:', error);
+      });
+    }
   }, []);
 
   // Handle online/offline
@@ -121,9 +136,48 @@ export function usePWA() {
     }
   }, [deferredPrompt]);
 
+  // Get platform-specific install instructions
+  const getInstallInstructions = useCallback(() => {
+    switch (state.platform) {
+      case 'ios':
+        return {
+          title: 'Instalar en iPhone/iPad',
+          steps: [
+            'Abre esta página en Safari',
+            'Toca el botón Compartir (□↑)',
+            'Selecciona "Añadir a pantalla de inicio"',
+            'Toca "Añadir"'
+          ],
+          icon: '🍎'
+        };
+      case 'android':
+        return {
+          title: 'Instalar en Android',
+          steps: [
+            'Abre esta página en Chrome',
+            'Toca el menú (⋮) arriba a la derecha',
+            'Selecciona "Añadir a pantalla de inicio"',
+            'Confirma tocando "Añadir"'
+          ],
+          icon: '🤖'
+        };
+      default:
+        return {
+          title: 'Instalar en escritorio',
+          steps: [
+            'Abre en Chrome, Edge o Safari',
+            'Busca el ícono de instalación en la barra de direcciones',
+            'Haz clic en "Instalar"'
+          ],
+          icon: '💻'
+        };
+    }
+  }, [state.platform]);
+
   return {
     ...state,
     installApp,
     deferredPrompt,
+    getInstallInstructions,
   };
 }
