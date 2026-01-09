@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
+      includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png", "robots.txt"],
       devOptions: {
         enabled: true,
       },
@@ -31,6 +31,8 @@ export default defineConfig(({ mode }) => ({
         scope: "/",
         start_url: "/",
         categories: ["business", "productivity", "utilities"],
+        lang: "es",
+        dir: "ltr",
         icons: [
           {
             src: "/pwa-icon-192.png",
@@ -59,9 +61,13 @@ export default defineConfig(({ mode }) => ({
             form_factor: "narrow",
           },
         ],
+        prefer_related_applications: false,
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp,jpg,jpeg}"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -89,6 +95,21 @@ export default defineConfig(({ mode }) => ({
               cacheableResponse: {
                 statuses: [0, 200],
               },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              networkTimeoutSeconds: 10,
             },
           },
         ],
