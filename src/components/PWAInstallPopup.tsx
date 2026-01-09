@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, X, Sparkles, Share } from "lucide-react";
+import { Download, X, Sparkles, Share, MoreVertical, Smartphone, Monitor } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -13,21 +14,29 @@ declare global {
   }
 }
 
+type DevicePlatform = "ios" | "android" | "desktop" | "unknown";
+
 const PWAInstallPopup = () => {
+  const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [platform, setPlatform] = useState<DevicePlatform>("unknown");
+  const [showInstructions, setShowInstructions] = useState(false);
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
-  // Check if device is iOS
-  const checkIsIOS = useCallback((): boolean => {
+  // Detect device platform
+  const detectPlatform = useCallback((): DevicePlatform => {
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
-    console.log("[PWA Popup] 📱 iOS check - Device:", isIOSDevice, "Safari:", isSafari);
-    return isIOSDevice;
+    const isIOS = /iphone|ipad|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+    
+    console.log("[PWA Popup] 📱 Platform detection - iOS:", isIOS, "Android:", isAndroid);
+    
+    if (isIOS) return "ios";
+    if (isAndroid) return "android";
+    return "desktop";
   }, []);
 
   // Check if app is already installed/standalone
@@ -41,9 +50,10 @@ const PWAInstallPopup = () => {
   useEffect(() => {
     console.log("[PWA Popup] 🚀 Component mounted at", new Date().toISOString());
     
-    // Check if iOS device
-    const iosDevice = checkIsIOS();
-    setIsIOS(iosDevice);
+    // Detect platform
+    const detectedPlatform = detectPlatform();
+    setPlatform(detectedPlatform);
+    console.log("[PWA Popup] 📲 Detected platform:", detectedPlatform);
     
     // Check if already installed
     const standalone = checkStandalone();
@@ -74,10 +84,10 @@ const PWAInstallPopup = () => {
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     console.log("[PWA Popup] ✅ beforeinstallprompt listener added");
 
-    // Show popup after 2 seconds - ALWAYS (for iOS show manual instructions)
+    // Show popup after 2 seconds - ALWAYS
     const timer = setTimeout(() => {
       console.log("[PWA Popup] ⏰ 2 seconds elapsed!");
-      console.log("[PWA Popup] 📊 State: isIOS=", iosDevice, "deferredPrompt=", !!promptRef.current);
+      console.log("[PWA Popup] 📊 State: platform=", detectedPlatform, "deferredPrompt=", !!promptRef.current);
       setShowPopup(true);
       console.log("[PWA Popup] ✨ Popup is now VISIBLE");
     }, 2000);
@@ -100,7 +110,7 @@ const PWAInstallPopup = () => {
       clearTimeout(timer);
       console.log("[PWA Popup] 🧹 Cleanup complete");
     };
-  }, [checkStandalone, checkIsIOS]);
+  }, [checkStandalone, detectPlatform]);
 
   // Update ref when deferredPrompt changes
   useEffect(() => {
@@ -134,15 +144,12 @@ const PWAInstallPopup = () => {
         promptRef.current = null;
       } catch (error) {
         console.error("[PWA Popup] ⚠️ Error during installation:", error);
-        // On error, don't hide the popup - user might want to retry
+        // On error, show manual instructions
+        setShowInstructions(true);
       }
     } else {
-      console.log("[PWA Popup] ⚠️ No native prompt available");
-      if (isIOS) {
-        console.log("[PWA Popup] 📱 iOS device - showing manual instructions");
-      } else {
-        console.log("[PWA Popup] 🔄 Non-iOS without prompt - check browser support");
-      }
+      console.log("[PWA Popup] ⚠️ No native prompt available - showing manual instructions");
+      setShowInstructions(true);
     }
     
     setIsInstalling(false);
@@ -152,6 +159,12 @@ const PWAInstallPopup = () => {
     console.log("[PWA Popup] 👋 Popup dismissed by user");
     setShowPopup(false);
     sessionStorage.setItem("pwa-popup-dismissed", "true");
+  };
+
+  const handleShowFullInstructions = () => {
+    console.log("[PWA Popup] 📖 Navigating to full install instructions");
+    setShowPopup(false);
+    navigate("/install");
   };
 
   // Don't render if already installed or popup not triggered
@@ -165,7 +178,93 @@ const PWAInstallPopup = () => {
   }
 
   const canInstallNatively = !!promptRef.current || !!deferredPrompt;
-  console.log("[PWA Popup] 🎨 Rendering popup - canInstallNatively:", canInstallNatively, "isIOS:", isIOS);
+  console.log("[PWA Popup] 🎨 Rendering popup - canInstallNatively:", canInstallNatively, "platform:", platform);
+
+  // Platform-specific instructions
+  const renderPlatformInstructions = () => {
+    if (!showInstructions && canInstallNatively) return null;
+
+    switch (platform) {
+      case "ios":
+        return (
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Share className="h-4 w-4 text-primary" />
+              Instalación en Safari (iPhone/iPad):
+            </p>
+            <ol className="text-sm text-muted-foreground space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                <span>Toca el botón <strong className="text-foreground">Compartir</strong> <span className="inline-block px-1.5 py-0.5 bg-muted rounded text-xs">□↑</span> en la barra inferior</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                <span>Desliza y selecciona <strong className="text-foreground">"Añadir a pantalla de inicio"</strong></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                <span>Toca <strong className="text-foreground">"Añadir"</strong> ¡y listo!</span>
+              </li>
+            </ol>
+          </div>
+        );
+
+      case "android":
+        return (
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700">
+            <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <MoreVertical className="h-4 w-4 text-green-600" />
+              Instalación en Chrome (Android):
+            </p>
+            <ol className="text-sm text-muted-foreground space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold flex items-center justify-center">1</span>
+                <span>Toca el <strong className="text-foreground">menú</strong> <span className="inline-block px-1.5 py-0.5 bg-muted rounded text-xs">⋮</span> en la esquina superior derecha</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold flex items-center justify-center">2</span>
+                <span>Selecciona <strong className="text-foreground">"Añadir a pantalla de inicio"</strong> o <strong className="text-foreground">"Instalar app"</strong></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold flex items-center justify-center">3</span>
+                <span>Confirma tocando <strong className="text-foreground">"Añadir"</strong></span>
+              </li>
+            </ol>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700">
+            <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-blue-600" />
+              Instalación en escritorio:
+            </p>
+            <ol className="text-sm text-muted-foreground space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 text-xs font-bold flex items-center justify-center">1</span>
+                <span>Busca el ícono de <strong className="text-foreground">instalación</strong> <span className="inline-block px-1.5 py-0.5 bg-muted rounded text-xs">⊕</span> en la barra de direcciones</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 text-xs font-bold flex items-center justify-center">2</span>
+                <span>Haz clic en <strong className="text-foreground">"Instalar"</strong></span>
+              </li>
+            </ol>
+          </div>
+        );
+    }
+  };
+
+  const getPlatformIcon = () => {
+    switch (platform) {
+      case "ios":
+        return "🍎";
+      case "android":
+        return "🤖";
+      default:
+        return "💻";
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 pointer-events-none">
@@ -195,8 +294,9 @@ const PWAInstallPopup = () => {
                     alt="App icon" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.log("[PWA Popup] ⚠️ Icon failed to load");
+                      console.log("[PWA Popup] ⚠️ Icon failed to load, showing fallback");
                       e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl">🎈</span>';
                     }}
                   />
                 </div>
@@ -211,10 +311,11 @@ const PWAInstallPopup = () => {
                   <Sparkles className="h-5 w-5 text-primary" />
                   ¡Instala la app!
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {isIOS && !canInstallNatively
-                    ? "Agrégala a tu pantalla de inicio"
-                    : "Accede más rápido desde tu pantalla de inicio"
+                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1">
+                  <span>{getPlatformIcon()}</span>
+                  {canInstallNatively
+                    ? "Accede más rápido desde tu pantalla"
+                    : `Agrégala a tu ${platform === "desktop" ? "escritorio" : "pantalla de inicio"}`
                   }
                 </p>
               </div>
@@ -236,46 +337,35 @@ const PWAInstallPopup = () => {
               </div>
             </div>
 
-            {/* iOS Manual Instructions */}
-            {isIOS && !canInstallNatively && (
-              <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-muted">
-                <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                  <Share className="h-4 w-4" />
-                  En Safari:
-                </p>
-                <ol className="text-xs text-muted-foreground space-y-1 ml-6 list-decimal">
-                  <li>Toca el botón <strong>Compartir</strong> (□↑)</li>
-                  <li>Selecciona <strong>"Añadir a inicio"</strong></li>
-                  <li>Toca <strong>"Añadir"</strong></li>
-                </ol>
-              </div>
-            )}
+            {/* Platform-specific Manual Instructions */}
+            {renderPlatformInstructions()}
 
-            {/* Install button */}
-            <div className="mt-5 flex gap-3">
+            {/* Install buttons */}
+            <div className="mt-5 flex flex-col gap-3">
               {canInstallNatively ? (
                 <Button
                   onClick={handleInstall}
                   disabled={isInstalling}
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg"
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg"
                 >
                   <Download className="h-5 w-5 mr-2" />
                   {isInstalling ? "Instalando..." : "Instalar ahora"}
                 </Button>
               ) : (
                 <Button
-                  onClick={handleDismiss}
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg"
+                  onClick={handleShowFullInstructions}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg"
                 >
-                  ¡Entendido!
+                  <Smartphone className="h-5 w-5 mr-2" />
+                  Ver instrucciones completas
                 </Button>
               )}
               <Button
                 onClick={handleDismiss}
                 variant="outline"
-                className="h-12 px-4 rounded-xl"
+                className="w-full h-10 rounded-xl"
               >
-                Después
+                Quizás después
               </Button>
             </div>
           </div>
