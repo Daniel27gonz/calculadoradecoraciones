@@ -3,6 +3,16 @@ import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummar
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  validateQuoteData, 
+  safeParseQuoteArrayField,
+  BalloonSchema,
+  MaterialSchema,
+  WorkerSchema,
+  TimePhaseSchema,
+  ExtraSchema,
+  TransportItemSchema
+} from '@/lib/validations/quote';
 
 interface QuoteContextType {
   // Current quote being edited
@@ -138,18 +148,19 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       if (data) {
         const loadedQuotes: Quote[] = data.map((q: any) => ({
           id: q.id,
-          clientName: q.client_name,
+          clientName: q.client_name || '',
           eventDate: q.event_date || '',
           createdAt: q.created_at,
           updatedAt: q.updated_at,
-          balloons: (q.balloons as Balloon[]) || [],
-          materials: (q.materials as Material[]) || [],
-          workers: (q.workers as Worker[]) || [],
-          timePhases: (q.time_phases as TimePhase[]) || [],
-          extras: (q.extras as Extra[]) || [],
-          transportItems: (q as any).transport_items || [],
-          marginPercentage: q.margin_percentage || 30,
-          toolWearPercentage: (q as any).tool_wear_percentage || 7,
+          // Use safe parsing for JSONB fields to handle malformed data
+          balloons: safeParseQuoteArrayField(q.balloons, BalloonSchema, []) as Balloon[],
+          materials: safeParseQuoteArrayField(q.materials, MaterialSchema, []) as Material[],
+          workers: safeParseQuoteArrayField(q.workers, WorkerSchema, []) as Worker[],
+          timePhases: safeParseQuoteArrayField(q.time_phases, TimePhaseSchema, []) as TimePhase[],
+          extras: safeParseQuoteArrayField(q.extras, ExtraSchema, []) as Extra[],
+          transportItems: safeParseQuoteArrayField(q.transport_items, TransportItemSchema, []) as TransportItem[],
+          marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
+          toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           notes: q.notes || '',
         }));
         setQuotes(loadedQuotes);
@@ -182,21 +193,48 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Validate quote data before saving
+    const validation = validateQuoteData({
+      clientName: quote.clientName,
+      eventDate: quote.eventDate,
+      balloons: quote.balloons,
+      materials: quote.materials,
+      workers: quote.workers,
+      timePhases: quote.timePhases,
+      extras: quote.extras,
+      transportItems: quote.transportItems,
+      marginPercentage: quote.marginPercentage,
+      toolWearPercentage: quote.toolWearPercentage,
+      notes: quote.notes,
+    });
+
+    if (!validation.success) {
+      console.error('[QuoteContext] Validation failed:', validation.error);
+      toast({
+        title: "Error de validación",
+        description: validation.error || "Los datos de la cotización no son válidos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validatedData = validation.data!;
+
     try {
       const dbQuote = {
         id: quote.id,
         user_id: user.id,
-        client_name: quote.clientName,
-        event_date: quote.eventDate || null,
-        balloons: quote.balloons as any,
-        materials: quote.materials as any,
-        workers: quote.workers as any,
-        time_phases: quote.timePhases as any,
-        extras: quote.extras as any,
-        transport_items: quote.transportItems as any,
-        margin_percentage: quote.marginPercentage,
-        tool_wear_percentage: quote.toolWearPercentage,
-        notes: quote.notes,
+        client_name: validatedData.clientName,
+        event_date: validatedData.eventDate || null,
+        balloons: validatedData.balloons,
+        materials: validatedData.materials,
+        workers: validatedData.workers,
+        time_phases: validatedData.timePhases,
+        extras: validatedData.extras,
+        transport_items: validatedData.transportItems,
+        margin_percentage: validatedData.marginPercentage,
+        tool_wear_percentage: validatedData.toolWearPercentage,
+        notes: validatedData.notes,
         updated_at: new Date().toISOString(),
       };
 
