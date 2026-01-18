@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Save, Package, X, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Save, Package, X, Check, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrencyByCode } from '@/lib/currencies';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Material {
   id: string;
@@ -29,6 +36,15 @@ const DEFAULT_MATERIALS = [
   { name: 'Helio (tanque pequeño)', category: 'gases', price: 40 },
 ];
 
+const CATEGORY_LABELS: Record<string, string> = {
+  globos: '🎈 Globos',
+  accesorios: '🎀 Accesorios',
+  estructuras: '🏗️ Estructuras',
+  herramientas: '🔧 Herramientas',
+  gases: '💨 Gases',
+  personalizado: '✨ Personalizado',
+};
+
 export function MaterialsManager() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -42,11 +58,28 @@ export function MaterialsManager() {
   const [newPrice, setNewPrice] = useState<number>(0);
   const [showAddForm, setShowAddForm] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [pendingChanges, setPendingChanges] = useState<{
     updates: Material[];
     deletes: string[];
     adds: Omit<Material, 'id'>[];
   }>({ updates: [], deletes: [], adds: [] });
+
+  // Get unique categories from materials
+  const categories = useMemo(() => {
+    const cats = new Set(materials.map(m => m.category));
+    return Array.from(cats).sort();
+  }, [materials]);
+
+  // Filter materials based on search and category
+  const filteredMaterials = useMemo(() => {
+    return materials.filter(material => {
+      const matchesSearch = material.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === 'all' || material.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [materials, searchQuery, categoryFilter]);
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
@@ -368,9 +401,43 @@ export function MaterialsManager() {
           </div>
         ) : (
           <>
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar material..."
+                  className="pl-9"
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {CATEGORY_LABELS[cat] || cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Results count */}
+            {(searchQuery || categoryFilter !== 'all') && (
+              <p className="text-sm text-muted-foreground">
+                {filteredMaterials.length} de {materials.length} materiales
+              </p>
+            )}
+
             {/* Materials List */}
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-              {materials.map((material) => (
+              {filteredMaterials.map((material) => (
                 <div
                   key={material.id}
                   className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
@@ -448,6 +515,22 @@ export function MaterialsManager() {
                   <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>No hay materiales en tu lista</p>
                   <p className="text-sm">Agrega tu primer material</p>
+                </div>
+              )}
+
+              {filteredMaterials.length === 0 && materials.length > 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Search className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No se encontraron materiales</p>
+                  <p className="text-sm">Intenta con otro término de búsqueda o categoría</p>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => { setSearchQuery(''); setCategoryFilter('all'); }}
+                    className="mt-2"
+                  >
+                    Limpiar filtros
+                  </Button>
                 </div>
               )}
             </div>
