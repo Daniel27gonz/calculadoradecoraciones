@@ -1,9 +1,24 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Search, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { Material } from '@/types/quote';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
+interface UserMaterial {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
 
 interface MaterialSectionProps {
   materials: Material[];
@@ -11,12 +26,95 @@ interface MaterialSectionProps {
   currencySymbol?: string;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  balloons: '🎈 Globos',
+  tapes: '🎀 Cintas',
+  bases: '🧱 Bases',
+  structures: '🏗️ Estructuras',
+  accessories: '✨ Accesorios',
+  tools: '🔧 Herramientas',
+  other: '📦 Otros',
+};
+
 export function MaterialSection({ materials, onChange, currencySymbol = '$' }: MaterialSectionProps) {
+  const { user } = useAuth();
+  const [savedMaterials, setSavedMaterials] = useState<UserMaterial[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+
+  // Fetch saved materials from settings
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_materials')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('category', { ascending: true })
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        
+        setSavedMaterials(data?.map(m => ({
+          id: m.id,
+          name: m.name,
+          price: m.price || 0,
+          category: m.category,
+        })) || []);
+      } catch (error) {
+        console.error('Error fetching materials:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMaterials();
+  }, [user]);
+
+  // Filter saved materials by search
+  const filteredSavedMaterials = useMemo(() => {
+    if (!searchQuery.trim()) return savedMaterials;
+    const query = searchQuery.toLowerCase();
+    return savedMaterials.filter(m => 
+      m.name.toLowerCase().includes(query) ||
+      CATEGORY_LABELS[m.category]?.toLowerCase().includes(query)
+    );
+  }, [savedMaterials, searchQuery]);
+
+  // Group materials by category for display
+  const groupedMaterials = useMemo(() => {
+    const groups: Record<string, UserMaterial[]> = {};
+    filteredSavedMaterials.forEach(m => {
+      if (!groups[m.category]) {
+        groups[m.category] = [];
+      }
+      groups[m.category].push(m);
+    });
+    return groups;
+  }, [filteredSavedMaterials]);
+
   const addMaterial = () => {
     onChange([
       ...materials,
       { id: crypto.randomUUID(), name: '', costPerUnit: undefined as unknown as number, quantity: undefined as unknown as number },
     ]);
+  };
+
+  const addFromSaved = (savedMaterial: UserMaterial) => {
+    onChange([
+      ...materials,
+      { 
+        id: crypto.randomUUID(), 
+        name: savedMaterial.name, 
+        costPerUnit: savedMaterial.price, 
+        quantity: 1 
+      },
+    ]);
+    setOpenPopoverId(null);
+    setSearchQuery('');
   };
 
   const updateMaterial = (id: string, updates: Partial<Material>) => {
@@ -122,10 +220,74 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
           </div>
         ))}
 
-        <Button variant="lavender" className="w-full h-12 text-base font-medium" onClick={addMaterial}>
-          <Plus className="w-5 h-5 mr-2" />
-          Agregar material
-        </Button>
+        {/* Add material buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {savedMaterials.length > 0 && (
+            <Popover open={openPopoverId === 'add-saved'} onOpenChange={(open) => setOpenPopoverId(open ? 'add-saved' : null)}>
+              <PopoverTrigger asChild>
+                <Button variant="lavender" className="flex-1 h-12 text-base font-medium">
+                  <ChevronDown className="w-5 h-5 mr-2" />
+                  Agregar de mis materiales
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <div className="p-3 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar material..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      Cargando materiales...
+                    </div>
+                  ) : Object.keys(groupedMaterials).length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      {searchQuery ? 'No se encontraron materiales' : 'No hay materiales guardados'}
+                    </div>
+                  ) : (
+                    Object.entries(groupedMaterials).map(([category, items]) => (
+                      <div key={category}>
+                        <div className="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50 sticky top-0">
+                          {CATEGORY_LABELS[category] || category}
+                        </div>
+                        {items.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => addFromSaved(item)}
+                            className="w-full px-3 py-2 text-left hover:bg-accent/50 flex items-center justify-between gap-2 transition-colors"
+                          >
+                            <span className="text-sm truncate">{item.name}</span>
+                            <span className="text-xs font-medium text-muted-foreground shrink-0">
+                              {currencySymbol}{item.price.toFixed(2)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          
+          <Button variant="outline" className="flex-1 h-12 text-base font-medium" onClick={addMaterial}>
+            <Plus className="w-5 h-5 mr-2" />
+            Agregar manual
+          </Button>
+        </div>
+
+        {savedMaterials.length === 0 && !isLoading && (
+          <p className="text-xs text-center text-muted-foreground">
+            💡 Puedes agregar materiales predefinidos en Ajustes → Lista de Materiales
+          </p>
+        )}
       </CardContent>
     </Card>
   );
