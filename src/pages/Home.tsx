@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle, Palette } from 'lucide-react';
+import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -42,13 +42,6 @@ export default function Home() {
       description: 'Calcula costos y precios de tu evento',
       href: '/calculator',
       color: 'bg-rose-light text-rose-dark',
-    },
-    {
-      icon: Palette,
-      title: 'Materiales',
-      description: 'Administra tus materiales y precios',
-      href: '/materials',
-      color: 'bg-accent text-accent-foreground',
     },
     {
       icon: Package,
