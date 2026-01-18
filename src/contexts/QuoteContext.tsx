@@ -28,8 +28,10 @@ interface QuoteContextType {
   
   // Packages
   packages: Package[];
-  savePackage: (pkg: Package) => void;
-  deletePackage: (id: string) => void;
+  loadPackages: () => Promise<void>;
+  savePackage: (pkg: Package) => Promise<void>;
+  deletePackage: (id: string) => Promise<void>;
+  duplicatePackage: (id: string) => Promise<Package>;
   
   // Calculations
   calculateCosts: (quote: Quote) => CostSummary;
@@ -43,7 +45,7 @@ const QuoteContext = createContext<QuoteContextType | undefined>(undefined);
 
 const defaultPackages: Package[] = [
   {
-    id: '1',
+    id: 'default-1',
     name: 'Arco Orgánico',
     description: 'Arco de globos estilo orgánico con diferentes tamaños',
     icon: '🎈',
@@ -56,7 +58,7 @@ const defaultPackages: Package[] = [
     suggestedPrice: 250,
   },
   {
-    id: '2',
+    id: 'default-2',
     name: 'Arco Básico',
     description: 'Arco sencillo con globos del mismo tamaño',
     icon: '🎀',
@@ -69,7 +71,7 @@ const defaultPackages: Package[] = [
     suggestedPrice: 120,
   },
   {
-    id: '3',
+    id: 'default-3',
     name: 'Columnas',
     description: 'Par de columnas de globos para entrada',
     icon: '🏛️',
@@ -82,7 +84,7 @@ const defaultPackages: Package[] = [
     suggestedPrice: 180,
   },
   {
-    id: '4',
+    id: 'default-4',
     name: 'Backdrop',
     description: 'Pared de globos para fotos',
     icon: '📸',
@@ -95,7 +97,7 @@ const defaultPackages: Package[] = [
     suggestedPrice: 350,
   },
   {
-    id: '5',
+    id: 'default-5',
     name: 'Centro de Mesa',
     description: 'Arreglo pequeño para mesa',
     icon: '🌸',
@@ -108,7 +110,7 @@ const defaultPackages: Package[] = [
     suggestedPrice: 35,
   },
   {
-    id: '6',
+    id: 'default-6',
     name: 'Decoración Completa',
     description: 'Paquete completo para evento',
     icon: '✨',
@@ -128,6 +130,51 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const [defaultHourlyRate, setDefaultHourlyRate] = useState<number>(25);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+
+  // Load packages from Supabase
+  const loadPackages = async () => {
+    if (!user) {
+      setPackages(defaultPackages);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .or(`user_id.eq.${user.id},is_default.eq.true`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const loadedPackages: Package[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          icon: p.icon || '🎈',
+          estimatedBalloons: p.estimated_balloons || 0,
+          estimatedHours: p.estimated_hours || 0,
+          suggestedPrice: p.suggested_price || 0,
+          estimatedMaterials: Array.isArray(p.estimated_materials) 
+            ? (p.estimated_materials as any[]).map((m: any) => ({
+                id: m.id || crypto.randomUUID(),
+                name: m.name || '',
+                costPerUnit: m.costPerUnit || 0,
+                quantity: m.quantity || 1,
+              }))
+            : [],
+        }));
+        setPackages(loadedPackages);
+      } else {
+        // No packages in DB, use defaults
+        setPackages(defaultPackages);
+      }
+    } catch (error) {
+      console.error('Error loading packages:', error);
+      setPackages(defaultPackages);
+    }
+  };
 
   // Load quotes from Supabase when user logs in
   const loadQuotes = async () => {
@@ -173,6 +220,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       loadQuotes();
+      loadPackages();
     }
   }, [user]);
 
@@ -302,20 +350,104 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     return newQuote;
   };
 
-  const savePackage = (pkg: Package) => {
-    setPackages(prev => {
-      const existingIndex = prev.findIndex(p => p.id === pkg.id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = pkg;
-        return updated;
-      }
-      return [...prev, pkg];
-    });
+  const savePackage = async (pkg: Package) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para guardar paquetes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const dbPackage = {
+        id: pkg.id,
+        user_id: user.id,
+        name: pkg.name,
+        description: pkg.description,
+        icon: pkg.icon,
+        estimated_balloons: pkg.estimatedBalloons,
+        estimated_hours: pkg.estimatedHours,
+        suggested_price: pkg.suggestedPrice,
+        estimated_materials: pkg.estimatedMaterials as unknown as import('@/integrations/supabase/types').Json,
+        is_default: false,
+      };
+
+      const { error } = await supabase
+        .from('packages')
+        .upsert(dbPackage, { onConflict: 'id' });
+
+      if (error) throw error;
+
+      // Update local state
+      setPackages(prev => {
+        const existingIndex = prev.findIndex(p => p.id === pkg.id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = pkg;
+          return updated;
+        }
+        return [pkg, ...prev];
+      });
+    } catch (error) {
+      console.error('Error saving package:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el paquete",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
-  const deletePackage = (id: string) => {
-    setPackages(prev => prev.filter(p => p.id !== id));
+  const deletePackage = async (id: string) => {
+    if (!user) return;
+
+    // Check if it's a default package (can't delete those from DB)
+    const pkg = packages.find(p => p.id === id);
+    if (pkg && id.startsWith('default-')) {
+      // Just remove from local state for default packages
+      setPackages(prev => prev.filter(p => p.id !== id));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('packages')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setPackages(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Error deleting package:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el paquete",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const duplicatePackage = async (id: string): Promise<Package> => {
+    const original = packages.find(p => p.id === id);
+    if (!original) throw new Error('Package not found');
+    
+    const newPackage: Package = {
+      ...original,
+      id: crypto.randomUUID(),
+      name: `${original.name} (copia)`,
+      estimatedMaterials: original.estimatedMaterials.map(m => ({
+        ...m,
+        id: crypto.randomUUID(),
+      })),
+    };
+    
+    await savePackage(newPackage);
+    return newPackage;
   };
 
   const calculateCosts = (quote: Quote): CostSummary => {
@@ -378,8 +510,10 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       duplicateQuote,
       loadQuotes,
       packages,
+      loadPackages,
       savePackage,
       deletePackage,
+      duplicatePackage,
       calculateCosts,
       defaultHourlyRate,
       setDefaultHourlyRate,
