@@ -152,39 +152,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_materials: {
-        Row: {
-          category: string
-          created_at: string
-          id: string
-          is_custom: boolean | null
-          name: string
-          price: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          id?: string
-          is_custom?: boolean | null
-          name: string
-          price?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          id?: string
-          is_custom?: boolean | null
-          name?: string
-          price?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
