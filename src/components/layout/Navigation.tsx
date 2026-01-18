@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
   { path: '/calculator', icon: Calculator, label: 'Cotizar' },
+  { path: '/materials', icon: Palette, label: 'Materiales' },
   { path: '/packages', icon: Package, label: 'Paquetes' },
   { path: '/history', icon: History, label: 'Historial' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },

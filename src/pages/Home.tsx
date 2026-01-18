@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
+import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -42,6 +42,13 @@ export default function Home() {
       description: 'Calcula costos y precios de tu evento',
       href: '/calculator',
       color: 'bg-rose-light text-rose-dark',
+    },
+    {
+      icon: Palette,
+      title: 'Materiales',
+      description: 'Administra tus materiales y precios',
+      href: '/materials',
+      color: 'bg-accent text-accent-foreground',
     },
     {
       icon: Package,
@@ -146,17 +153,17 @@ export default function Home() {
 
       {/* Features Grid */}
       <section className="container max-w-4xl mx-auto px-4 mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {features.map(({ icon: Icon, title, description, href, color }) => (
             <Link key={href} to={href}>
               <Card className="h-full hover:scale-[1.02] transition-transform duration-300">
-                <CardContent className="p-6 space-y-4">
-                  <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
-                    <Icon className="w-6 h-6" />
+                <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${color} flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div>
-                    <h3 className="font-display text-lg font-semibold">{title}</h3>
-                    <p className="text-sm text-muted-foreground">{description}</p>
+                    <h3 className="font-display text-sm md:text-lg font-semibold">{title}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{description}</p>
                   </div>
                 </CardContent>
               </Card>
