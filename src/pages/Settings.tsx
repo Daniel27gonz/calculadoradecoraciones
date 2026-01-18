@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, User, Globe, LogOut } from 'lucide-react';
+import { ArrowLeft, DollarSign, User, Globe, LogOut, Palette, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -150,8 +150,26 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-
-        {/* Login prompt for non-authenticated users */}
+        {/* Materials Management */}
+        <Card 
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          onClick={() => navigate('/materials')}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
+                <Palette className="w-5 h-5 text-rose-dark" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg">Lista de Materiales</CardTitle>
+                <CardDescription>
+                  Gestiona tus materiales y precios
+                </CardDescription>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+        </Card>
         {!user && (
           <Card className="border-primary/30 bg-rose-light/20">
             <CardContent className="p-6 text-center">
