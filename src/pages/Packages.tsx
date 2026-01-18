@@ -1,25 +1,99 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Copy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useToast } from '@/hooks/use-toast';
+import { PackageFormModal } from '@/components/packages/PackageFormModal';
+import { Package } from '@/types/quote';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Packages() {
   const navigate = useNavigate();
-  const { packages, deletePackage } = useQuote();
+  const { packages, deletePackage, savePackage, duplicatePackage } = useQuote();
   const { toast } = useToast();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [packageToDelete, setPackageToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleUsePackage = (packageId: string) => {
     navigate(`/calculator?package=${packageId}`);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    deletePackage(id);
-    toast({
-      title: "Paquete eliminado",
-      description: `"${name}" ha sido eliminado`,
-    });
+  const handleAddNew = () => {
+    setEditingPackage(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (pkg: Package) => {
+    setEditingPackage(pkg);
+    setIsFormOpen(true);
+  };
+
+  const handleDuplicate = async (id: string, name: string) => {
+    try {
+      await duplicatePackage(id);
+      toast({
+        title: "Paquete duplicado",
+        description: `"${name}" ha sido duplicado`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo duplicar el paquete",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteClick = (id: string, name: string) => {
+    setPackageToDelete({ id, name });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!packageToDelete) return;
+    
+    try {
+      await deletePackage(packageToDelete.id);
+      toast({
+        title: "Paquete eliminado",
+        description: `"${packageToDelete.name}" ha sido eliminado`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el paquete",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setPackageToDelete(null);
+    }
+  };
+
+  const handleSavePackage = async (pkg: Package) => {
+    try {
+      await savePackage(pkg);
+      toast({
+        title: editingPackage ? "Paquete actualizado" : "Paquete creado",
+        description: `"${pkg.name}" ha sido ${editingPackage ? 'actualizado' : 'creado'}`,
+      });
+    } catch (error) {
+      // Error already handled in context
+    }
   };
 
   return (
@@ -33,7 +107,7 @@ export default function Packages() {
               Volver
             </Button>
             <h1 className="font-display text-xl font-semibold">Paquetes</h1>
-            <Button variant="soft" size="sm" disabled>
+            <Button variant="soft" size="sm" onClick={handleAddNew}>
               <Plus className="w-4 h-4" />
               Nuevo
             </Button>
@@ -95,7 +169,9 @@ export default function Packages() {
                 {/* Materials preview */}
                 <div className="text-sm text-muted-foreground">
                   <span className="font-medium">Materiales: </span>
-                  {pkg.estimatedMaterials.map(m => m.name).join(', ')}
+                  {pkg.estimatedMaterials.length > 0 
+                    ? pkg.estimatedMaterials.map(m => m.name).join(', ')
+                    : 'Sin materiales'}
                 </div>
 
                 {/* Actions */}
@@ -108,17 +184,25 @@ export default function Packages() {
                   >
                     Usar paquete
                   </Button>
-                  <Button variant="outline" size="icon" disabled>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleEdit(pkg)}
+                  >
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="icon" disabled>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleDuplicate(pkg.id, pkg.name)}
+                  >
                     <Copy className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDelete(pkg.id, pkg.name)}
+                    onClick={() => handleDeleteClick(pkg.id, pkg.name)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -127,7 +211,43 @@ export default function Packages() {
             </Card>
           ))}
         </div>
+
+        {packages.length === 0 && (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground mb-4">No tienes paquetes creados</p>
+            <Button onClick={handleAddNew}>
+              <Plus className="w-4 h-4 mr-2" />
+              Crear primer paquete
+            </Button>
+          </Card>
+        )}
       </main>
+
+      {/* Form Modal */}
+      <PackageFormModal
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        package={editingPackage}
+        onSave={handleSavePackage}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar paquete?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar "{packageToDelete?.name}"? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
