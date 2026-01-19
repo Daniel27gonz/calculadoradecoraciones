@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,10 +13,10 @@ const navItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin, approvalStatus } = useAuth();
 
-  // Hide navigation on auth page
-  if (location.pathname === '/auth') {
+  // Hide navigation on auth page or if user is not approved
+  if (location.pathname === '/auth' || (user && approvalStatus !== 'approved')) {
     return null;
   }
 
@@ -55,6 +55,22 @@ export function Navigation() {
 
         {/* Right side - desktop only */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Admin link */}
+          {isAdmin && (
+            <Link 
+              to="/admin"
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors",
+                location.pathname === '/admin'
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-400"
+              )}
+            >
+              <Shield className="w-4 h-4" />
+              <span className="text-xs font-medium">Admin</span>
+            </Link>
+          )}
+          
           {/* User indicator */}
           {user ? (
             <Link 

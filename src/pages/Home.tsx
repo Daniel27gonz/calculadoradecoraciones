@@ -12,14 +12,16 @@ import { getCurrencyByCode } from '@/lib/currencies';
 export default function Home() {
   const navigate = useNavigate();
   const { quotes, calculateCosts } = useQuote();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, approvalStatus } = useAuth();
   
-  // Redirect to auth if not logged in
+  // Redirect to auth if not logged in or not approved
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
+    } else if (!loading && user && approvalStatus !== 'approved') {
+      navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, approvalStatus, navigate]);
 
   // Obtener el símbolo de moneda del perfil del usuario
   const currencySymbol = useMemo(() => {
@@ -71,7 +73,7 @@ export default function Home() {
     );
   }
 
-  if (!user) {
+  if (!user || approvalStatus !== 'approved') {
     return null;
   }
 
