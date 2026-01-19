@@ -6,12 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuoteProvider } from "@/contexts/QuoteContext";
 import { Navigation } from "@/components/layout/Navigation";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import PWAInstallPopup from "@/components/PWAInstallPopup";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import PendingApproval from "./pages/PendingApproval";
-import Admin from "./pages/Admin";
 import Calculator from "./pages/Calculator";
 import Packages from "./pages/Packages";
 import History from "./pages/History";
@@ -32,14 +29,12 @@ const App = () => (
             <PWAInstallPopup />
             <Navigation />
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/pending-approval" element={<PendingApproval />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
-              <Route path="/packages" element={<ProtectedRoute><Packages /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/calculator" element={<Calculator />} />
+              <Route path="/packages" element={<Packages />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
