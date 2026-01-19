@@ -11,6 +11,7 @@ import PWAInstallPopup from "@/components/PWAInstallPopup";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import PendingApproval from "./pages/PendingApproval";
+import Admin from "./pages/Admin";
 import Calculator from "./pages/Calculator";
 import Packages from "./pages/Packages";
 import History from "./pages/History";
@@ -33,6 +34,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/pending-approval" element={<PendingApproval />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
               <Route path="/packages" element={<ProtectedRoute><Packages /></ProtectedRoute>} />

@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
@@ -14,6 +15,7 @@ const navItems = [
 export function Navigation() {
   const location = useLocation();
   const { user, profile, approvalStatus } = useAuth();
+  const { isAdmin } = useAdminRole();
 
   // Hide navigation on auth page and pending approval page
   if (location.pathname === '/auth' || location.pathname === '/pending-approval') {
@@ -56,6 +58,22 @@ export function Navigation() {
               </Link>
             );
           })}
+          
+          {/* Admin link - only visible for admins */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(
+                "flex flex-col md:flex-row items-center gap-1 md:gap-2 px-3 py-2 rounded-xl transition-all duration-300",
+                location.pathname === '/admin'
+                  ? "text-primary bg-rose-light"
+                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
+              )}
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-xs md:text-sm font-medium">Admin</span>
+            </Link>
+          )}
         </div>
 
         {/* Right side - desktop only */}
