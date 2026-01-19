@@ -1,9 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-type ApprovalStatus = 'pending' | 'approved' | 'rejected' | null;
 
 interface Profile {
   id: string;
@@ -21,13 +19,10 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  approvalStatus: ApprovalStatus;
-  isAdmin: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
-  checkApprovalStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,52 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
-
-  const checkApprovalStatus = useCallback(async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('user_approval_status')
-      .select('status')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error checking approval status:', error);
-      return;
-    }
-
-    if (data) {
-      setApprovalStatus(data.status as ApprovalStatus);
-    } else {
-      // If no approval status exists, create one as pending
-      const { error: insertError } = await supabase
-        .from('user_approval_status')
-        .insert({ user_id: user.id, status: 'pending' });
-      
-      if (!insertError) {
-        setApprovalStatus('pending');
-      }
-    }
-  }, [user]);
-
-  const checkAdminRole = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (!error && data) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-  }, []);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -98,8 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
-          setApprovalStatus(null);
-          setIsAdmin(false);
         }
       }
     );
@@ -117,14 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Check approval status and admin role when user changes
-  useEffect(() => {
-    if (user) {
-      checkApprovalStatus();
-      checkAdminRole(user.id);
-    }
-  }, [user, checkApprovalStatus, checkAdminRole]);
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -176,15 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     toast({
-      title: "¡Registro exitoso!",
-      description: "Tu cuenta ha sido creada. Está pendiente de aprobación."
+      title: "¡Bienvenida!",
+      description: "Tu cuenta ha sido creada exitosamente."
     });
 
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -200,33 +140,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // Check approval status
-    if (data.user) {
-      const { data: approvalData } = await supabase
-        .from('user_approval_status')
-        .select('status')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      if (approvalData?.status === 'pending') {
-        toast({
-          title: "Cuenta en revisión",
-          description: "Tu cuenta aún no ha sido aprobada. Por favor espera la aprobación."
-        });
-        return { error: null };
-      }
-
-      if (approvalData?.status === 'rejected') {
-        toast({
-          title: "Acceso denegado",
-          description: "Tu solicitud de acceso ha sido rechazada.",
-          variant: "destructive"
-        });
-        await supabase.auth.signOut();
-        return { error: new Error('Access denied') };
-      }
-    }
-
     toast({
       title: "¡Hola de nuevo!",
       description: "Has iniciado sesión correctamente."
@@ -238,8 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
-    setApprovalStatus(null);
-    setIsAdmin(false);
     toast({
       title: "Sesión cerrada",
       description: "Has cerrado sesión correctamente."
@@ -276,13 +187,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       profile,
       loading,
-      approvalStatus,
-      isAdmin,
       signUp,
       signIn,
       signOut,
-      updateProfile,
-      checkApprovalStatus
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>
