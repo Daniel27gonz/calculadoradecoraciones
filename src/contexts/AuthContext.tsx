@@ -3,6 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+type ApprovalStatus = 'pending' | 'approved' | 'rejected' | null;
+
 interface Profile {
   id: string;
   user_id: string;
@@ -18,11 +20,13 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  approvalStatus: ApprovalStatus;
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  refreshApprovalStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -45,9 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
+            fetchApprovalStatus(session.user.id);
           }, 0);
         } else {
           setProfile(null);
+          setApprovalStatus(null);
         }
       }
     );
@@ -59,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         fetchProfile(session.user.id);
+        fetchApprovalStatus(session.user.id);
       }
       setLoading(false);
     });
@@ -80,6 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       setProfile(data as Profile);
+    }
+  };
+
+  const fetchApprovalStatus = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_approval_status')
+      .select('status')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching approval status:', error);
+      return;
+    }
+
+    if (data) {
+      setApprovalStatus(data.status as ApprovalStatus);
+    }
+  };
+
+  const refreshApprovalStatus = async () => {
+    if (user) {
+      await fetchApprovalStatus(user.id);
     }
   };
 
@@ -116,15 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     toast({
-      title: "¡Bienvenida!",
-      description: "Tu cuenta ha sido creada exitosamente."
+      title: "¡Registro exitoso!",
+      description: "Tu cuenta ha sido creada. Espera la aprobación para acceder."
     });
 
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -140,10 +171,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    toast({
-      title: "¡Hola de nuevo!",
-      description: "Has iniciado sesión correctamente."
-    });
+    // Check approval status after sign in
+    if (data.user) {
+      const { data: statusData } = await supabase
+        .from('user_approval_status')
+        .select('status')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+
+      if (statusData?.status === 'approved') {
+        toast({
+          title: "¡Hola de nuevo!",
+          description: "Has iniciado sesión correctamente."
+        });
+      } else if (statusData?.status === 'rejected') {
+        toast({
+          title: "Acceso denegado",
+          description: "Tu cuenta ha sido rechazada.",
+          variant: "destructive"
+        });
+      }
+      // For pending, we don't show toast as the PendingApproval page will show
+    }
 
     return { error: null };
   };
@@ -151,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setApprovalStatus(null);
     toast({
       title: "Sesión cerrada",
       description: "Has cerrado sesión correctamente."
@@ -186,11 +236,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       profile,
+      approvalStatus,
       loading,
       signUp,
       signIn,
       signOut,
-      updateProfile
+      updateProfile,
+      refreshApprovalStatus
     }}>
       {children}
     </AuthContext.Provider>

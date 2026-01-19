@@ -13,10 +13,15 @@ const navItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user, profile, approvalStatus } = useAuth();
 
-  // Hide navigation on auth page
-  if (location.pathname === '/auth') {
+  // Hide navigation on auth page and pending approval page
+  if (location.pathname === '/auth' || location.pathname === '/pending-approval') {
+    return null;
+  }
+
+  // Hide navigation if user is not logged in or not approved
+  if (!user || approvalStatus !== 'approved') {
     return null;
   }
 
