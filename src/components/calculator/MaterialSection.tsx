@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
+import { Label } from '@/components/ui/label';
 import { Material } from '@/types/quote';
 
 interface MaterialSectionProps {
@@ -15,12 +16,38 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
   const addMaterial = () => {
     onChange([
       ...materials,
-      { id: crypto.randomUUID(), name: '', costPerUnit: undefined as unknown as number, quantity: undefined as unknown as number },
+      { 
+        id: crypto.randomUUID(), 
+        name: '', 
+        baseUnit: 'unidad',
+        purchaseUnit: 'paquete',
+        presentationPrice: undefined as unknown as number,
+        quantityPerPresentation: undefined as unknown as number,
+        costPerUnit: 0,
+        quantity: undefined as unknown as number 
+      },
     ]);
   };
 
+  const calculateCostPerUnit = (presentationPrice: number, quantityPerPresentation: number): number => {
+    if (!quantityPerPresentation || quantityPerPresentation <= 0) return 0;
+    return presentationPrice / quantityPerPresentation;
+  };
+
   const updateMaterial = (id: string, updates: Partial<Material>) => {
-    onChange(materials.map(m => (m.id === id ? { ...m, ...updates } : m)));
+    onChange(materials.map(m => {
+      if (m.id !== id) return m;
+      
+      const updated = { ...m, ...updates };
+      // Auto-calculate cost per unit when presentation price or quantity changes
+      if ('presentationPrice' in updates || 'quantityPerPresentation' in updates) {
+        updated.costPerUnit = calculateCostPerUnit(
+          updated.presentationPrice || 0, 
+          updated.quantityPerPresentation || 1
+        );
+      }
+      return updated;
+    }));
   };
 
   const removeMaterial = (id: string) => {
@@ -67,12 +94,12 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Descripción del material
+                  Nombre del material
                 </label>
                 <Input
                   value={material.name}
                   onChange={(e) => updateMaterial(material.id, { name: e.target.value })}
-                  placeholder="Ej: Cinta de globos 5 metros"
+                  placeholder="Ej: Globos de látex 11 pulgadas"
                   className="h-11 text-base"
                 />
               </div>
@@ -86,21 +113,71 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
               </Button>
             </div>
 
-            {/* Numeric fields grid */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Units row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Unidad base de uso
+                </Label>
+                <Input
+                  value={material.baseUnit || ''}
+                  onChange={(e) => updateMaterial(material.id, { baseUnit: e.target.value })}
+                  placeholder="Ej: unidad, pieza, metro"
+                  className="h-10 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Unidad de compra
+                </Label>
+                <Input
+                  value={material.purchaseUnit || ''}
+                  onChange={(e) => updateMaterial(material.id, { purchaseUnit: e.target.value })}
+                  placeholder="Ej: bolsa, paquete"
+                  className="h-10 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Presentation price and quantity */}
+            <div className="grid grid-cols-2 gap-3">
               <NumericField
-                label="Precio/unidad"
+                label="Precio de presentación"
                 prefix={currencySymbol}
                 min={0}
                 step={0.01}
-                value={material.costPerUnit ?? ''}
+                value={material.presentationPrice ?? ''}
                 onChange={(e) => updateMaterial(material.id, { 
-                  costPerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                  presentationPrice: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
                 })}
                 placeholder="0.00"
               />
               <NumericField
-                label="Cantidad"
+                label="Cantidad por presentación"
+                min={1}
+                step={1}
+                value={material.quantityPerPresentation ?? ''}
+                onChange={(e) => updateMaterial(material.id, { 
+                  quantityPerPresentation: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                })}
+                placeholder="1"
+              />
+            </div>
+
+            {/* Calculated cost per unit */}
+            <div className="bg-primary/10 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Costo por unidad:</span>
+                <span className="text-base font-bold text-primary">
+                  {currencySymbol}{formatCurrency(material.costPerUnit || 0)} / {material.baseUnit || 'unidad'}
+                </span>
+              </div>
+            </div>
+
+            {/* Quantity to use */}
+            <div className="pt-2 border-t border-lavender/20">
+              <NumericField
+                label={`Cantidad a usar (${material.baseUnit || 'unidades'})`}
                 min={0}
                 value={material.quantity ?? ''}
                 onChange={(e) => updateMaterial(material.id, { 
