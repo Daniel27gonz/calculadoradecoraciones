@@ -93,11 +93,6 @@ export function MaterialsManager() {
       return;
     }
 
-    const costPerUnit = calculateCostPerUnit(
-      newMaterial.presentation_price,
-      newMaterial.quantity_per_presentation
-    );
-
     try {
       const { error } = await supabase.from('user_materials').insert({
         user_id: user.id,
@@ -106,7 +101,6 @@ export function MaterialsManager() {
         purchase_unit: newMaterial.purchase_unit.trim() || null,
         presentation_price: newMaterial.presentation_price,
         quantity_per_presentation: newMaterial.quantity_per_presentation,
-        cost_per_unit: costPerUnit,
         category: 'general',
       });
 
