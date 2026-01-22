@@ -54,11 +54,13 @@ export function MaterialsManager() {
         (data || []).map((m) => ({
           id: m.id,
           name: m.name,
-          base_unit: m.base_unit || 'unidad',
-          purchase_unit: m.purchase_unit || 'paquete',
-          presentation_price: m.presentation_price || 0,
-          quantity_per_presentation: m.quantity_per_presentation || 1,
-          cost_per_unit: m.cost_per_unit || 0,
+          // Show exactly what the user saved; don't force defaults in the UI.
+          base_unit: m.base_unit || '',
+          purchase_unit: m.purchase_unit || '',
+          presentation_price: m.presentation_price ?? 0,
+          // Use 0 so the numeric input renders blank when the DB value is null.
+          quantity_per_presentation: m.quantity_per_presentation ?? 0,
+          cost_per_unit: m.cost_per_unit ?? 0,
           category: m.category,
         }))
       );
@@ -78,10 +80,11 @@ export function MaterialsManager() {
     const newMaterial: Material = {
       id: `new-${Date.now()}`,
       name: '',
-      base_unit: 'unidad',
-      purchase_unit: 'paquete',
+      // Start blank so each user can fill it manually.
+      base_unit: '',
+      purchase_unit: '',
       presentation_price: 0,
-      quantity_per_presentation: 1,
+      quantity_per_presentation: 0,
       cost_per_unit: 0,
       category: 'general',
       isNew: true,
