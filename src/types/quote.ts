@@ -28,7 +28,8 @@ export interface TimePhase {
 export interface Extra {
   id: string;
   name: string;
-  cost: number;
+  pricePerUnit: number;
+  quantity: number;
 }
 
 export interface TransportItem {

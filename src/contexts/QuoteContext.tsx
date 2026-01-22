@@ -329,7 +329,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const totalLabor = laborFromWorkers + laborFromPhases;
     const totalTime = 0; // Ya incluido en totalLabor para evitar duplicados
     
-    const totalExtras = quote.extras.reduce((sum, e) => sum + (e.cost || 0), 0);
+    const totalExtras = quote.extras.reduce((sum, e) => sum + ((e.pricePerUnit || 0) * (e.quantity || 0)), 0);
     
     // Transporte
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
