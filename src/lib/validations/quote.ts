@@ -74,7 +74,6 @@ export const QuoteDataSchema = z.object({
   indirectExpenses: z.array(IndirectExpenseSchema).max(MAX_ITEMS).default([]),
   marginPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(30),
   toolWearPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(7),
-  wastagePercentage: z.number().min(1).max(10).default(5),
   clientName: z.string().trim().min(1).max(MAX_NAME_LENGTH),
   eventDate: z.string().max(50).optional().nullable(),
   notes: z.string().max(MAX_NOTES_LENGTH).optional().default(''),

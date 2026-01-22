@@ -66,7 +66,6 @@ export interface Quote {
   indirectExpenses: IndirectExpense[];
   marginPercentage: number;
   toolWearPercentage: number;
-  wastagePercentage: number;
   notes: string;
   // Legacy field for backwards compatibility
   transportCost?: number;
@@ -90,8 +89,7 @@ export interface CostSummary {
   totalTime: number;
   totalExtras: number;
   totalTransport: number;
-  toolWear: number;
-  wastage: number;
+  toolWear: number; // 7% of (materials + labor + transport)
   totalCost: number;
   finalPrice: number;
   netProfit: number;
