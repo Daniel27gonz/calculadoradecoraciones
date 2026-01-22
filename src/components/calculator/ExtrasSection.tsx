@@ -11,11 +11,7 @@ interface ExtrasSectionProps {
   currencySymbol?: string;
 }
 
-const suggestedExtras = [
-  { name: 'Alquiler', icon: '🏠' },
-  { name: 'Imprevistos', icon: '⚡' },
-  { name: 'Impuestos', icon: '📋' },
-];
+const suggestedExtras: { name: string; icon: string }[] = [];
 
 export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: ExtrasSectionProps) {
   const addExtra = (name?: string) => {
