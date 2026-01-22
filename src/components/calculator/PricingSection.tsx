@@ -98,7 +98,6 @@ export function PricingSection({
         <CardContent className="p-0">
           {/* Cost breakdown */}
           <div className="divide-y divide-border/50">
-            <CostLine icon="🎈" label="Total globos" amount={summary.totalBalloons} />
             <CostLine icon="🎀" label="Total materiales" amount={summary.totalMaterials} />
             <CostLine icon="👩‍🎨" label="Total mano de obra" amount={summary.totalLabor} />
             <CostLine icon="🚗" label="Total transporte" amount={summary.totalTransport} />
