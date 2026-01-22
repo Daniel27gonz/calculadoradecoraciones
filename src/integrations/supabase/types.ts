@@ -178,32 +178,47 @@ export type Database = {
       }
       user_materials: {
         Row: {
+          base_unit: string | null
           category: string
+          cost_per_unit: number | null
           created_at: string
           id: string
           is_custom: boolean | null
           name: string
+          presentation_price: number | null
           price: number | null
+          purchase_unit: string | null
+          quantity_per_presentation: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          base_unit?: string | null
           category: string
+          cost_per_unit?: number | null
           created_at?: string
           id?: string
           is_custom?: boolean | null
           name: string
+          presentation_price?: number | null
           price?: number | null
+          purchase_unit?: string | null
+          quantity_per_presentation?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          base_unit?: string | null
           category?: string
+          cost_per_unit?: number | null
           created_at?: string
           id?: string
           is_custom?: boolean | null
           name?: string
+          presentation_price?: number | null
           price?: number | null
+          purchase_unit?: string | null
+          quantity_per_presentation?: number | null
           updated_at?: string
           user_id?: string
         }
