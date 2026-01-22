@@ -4,10 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
+
+const PURCHASE_UNITS = [
+  { value: 'bolsa', label: 'Bolsa' },
+  { value: 'paquete', label: 'Paquete' },
+  { value: 'caja', label: 'Caja' },
+  { value: 'rollo', label: 'Rollo' },
+  { value: 'pieza', label: 'Pieza' },
+  { value: 'metro', label: 'Metro' },
+  { value: 'litro', label: 'Litro' },
+  { value: 'kilo', label: 'Kilo' },
+];
 
 interface Material {
   id: string;
@@ -228,11 +240,22 @@ export function MaterialsManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Unidad de compra (bolsas, paquetes)</Label>
-              <Input
+              <Label>Unidad de compra</Label>
+              <Select
                 value={newMaterial.purchase_unit}
-                onChange={(e) => setNewMaterial(prev => ({ ...prev, purchase_unit: e.target.value }))}
-              />
+                onValueChange={(value) => setNewMaterial(prev => ({ ...prev, purchase_unit: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecciona una opción" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {PURCHASE_UNITS.map((unit) => (
+                    <SelectItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Precio de la presentación</Label>
