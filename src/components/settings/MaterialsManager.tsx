@@ -273,7 +273,9 @@ export function MaterialsManager() {
 
           {/* Calculated cost per unit */}
           <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-            <span className="text-sm font-medium">Costo por unidad:</span>
+            <span className="text-sm font-medium">
+              Costo por {['bolsa', 'paquete', 'caja'].includes(newMaterial.purchase_unit) ? 'pieza' : 'unidad'}:
+            </span>
             <span className="text-lg font-bold text-primary">
               {displayCostPerUnit !== null ? formatCurrency(displayCostPerUnit) : '-'}
             </span>
@@ -310,7 +312,7 @@ export function MaterialsManager() {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-sm font-medium text-primary">
-                        {formatCurrency(material.cost_per_unit)}/unidad
+                        {formatCurrency(material.cost_per_unit)}/{['bolsa', 'paquete', 'caja'].includes(material.purchase_unit) ? 'pieza' : 'unidad'}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatCurrency(material.presentation_price)} × {material.quantity_per_presentation ?? '-'}
