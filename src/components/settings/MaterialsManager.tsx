@@ -84,22 +84,7 @@ export function MaterialsManager() {
   const updateMaterial = (id: string, field: keyof Material, value: string | number | null) => {
     setMaterials(materials.map(m => {
       if (m.id !== id) return m;
-      
-      const updated = { ...m, [field]: value };
-      
-      // Auto-calculate cost per unit
-      if (field === 'presentation_price' || field === 'quantity_per_presentation') {
-        const price = field === 'presentation_price' ? (value as number) : updated.presentation_price;
-        const qty = field === 'quantity_per_presentation' ? (value as number) : updated.quantity_per_presentation;
-        
-        if (price && qty && qty > 0) {
-          updated.cost_per_unit = Math.round((price / qty) * 10000) / 10000;
-        } else {
-          updated.cost_per_unit = null;
-        }
-      }
-      
-      return updated;
+      return { ...m, [field]: value };
     }));
   };
 
@@ -307,19 +292,20 @@ export function MaterialsManager() {
                   </div>
                 </div>
 
-                {/* Cost per unit (calculated) */}
+                {/* Cost per unit */}
                 <div className="space-y-2">
                   <Label>Costo por unidad</Label>
-                  <div className="h-10 px-3 py-2 rounded-md border border-border bg-muted/50 flex items-center">
-                    <span className="text-sm">
-                      {material.cost_per_unit !== null 
-                        ? `$${material.cost_per_unit.toFixed(4)}` 
-                        : '—'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Se calcula automáticamente (precio ÷ cantidad)
-                  </p>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.0001"
+                    value={material.cost_per_unit ?? ''}
+                    onChange={(e) => updateMaterial(
+                      material.id, 
+                      'cost_per_unit', 
+                      e.target.value === '' ? null : Number(e.target.value)
+                    )}
+                  />
                 </div>
               </div>
             ))}
