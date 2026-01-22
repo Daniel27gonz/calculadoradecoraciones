@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { MaterialsManager } from '@/components/settings/MaterialsManager';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -149,6 +150,9 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Materials Manager */}
+        <MaterialsManager />
 
 
         {/* Login prompt for non-authenticated users */}
