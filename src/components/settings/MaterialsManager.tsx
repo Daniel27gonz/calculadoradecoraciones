@@ -26,7 +26,7 @@ export function MaterialsManager() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
