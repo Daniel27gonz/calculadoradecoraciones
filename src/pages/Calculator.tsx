@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { BalloonSection } from '@/components/calculator/BalloonSection';
 import { MaterialSection } from '@/components/calculator/MaterialSection';
 import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
@@ -230,6 +231,12 @@ export default function Calculator() {
         </Card>
 
         {/* Cost Sections */}
+        <BalloonSection
+          balloons={quote.balloons}
+          onChange={(balloons) => updateQuote({ balloons })}
+          currencySymbol={currencySymbol}
+        />
+
         <MaterialSection
           materials={quote.materials}
           onChange={(materials) => updateQuote({ materials })}
