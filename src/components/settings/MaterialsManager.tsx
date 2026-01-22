@@ -24,7 +24,6 @@ const PURCHASE_UNITS = [
 interface Material {
   id: string;
   name: string;
-  base_unit: string;
   purchase_unit: string;
   presentation_price: number | null;
   quantity_per_presentation: number | null;
@@ -38,7 +37,6 @@ export function MaterialsManager() {
   const [loading, setLoading] = useState(false);
   const [newMaterial, setNewMaterial] = useState<Omit<Material, 'id' | 'cost_per_unit'>>({
     name: '',
-    base_unit: '',
     purchase_unit: '',
     presentation_price: null,
     quantity_per_presentation: null,
@@ -68,7 +66,6 @@ export function MaterialsManager() {
       setMaterials(data?.map(m => ({
         id: m.id,
         name: m.name,
-        base_unit: m.base_unit || '',
         purchase_unit: m.purchase_unit || '',
         presentation_price: m.presentation_price,
         quantity_per_presentation: m.quantity_per_presentation,
@@ -109,7 +106,6 @@ export function MaterialsManager() {
       const { error } = await supabase.from('user_materials').insert({
         user_id: user.id,
         name: newMaterial.name.trim(),
-        base_unit: newMaterial.base_unit.trim() || null,
         purchase_unit: newMaterial.purchase_unit.trim() || null,
         presentation_price: newMaterial.presentation_price,
         quantity_per_presentation: newMaterial.quantity_per_presentation,
@@ -125,7 +121,6 @@ export function MaterialsManager() {
 
       setNewMaterial({
         name: '',
-        base_unit: '',
         purchase_unit: '',
         presentation_price: null,
         quantity_per_presentation: null,
@@ -221,21 +216,12 @@ export function MaterialsManager() {
       <CardContent className="space-y-6">
         {/* Form to add new material */}
         <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Nombre del material</Label>
-              <Input
-                value={newMaterial.name}
-                onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Unidad base de uso (metros, piezas)</Label>
-              <Input
-                value={newMaterial.base_unit}
-                onChange={(e) => setNewMaterial(prev => ({ ...prev, base_unit: e.target.value }))}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Nombre del material</Label>
+            <Input
+              value={newMaterial.name}
+              onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -318,8 +304,6 @@ export function MaterialsManager() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{material.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {material.base_unit && `Unidad: ${material.base_unit}`}
-                      {material.base_unit && material.purchase_unit && ' • '}
                       {material.purchase_unit && `Compra: ${material.purchase_unit}`}
                     </p>
                   </div>
