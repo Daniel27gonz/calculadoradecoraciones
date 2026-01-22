@@ -8,6 +8,10 @@ export interface Balloon {
 export interface Material {
   id: string;
   name: string;
+  baseUnit: string;
+  purchaseUnit: string;
+  presentationPrice: number;
+  quantityPerPresentation: number;
   costPerUnit: number;
   quantity: number;
 }

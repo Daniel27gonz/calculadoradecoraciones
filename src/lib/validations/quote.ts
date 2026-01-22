@@ -22,7 +22,11 @@ export const BalloonSchema = z.object({
 export const MaterialSchema = z.object({
   id: z.string().max(100),
   name: z.string().max(MAX_NAME_LENGTH),
-  costPerUnit: z.number().min(0).max(MAX_PRICE),
+  baseUnit: z.string().max(50).default('unidad'),
+  purchaseUnit: z.string().max(50).default('paquete'),
+  presentationPrice: z.number().min(0).max(MAX_PRICE).default(0),
+  quantityPerPresentation: z.number().min(0).max(MAX_QUANTITY).default(1),
+  costPerUnit: z.number().min(0).max(MAX_PRICE).default(0),
   quantity: z.number().min(0).max(MAX_QUANTITY),
 });
 
