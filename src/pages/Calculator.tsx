@@ -12,6 +12,7 @@ import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
 import { ToolWearSection } from '@/components/calculator/ToolWearSection';
+import { WastageSection } from '@/components/calculator/WastageSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -42,6 +43,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   indirectExpenses: [],
   marginPercentage: 30,
   toolWearPercentage: 7,
+  wastagePercentage: 5,
   notes: '',
 });
 
@@ -269,11 +271,19 @@ export default function Calculator() {
           currencySymbol={currencySymbol}
         />
 
+        <WastageSection
+          totalMaterials={summary.totalMaterials}
+          wastagePercentage={quote.wastagePercentage}
+          onPercentageChange={(wastagePercentage) => updateQuote({ wastagePercentage })}
+          currencySymbol={currencySymbol}
+        />
+
         {/* Pricing */}
         <PricingSection
           summary={summary}
           marginPercentage={quote.marginPercentage}
           toolWearPercentage={quote.toolWearPercentage}
+          wastagePercentage={quote.wastagePercentage}
           onMarginChange={(marginPercentage) => updateQuote({ marginPercentage })}
           currencySymbol={currencySymbol}
         />

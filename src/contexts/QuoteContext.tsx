@@ -163,6 +163,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           indirectExpenses: safeParseQuoteArrayField(q.indirect_expenses, IndirectExpenseSchema, []) as IndirectExpense[],
           marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
+          wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
           notes: q.notes || '',
         }));
         setQuotes(loadedQuotes);
@@ -338,13 +339,17 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Transporte
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
     
+    // Merma: porcentaje sobre el total de materiales
+    const wastagePercentage = quote.wastagePercentage || 5;
+    const wastage = totalMaterials * (wastagePercentage / 100);
+    
     // Desgaste de herramientas: usa el porcentaje de la cotización
     const toolWearPercentage = quote.toolWearPercentage || 7;
     const subtotalForToolWear = totalBalloons + totalMaterials + totalLabor;
     const toolWear = subtotalForToolWear * (toolWearPercentage / 100);
     
     // Total = suma de todos los conceptos
-    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTransport + toolWear + totalExtras;
+    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTransport + toolWear + wastage + totalExtras;
     
     // Precio final con margen
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
@@ -364,6 +369,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       totalExtras,
       totalTransport,
       toolWear,
+      wastage,
       totalCost,
       finalPrice,
       netProfit,
