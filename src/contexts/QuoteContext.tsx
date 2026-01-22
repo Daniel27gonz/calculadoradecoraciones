@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummary, TransportItem } from '@/types/quote';
+import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummary, TransportItem, IndirectExpense } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,8 @@ import {
   WorkerSchema,
   TimePhaseSchema,
   ExtraSchema,
-  TransportItemSchema
+  TransportItemSchema,
+  IndirectExpenseSchema
 } from '@/lib/validations/quote';
 
 interface QuoteContextType {
@@ -159,6 +160,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           timePhases: safeParseQuoteArrayField(q.time_phases, TimePhaseSchema, []) as TimePhase[],
           extras: safeParseQuoteArrayField(q.extras, ExtraSchema, []) as Extra[],
           transportItems: safeParseQuoteArrayField(q.transport_items, TransportItemSchema, []) as TransportItem[],
+          indirectExpenses: safeParseQuoteArrayField(q.indirect_expenses, IndirectExpenseSchema, []) as IndirectExpense[],
           marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           notes: q.notes || '',
@@ -203,6 +205,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       timePhases: quote.timePhases,
       extras: quote.extras,
       transportItems: quote.transportItems,
+      indirectExpenses: quote.indirectExpenses,
       marginPercentage: quote.marginPercentage,
       toolWearPercentage: quote.toolWearPercentage,
       notes: quote.notes,
@@ -232,6 +235,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         time_phases: validatedData.timePhases,
         extras: validatedData.extras,
         transport_items: validatedData.transportItems,
+        indirect_expenses: validatedData.indirectExpenses,
         margin_percentage: validatedData.marginPercentage,
         tool_wear_percentage: validatedData.toolWearPercentage,
         notes: validatedData.notes,

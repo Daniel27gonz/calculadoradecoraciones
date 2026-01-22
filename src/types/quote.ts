@@ -38,6 +38,12 @@ export interface TransportItem {
   amount: number;
 }
 
+export interface IndirectExpense {
+  id: string;
+  description: string;
+  monthlyAmount: number;
+}
+
 export interface ToolAmortization {
   id: string;
   name: string;
@@ -57,6 +63,7 @@ export interface Quote {
   timePhases: TimePhase[];
   extras: Extra[];
   transportItems: TransportItem[];
+  indirectExpenses: IndirectExpense[];
   marginPercentage: number;
   toolWearPercentage: number;
   notes: string;

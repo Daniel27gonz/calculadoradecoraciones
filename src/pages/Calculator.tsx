@@ -39,6 +39,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   timePhases: defaultTimePhases.map(p => ({ ...p, rate: hourlyRate })),
   extras: [],
   transportItems: [],
+  indirectExpenses: [],
   marginPercentage: 30,
   toolWearPercentage: 7,
   notes: '',

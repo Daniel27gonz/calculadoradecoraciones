@@ -45,7 +45,8 @@ export const TimePhaseSchema = z.object({
 export const ExtraSchema = z.object({
   id: z.string().max(100),
   name: z.string().max(MAX_NAME_LENGTH),
-  cost: z.number().min(0).max(MAX_PRICE),
+  pricePerUnit: z.number().min(0).max(MAX_PRICE),
+  quantity: z.number().min(0).max(MAX_QUANTITY),
 });
 
 // TransportItem validation schema
@@ -53,6 +54,13 @@ export const TransportItemSchema = z.object({
   id: z.string().max(100),
   concept: z.string().max(MAX_NAME_LENGTH),
   amount: z.number().min(0).max(MAX_PRICE),
+});
+
+// IndirectExpense validation schema
+export const IndirectExpenseSchema = z.object({
+  id: z.string().max(100),
+  description: z.string().max(MAX_NAME_LENGTH),
+  monthlyAmount: z.number().min(0).max(MAX_PRICE),
 });
 
 // Full Quote validation schema for database operations
@@ -63,6 +71,7 @@ export const QuoteDataSchema = z.object({
   timePhases: z.array(TimePhaseSchema).max(20).default([]),
   extras: z.array(ExtraSchema).max(MAX_ITEMS).default([]),
   transportItems: z.array(TransportItemSchema).max(MAX_ITEMS).default([]),
+  indirectExpenses: z.array(IndirectExpenseSchema).max(MAX_ITEMS).default([]),
   marginPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(30),
   toolWearPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(7),
   clientName: z.string().trim().min(1).max(MAX_NAME_LENGTH),
