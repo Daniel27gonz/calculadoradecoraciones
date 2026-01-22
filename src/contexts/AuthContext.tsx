@@ -12,6 +12,7 @@ interface Profile {
   currency: string;
   default_hourly_rate: number;
   mode: string;
+  events_per_month: number;
 }
 
 interface AuthContextType {

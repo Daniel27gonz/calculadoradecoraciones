@@ -62,6 +62,7 @@ export type Database = {
           created_at: string
           currency: string | null
           default_hourly_rate: number | null
+          events_per_month: number | null
           id: string
           logo_url: string | null
           mode: string | null
@@ -74,6 +75,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           default_hourly_rate?: number | null
+          events_per_month?: number | null
           id?: string
           logo_url?: string | null
           mode?: string | null
@@ -86,6 +88,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           default_hourly_rate?: number | null
+          events_per_month?: number | null
           id?: string
           logo_url?: string | null
           mode?: string | null

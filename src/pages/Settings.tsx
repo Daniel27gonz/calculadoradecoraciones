@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, User, Globe, LogOut } from 'lucide-react';
+import { ArrowLeft, DollarSign, User, Globe, LogOut, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,12 @@ export default function Settings() {
   const handleCurrencyChange = (currencyCode: string) => {
     if (user && profile) {
       updateProfile({ currency: currencyCode });
+    }
+  };
+
+  const handleEventsPerMonthChange = (value: number) => {
+    if (user && profile) {
+      updateProfile({ events_per_month: value });
     }
   };
 
@@ -155,12 +161,45 @@ export default function Settings() {
         {/* Materials Manager */}
         <MaterialsManager />
 
+        {/* Events Per Month */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Eventos por mes</CardTitle>
+                  <CardDescription>
+                    ¿Cuántos eventos realizas en promedio al mes?
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="number"
+                  min="1"
+                  value={profile?.events_per_month ?? 4}
+                  onChange={(e) => handleEventsPerMonthChange(e.target.value === '' ? 1 : Number(e.target.value))}
+                  placeholder="4"
+                  className="text-2xl font-bold h-14 w-32"
+                />
+                <span className="text-muted-foreground">eventos/mes</span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Este dato se usa para calcular el costo de gastos indirectos por evento.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Indirect Expenses - Global Settings */}
         {user && (
           <IndirectExpensesManager currencySymbol={currentCurrency?.symbol || '$'} />
         )}
-
-
 
         {/* Login prompt for non-authenticated users */}
         {!user && (
