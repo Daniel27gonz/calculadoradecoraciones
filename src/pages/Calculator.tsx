@@ -12,7 +12,6 @@ import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
 import { ToolWearSection } from '@/components/calculator/ToolWearSection';
-import { IndirectExpensesSection } from '@/components/calculator/IndirectExpensesSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -267,12 +266,6 @@ export default function Calculator() {
           totalLabor={summary.totalLabor}
           toolWearPercentage={quote.toolWearPercentage}
           onPercentageChange={(toolWearPercentage) => updateQuote({ toolWearPercentage })}
-          currencySymbol={currencySymbol}
-        />
-
-        <IndirectExpensesSection
-          expenses={quote.indirectExpenses || []}
-          onChange={(indirectExpenses) => updateQuote({ indirectExpenses })}
           currencySymbol={currencySymbol}
         />
 

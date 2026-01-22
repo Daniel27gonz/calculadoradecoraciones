@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { MaterialsManager } from '@/components/settings/MaterialsManager';
+import { IndirectExpensesManager } from '@/components/settings/IndirectExpensesManager';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -153,6 +154,12 @@ export default function Settings() {
 
         {/* Materials Manager */}
         <MaterialsManager />
+
+        {/* Indirect Expenses - Global Settings */}
+        {user && (
+          <IndirectExpensesManager currencySymbol={currentCurrency?.symbol || '$'} />
+        )}
+
 
 
         {/* Login prompt for non-authenticated users */}
