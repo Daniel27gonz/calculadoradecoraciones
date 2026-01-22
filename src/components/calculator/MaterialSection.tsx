@@ -66,7 +66,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
   const selectSavedMaterial = (materialId: string, saved: SavedMaterial) => {
     updateMaterial(materialId, {
       name: saved.name,
-      costPerUnit: saved.cost_per_unit || 0,
+      costPerUnit: Math.round((saved.cost_per_unit || 0) * 100) / 100,
       quantity: saved.quantity_per_presentation || 1,
     });
     setOpenDropdowns(prev => ({ ...prev, [materialId]: false }));
