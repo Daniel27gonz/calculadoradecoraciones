@@ -1,9 +1,23 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Trash2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { Material } from '@/types/quote';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+
+interface SavedMaterial {
+  id: string;
+  name: string;
+  cost_per_unit: number | null;
+  quantity_per_presentation: number | null;
+}
 
 interface MaterialSectionProps {
   materials: Material[];
@@ -12,6 +26,28 @@ interface MaterialSectionProps {
 }
 
 export function MaterialSection({ materials, onChange, currencySymbol = '$' }: MaterialSectionProps) {
+  const [savedMaterials, setSavedMaterials] = useState<SavedMaterial[]>([]);
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchSavedMaterials = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_materials')
+        .select('id, name, cost_per_unit, quantity_per_presentation')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (!error && data) {
+        setSavedMaterials(data);
+      }
+    };
+
+    fetchSavedMaterials();
+  }, []);
+
   const addMaterial = () => {
     onChange([
       ...materials,
@@ -25,6 +61,19 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
 
   const removeMaterial = (id: string) => {
     onChange(materials.filter(m => m.id !== id));
+  };
+
+  const selectSavedMaterial = (materialId: string, saved: SavedMaterial) => {
+    updateMaterial(materialId, {
+      name: saved.name,
+      costPerUnit: saved.cost_per_unit || 0,
+      quantity: saved.quantity_per_presentation || 1,
+    });
+    setOpenDropdowns(prev => ({ ...prev, [materialId]: false }));
+  };
+
+  const toggleDropdown = (materialId: string) => {
+    setOpenDropdowns(prev => ({ ...prev, [materialId]: !prev[materialId] }));
   };
 
   const total = materials.reduce((sum, m) => sum + (m.costPerUnit || 0) * (m.quantity || 0), 0);
@@ -75,6 +124,43 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                   placeholder="Ej: Cinta de globos 5 metros"
                   className="h-11 text-base"
                 />
+                
+                {/* Saved materials dropdown */}
+                {savedMaterials.length > 0 && (
+                  <Collapsible 
+                    open={openDropdowns[material.id]} 
+                    onOpenChange={() => toggleDropdown(material.id)}
+                    className="mt-2"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-between text-xs h-9 bg-background hover:bg-lavender/20"
+                      >
+                        <span>Seleccionar de mis materiales</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${openDropdowns[material.id] ? 'rotate-180' : ''}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-1">
+                      <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+                        {savedMaterials.map((saved) => (
+                          <button
+                            key={saved.id}
+                            type="button"
+                            onClick={() => selectSavedMaterial(material.id, saved)}
+                            className="w-full text-left px-3 py-2 hover:bg-lavender/20 border-b border-border/50 last:border-b-0 transition-colors"
+                          >
+                            <div className="font-medium text-sm truncate">{saved.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </div>
               <Button
                 variant="ghost"
