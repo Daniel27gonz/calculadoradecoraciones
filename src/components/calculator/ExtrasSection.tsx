@@ -38,8 +38,9 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <span className="text-xl sm:text-2xl">✨</span>
-            <span>Extras</span>
+            <span className="text-xl sm:text-2xl">🥇</span>
+            <span>Adicionales del cliente</span>
+            <span className="text-xl sm:text-2xl">⭐</span>
           </CardTitle>
           <div className="px-3 py-1.5 rounded-full bg-beige border border-border">
             <span className="text-sm sm:text-base font-bold text-foreground tabular-nums">
@@ -47,6 +48,9 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
             </span>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground mt-2">
+          Agrega aquí todo lo que el cliente pidió aparte de la decoración base (viniles, letras, letreros, personalizaciones).
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {extras.length === 0 && (
