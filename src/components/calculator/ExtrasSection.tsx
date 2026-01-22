@@ -11,13 +11,11 @@ interface ExtrasSectionProps {
   currencySymbol?: string;
 }
 
-const suggestedExtras: { name: string; icon: string }[] = [];
-
 export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: ExtrasSectionProps) {
-  const addExtra = (name?: string) => {
+  const addExtra = () => {
     onChange([
       ...extras,
-      { id: crypto.randomUUID(), name: name || '', cost: 0 },
+      { id: crypto.randomUUID(), name: '', pricePerUnit: 0, quantity: 0 },
     ]);
   };
 
@@ -29,15 +27,11 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
     onChange(extras.filter(e => e.id !== id));
   };
 
-  const total = extras.reduce((sum, e) => sum + e.cost, 0);
+  const total = extras.reduce((sum, e) => sum + (e.pricePerUnit || 0) * (e.quantity || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
-
-  const unusedSuggestions = suggestedExtras.filter(
-    s => !extras.some(e => e.name.toLowerCase() === s.name.toLowerCase())
-  );
 
   return (
     <Card className="shadow-card">
@@ -55,82 +49,76 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Quick add buttons */}
-        {unusedSuggestions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {unusedSuggestions.map(({ name, icon }) => (
-              <Button
-                key={name}
-                variant="outline"
-                size="sm"
-                onClick={() => addExtra(name)}
-                className="text-sm h-9 px-3"
-              >
-                <span className="mr-1.5">{icon}</span>
-                {name}
-              </Button>
-            ))}
-          </div>
-        )}
-
         {extras.length === 0 && (
           <div className="text-center py-6 text-muted-foreground text-sm">
             No hay extras agregados
           </div>
         )}
 
-        {extras.map((extra) => (
-          <div
-            key={extra.id}
-            className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in"
-          >
-            {/* Description */}
-            <div className="flex-1 min-w-0">
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block sm:hidden">
-                Descripción
-              </label>
-              <Input
-                value={extra.name}
-                onChange={(e) => updateExtra(extra.id, { name: e.target.value })}
-                placeholder="Descripción del extra"
-                className="h-11 text-base bg-background/50"
-              />
-            </div>
-            
-            {/* Cost */}
-            <div className="flex items-end gap-3">
-              <div className="flex-1 sm:w-32">
-                <NumericField
-                  label="Costo"
-                  prefix={currencySymbol}
-                  min={0}
-                  step={0.01}
-                  value={extra.cost}
-                  onChange={(e) => updateExtra(extra.id, { cost: Number(e.target.value) })}
-                  containerClassName="sm:hidden"
-                />
-                <NumericField
-                  prefix={currencySymbol}
-                  min={0}
-                  step={0.01}
-                  value={extra.cost}
-                  onChange={(e) => updateExtra(extra.id, { cost: Number(e.target.value) })}
-                  containerClassName="hidden sm:block"
-                />
+        {extras.map((extra) => {
+          const itemTotal = (extra.pricePerUnit || 0) * (extra.quantity || 0);
+          
+          return (
+            <div
+              key={extra.id}
+              className="p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in space-y-3"
+            >
+              {/* Name field */}
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Nombre del extra
+                  </label>
+                  <Input
+                    value={extra.name}
+                    onChange={(e) => updateExtra(extra.id, { name: e.target.value })}
+                    placeholder="Ej: Decoración especial"
+                    className="h-11 text-base bg-background/50"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeExtra(extra.id)}
+                  className="h-11 w-11 text-destructive hover:bg-destructive/10 shrink-0 mt-6"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeExtra(extra.id)}
-                className="h-11 w-11 text-destructive hover:bg-destructive/10 shrink-0"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
 
-        <Button variant="secondary" className="w-full h-12 text-base font-medium" onClick={() => addExtra()}>
+              {/* Price, Quantity, and Total row */}
+              <div className="grid grid-cols-3 gap-3">
+                <NumericField
+                  label="Precio/unidad"
+                  prefix={currencySymbol}
+                  min={0}
+                  step={0.01}
+                  value={extra.pricePerUnit || ''}
+                  onChange={(e) => updateExtra(extra.id, { pricePerUnit: Number(e.target.value) || 0 })}
+                />
+                <NumericField
+                  label="Cantidad"
+                  min={0}
+                  step={1}
+                  value={extra.quantity || ''}
+                  onChange={(e) => updateExtra(extra.id, { quantity: Number(e.target.value) || 0 })}
+                />
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Total
+                  </label>
+                  <div className="h-11 px-3 flex items-center rounded-lg bg-primary/10 border border-primary/20">
+                    <span className="font-bold text-sm tabular-nums text-primary">
+                      {currencySymbol}{formatCurrency(itemTotal)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        <Button variant="secondary" className="w-full h-12 text-base font-medium" onClick={addExtra}>
           <Plus className="w-5 h-5 mr-2" />
           Agregar extra
         </Button>
