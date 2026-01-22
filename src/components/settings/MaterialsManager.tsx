@@ -218,7 +218,7 @@ export function MaterialsManager() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Unidad base de uso</Label>
+              <Label>Unidad base de uso (metros, piezas)</Label>
               <Input
                 value={newMaterial.base_unit}
                 onChange={(e) => setNewMaterial(prev => ({ ...prev, base_unit: e.target.value }))}
