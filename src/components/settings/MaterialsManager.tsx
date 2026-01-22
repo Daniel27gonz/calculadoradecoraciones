@@ -228,7 +228,7 @@ export function MaterialsManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Unidad de compra</Label>
+              <Label>Unidad de compra (bolsas, paquetes, cajas)</Label>
               <Input
                 value={newMaterial.purchase_unit}
                 onChange={(e) => setNewMaterial(prev => ({ ...prev, purchase_unit: e.target.value }))}
