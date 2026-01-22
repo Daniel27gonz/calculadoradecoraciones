@@ -49,8 +49,8 @@ const defaultPackages: Package[] = [
     icon: '🎈',
     estimatedBalloons: 150,
     estimatedMaterials: [
-      { id: '1', name: 'Cinta de globos', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 10, quantityPerPresentation: 2, costPerUnit: 5, quantity: 2 },
-      { id: '2', name: 'Glue dots', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 8, quantityPerPresentation: 1, costPerUnit: 8, quantity: 1 },
+      { id: '1', name: 'Cinta de globos', costPerUnit: 5, quantity: 2 },
+      { id: '2', name: 'Glue dots', costPerUnit: 8, quantity: 1 },
     ],
     estimatedHours: 4,
     suggestedPrice: 250,
@@ -62,8 +62,8 @@ const defaultPackages: Package[] = [
     icon: '🎀',
     estimatedBalloons: 80,
     estimatedMaterials: [
-      { id: '1', name: 'Cinta de globos', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 5, quantityPerPresentation: 1, costPerUnit: 5, quantity: 1 },
-      { id: '2', name: 'Glue dots', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 8, quantityPerPresentation: 1, costPerUnit: 8, quantity: 1 },
+      { id: '1', name: 'Cinta de globos', costPerUnit: 5, quantity: 1 },
+      { id: '2', name: 'Glue dots', costPerUnit: 8, quantity: 1 },
     ],
     estimatedHours: 2,
     suggestedPrice: 120,
@@ -75,8 +75,8 @@ const defaultPackages: Package[] = [
     icon: '🏛️',
     estimatedBalloons: 100,
     estimatedMaterials: [
-      { id: '1', name: 'Base PVC', baseUnit: 'unidad', purchaseUnit: 'unidad', presentationPrice: 15, quantityPerPresentation: 1, costPerUnit: 15, quantity: 2 },
-      { id: '2', name: 'Tubo PVC', baseUnit: 'unidad', purchaseUnit: 'unidad', presentationPrice: 8, quantityPerPresentation: 1, costPerUnit: 8, quantity: 4 },
+      { id: '1', name: 'Base PVC', costPerUnit: 15, quantity: 2 },
+      { id: '2', name: 'Tubo PVC', costPerUnit: 8, quantity: 4 },
     ],
     estimatedHours: 2.5,
     suggestedPrice: 180,
@@ -88,8 +88,8 @@ const defaultPackages: Package[] = [
     icon: '📸',
     estimatedBalloons: 200,
     estimatedMaterials: [
-      { id: '1', name: 'Estructura', baseUnit: 'unidad', purchaseUnit: 'unidad', presentationPrice: 30, quantityPerPresentation: 1, costPerUnit: 30, quantity: 1 },
-      { id: '2', name: 'Glue dots', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 8, quantityPerPresentation: 1, costPerUnit: 8, quantity: 2 },
+      { id: '1', name: 'Estructura', costPerUnit: 30, quantity: 1 },
+      { id: '2', name: 'Glue dots', costPerUnit: 8, quantity: 2 },
     ],
     estimatedHours: 5,
     suggestedPrice: 350,
@@ -101,8 +101,8 @@ const defaultPackages: Package[] = [
     icon: '🌸',
     estimatedBalloons: 15,
     estimatedMaterials: [
-      { id: '1', name: 'Base', baseUnit: 'unidad', purchaseUnit: 'unidad', presentationPrice: 5, quantityPerPresentation: 1, costPerUnit: 5, quantity: 1 },
-      { id: '2', name: 'Cinta', baseUnit: 'unidad', purchaseUnit: 'rollo', presentationPrice: 2, quantityPerPresentation: 1, costPerUnit: 2, quantity: 1 },
+      { id: '1', name: 'Base', costPerUnit: 5, quantity: 1 },
+      { id: '2', name: 'Cinta', costPerUnit: 2, quantity: 1 },
     ],
     estimatedHours: 0.5,
     suggestedPrice: 35,
@@ -114,7 +114,7 @@ const defaultPackages: Package[] = [
     icon: '✨',
     estimatedBalloons: 400,
     estimatedMaterials: [
-      { id: '1', name: 'Varios materiales', baseUnit: 'unidad', purchaseUnit: 'paquete', presentationPrice: 50, quantityPerPresentation: 1, costPerUnit: 50, quantity: 1 },
+      { id: '1', name: 'Varios materiales', costPerUnit: 50, quantity: 1 },
     ],
     estimatedHours: 8,
     suggestedPrice: 800,
