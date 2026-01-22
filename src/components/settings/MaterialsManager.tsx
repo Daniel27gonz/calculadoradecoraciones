@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Package, Plus, Trash2 } from 'lucide-react';
+import { Package, Plus, Trash2, Pencil, X, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +36,8 @@ export function MaterialsManager() {
   const { toast } = useToast();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newMaterial, setNewMaterial] = useState<Omit<Material, 'id' | 'cost_per_unit'>>({
     name: '',
     purchase_unit: '',
@@ -160,6 +163,58 @@ export function MaterialsManager() {
       });
     }
   };
+
+  const handleEditMaterial = (material: Material) => {
+    setEditingMaterial({ ...material });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateMaterial = async () => {
+    if (!editingMaterial || !user) return;
+
+    if (!editingMaterial.name.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre del material es requerido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_materials')
+        .update({
+          name: editingMaterial.name.trim(),
+          purchase_unit: editingMaterial.purchase_unit.trim() || null,
+          presentation_price: editingMaterial.presentation_price,
+          quantity_per_presentation: editingMaterial.quantity_per_presentation,
+        })
+        .eq('id', editingMaterial.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Material actualizado",
+        description: "El material se ha actualizado correctamente",
+      });
+
+      setEditDialogOpen(false);
+      setEditingMaterial(null);
+      loadMaterials();
+    } catch (error) {
+      console.error('Error updating material:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el material",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const editCostPerUnit = editingMaterial 
+    ? calculateCostPerUnit(editingMaterial.presentation_price, editingMaterial.quantity_per_presentation)
+    : null;
 
   const formatCurrency = (value: number | null): string => {
     if (value === null) return '-';
@@ -309,8 +364,8 @@ export function MaterialsManager() {
                       {material.purchase_unit && `Compra: ${material.purchase_unit}`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
+                  <div className="flex items-center gap-2">
+                    <div className="text-right mr-1">
                       <p className="text-sm font-medium text-primary">
                         {formatCurrency(material.cost_per_unit)}/{['bolsa', 'paquete', 'caja'].includes(material.purchase_unit) ? 'pieza' : 'unidad'}
                       </p>
@@ -318,6 +373,14 @@ export function MaterialsManager() {
                         {formatCurrency(material.presentation_price)} × {material.quantity_per_presentation ?? '-'}
                       </p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditMaterial(material)}
+                      className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -337,6 +400,92 @@ export function MaterialsManager() {
             <p className="text-sm">No tienes materiales guardados</p>
           </div>
         )}
+
+        {/* Edit Material Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="bg-background">
+            <DialogHeader>
+              <DialogTitle>Editar Material</DialogTitle>
+            </DialogHeader>
+            {editingMaterial && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nombre del material</Label>
+                  <Input
+                    value={editingMaterial.name}
+                    onChange={(e) => setEditingMaterial(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Unidad de compra</Label>
+                  <Select
+                    value={editingMaterial.purchase_unit}
+                    onValueChange={(value) => setEditingMaterial(prev => prev ? { ...prev, purchase_unit: value } : null)}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecciona una opción" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {PURCHASE_UNITS.map((unit) => (
+                        <SelectItem key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Precio de la presentación</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingMaterial.presentation_price ?? ''}
+                      onChange={(e) => setEditingMaterial(prev => prev ? { 
+                        ...prev, 
+                        presentation_price: e.target.value === '' ? null : Number(e.target.value)
+                      } : null)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cantidad</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={editingMaterial.quantity_per_presentation ?? ''}
+                      onChange={(e) => setEditingMaterial(prev => prev ? { 
+                        ...prev, 
+                        quantity_per_presentation: e.target.value === '' ? null : Number(e.target.value)
+                      } : null)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                  <span className="text-sm font-medium">
+                    Costo por {['bolsa', 'paquete', 'caja'].includes(editingMaterial.purchase_unit) ? 'pieza' : 'unidad'}:
+                  </span>
+                  <span className="text-lg font-bold text-primary">
+                    {editCostPerUnit !== null ? formatCurrency(editCostPerUnit) : '-'}
+                  </span>
+                </div>
+              </div>
+            )}
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button variant="gradient" onClick={handleUpdateMaterial}>
+                <Check className="w-4 h-4 mr-2" />
+                Guardar cambios
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
