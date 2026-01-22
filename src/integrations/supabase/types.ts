@@ -115,7 +115,6 @@ export type Database = {
           transport_items: Json | null
           updated_at: string
           user_id: string
-          wastage_percentage: number | null
           workers: Json | null
         }
         Insert: {
@@ -134,7 +133,6 @@ export type Database = {
           transport_items?: Json | null
           updated_at?: string
           user_id: string
-          wastage_percentage?: number | null
           workers?: Json | null
         }
         Update: {
@@ -153,7 +151,6 @@ export type Database = {
           transport_items?: Json | null
           updated_at?: string
           user_id?: string
-          wastage_percentage?: number | null
           workers?: Json | null
         }
         Relationships: []
