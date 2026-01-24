@@ -209,6 +209,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       indirectExpenses: quote.indirectExpenses,
       marginPercentage: quote.marginPercentage,
       toolWearPercentage: quote.toolWearPercentage,
+      wastagePercentage: quote.wastagePercentage,
       notes: quote.notes,
     });
 
@@ -239,6 +240,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         indirect_expenses: validatedData.indirectExpenses,
         margin_percentage: validatedData.marginPercentage,
         tool_wear_percentage: validatedData.toolWearPercentage,
+        wastage_percentage: validatedData.wastagePercentage,
         notes: validatedData.notes,
         updated_at: new Date().toISOString(),
       };
