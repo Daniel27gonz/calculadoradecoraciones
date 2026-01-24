@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Copy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useToast } from '@/hooks/use-toast';
+import { PackageFormDialog } from '@/components/packages/PackageFormDialog';
+import { Package } from '@/types/quote';
 
 export default function Packages() {
   const navigate = useNavigate();
-  const { packages, deletePackage } = useQuote();
+  const { packages, savePackage, deletePackage } = useQuote();
   const { toast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
 
   const handleUsePackage = (packageId: string) => {
     navigate(`/calculator?package=${packageId}`);
@@ -22,6 +27,38 @@ export default function Packages() {
     });
   };
 
+  const handleEdit = (pkg: Package) => {
+    setEditingPackage(pkg);
+    setIsFormOpen(true);
+  };
+
+  const handleDuplicate = (pkg: Package) => {
+    const duplicated: Package = {
+      ...pkg,
+      id: crypto.randomUUID(),
+      name: `${pkg.name} (copia)`,
+    };
+    savePackage(duplicated);
+    toast({
+      title: "Paquete duplicado",
+      description: `Se ha creado una copia de "${pkg.name}"`,
+    });
+  };
+
+  const handleSavePackage = (pkg: Package) => {
+    savePackage(pkg);
+    setEditingPackage(null);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) {
+      setEditingPackage(null);
+    }
+  };
+
+  const isDefaultPackage = (id: string) => id.startsWith('default-');
+
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
       {/* Header */}
@@ -33,7 +70,7 @@ export default function Packages() {
               Volver
             </Button>
             <h1 className="font-display text-xl font-semibold">Paquetes</h1>
-            <Button variant="soft" size="sm" disabled>
+            <Button variant="soft" size="sm" onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4" />
               Nuevo
             </Button>
@@ -95,7 +132,9 @@ export default function Packages() {
                 {/* Materials preview */}
                 <div className="text-sm text-muted-foreground">
                   <span className="font-medium">Materiales: </span>
-                  {pkg.estimatedMaterials.map(m => m.name).join(', ')}
+                  {pkg.estimatedMaterials.length > 0 
+                    ? pkg.estimatedMaterials.map(m => m.name).join(', ')
+                    : 'Sin materiales'}
                 </div>
 
                 {/* Actions */}
@@ -108,10 +147,19 @@ export default function Packages() {
                   >
                     Usar paquete
                   </Button>
-                  <Button variant="outline" size="icon" disabled>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleEdit(pkg)}
+                    disabled={isDefaultPackage(pkg.id)}
+                  >
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="icon" disabled>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleDuplicate(pkg)}
+                  >
                     <Copy className="w-4 h-4" />
                   </Button>
                   <Button
@@ -119,6 +167,7 @@ export default function Packages() {
                     size="icon"
                     className="text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(pkg.id, pkg.name)}
+                    disabled={isDefaultPackage(pkg.id)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -128,6 +177,14 @@ export default function Packages() {
           ))}
         </div>
       </main>
+
+      {/* Package Form Dialog */}
+      <PackageFormDialog
+        open={isFormOpen}
+        onOpenChange={handleOpenChange}
+        onSave={handleSavePackage}
+        initialPackage={editingPackage}
+      />
     </div>
   );
 }
