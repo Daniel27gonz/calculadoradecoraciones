@@ -160,7 +160,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           timePhases: safeParseQuoteArrayField(q.time_phases, TimePhaseSchema, []) as TimePhase[],
           extras: safeParseQuoteArrayField(q.extras, ExtraSchema, []) as Extra[],
           transportItems: safeParseQuoteArrayField(q.transport_items, TransportItemSchema, []) as TransportItem[],
-          indirectExpenses: safeParseQuoteArrayField(q.indirect_expenses, IndirectExpenseSchema, []) as IndirectExpense[],
+          indirectExpenses: [] as IndirectExpense[], // Column doesn't exist yet in DB
           marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
@@ -237,7 +237,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         time_phases: validatedData.timePhases,
         extras: validatedData.extras,
         transport_items: validatedData.transportItems,
-        indirect_expenses: validatedData.indirectExpenses,
+        // indirect_expenses column doesn't exist yet - omitted from save
         margin_percentage: validatedData.marginPercentage,
         tool_wear_percentage: validatedData.toolWearPercentage,
         wastage_percentage: validatedData.wastagePercentage,
