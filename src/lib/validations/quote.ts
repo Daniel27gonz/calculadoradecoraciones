@@ -22,8 +22,8 @@ export const BalloonSchema = z.object({
 export const MaterialSchema = z.object({
   id: z.string().max(100),
   name: z.string().max(MAX_NAME_LENGTH),
-  costPerUnit: z.number().min(0).max(MAX_PRICE),
-  quantity: z.number().min(0).max(MAX_QUANTITY),
+  costPerUnit: z.number().min(0).max(MAX_PRICE).optional().default(0),
+  quantity: z.number().min(0).max(MAX_QUANTITY).optional().default(0),
 });
 
 // Worker validation schema
