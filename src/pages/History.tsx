@@ -268,15 +268,6 @@ export default function History() {
                             variant="outline"
                             size="sm"
                             className="w-full"
-                            onClick={() => handleViewImage(quote)}
-                          >
-                            <Eye className="w-4 h-4 shrink-0" />
-                            <span className="truncate">Ver</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
                             onClick={() => handleDuplicate(quote.id)}
                           >
                             <Copy className="w-4 h-4 shrink-0" />
