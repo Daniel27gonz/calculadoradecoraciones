@@ -1,5 +1,9 @@
+import { useRef, useState } from "react";
 import { QuoteTemplateData } from "@/pages/Design";
-import { Heart } from "lucide-react";
+import { Heart, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import html2canvas from "html2canvas";
+import { toast } from "@/hooks/use-toast";
 
 interface QuoteTemplatePreviewProps {
   data: QuoteTemplateData;
@@ -8,9 +12,84 @@ interface QuoteTemplatePreviewProps {
 
 const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
   const depositAmount = (total * data.depositPercentage) / 100;
+  const templateRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!templateRef.current) return;
+
+    setIsDownloading(true);
+    console.log("Descarga iniciada");
+
+    try {
+      // Clone the element to avoid modifying the original
+      const clone = templateRef.current.cloneNode(true) as HTMLElement;
+      clone.style.position = "fixed";
+      clone.style.top = "0";
+      clone.style.left = "0";
+      clone.style.zIndex = "9999";
+      clone.style.background = "white";
+      clone.style.width = "800px";
+      clone.style.visibility = "visible";
+      document.body.appendChild(clone);
+
+      // Wait for rendering
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      // Remove clone
+      document.body.removeChild(clone);
+
+      // Generate filename
+      const clientName = data.clientName || "cotizacion";
+      const sanitizedName = clientName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").replace(/\s+/g, "-");
+      const fileName = `cotizacion-${sanitizedName}-${new Date().toISOString().split("T")[0]}`;
+
+      // Convert to image and download
+      const link = document.createElement("a");
+      link.download = `${fileName}.png`;
+      link.href = canvas.toDataURL("image/png", 1.0);
+      link.click();
+
+      console.log("Descarga completada");
+      toast({
+        title: "¡Descargado!",
+        description: "La cotización se ha descargado correctamente",
+      });
+    } catch (error) {
+      console.error("Error en la descarga:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo descargar la cotización",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
+    <div className="space-y-4">
+      {/* Download Button */}
+      <div className="flex justify-center">
+        <Button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="gap-2 bg-primary hover:bg-primary/90"
+        >
+          <Download className="w-4 h-4" />
+          {isDownloading ? "Descargando..." : "Descargar Cotización"}
+        </Button>
+      </div>
+
+      {/* Template Content */}
+      <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
       {/* Header con fondo rosa */}
       <div className="relative bg-gradient-to-r from-pink-100 to-pink-50 p-6">
         {/* Decoraciones de puntos */}
@@ -209,6 +288,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             </svg>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
