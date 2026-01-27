@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
   { path: '/calculator', icon: Calculator, label: 'Cotizar' },
   { path: '/packages', icon: Package, label: 'Paquetes' },
+  { path: '/finances', icon: Wallet, label: 'Finanzas' },
   { path: '/history', icon: History, label: 'Historial' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
