@@ -31,7 +31,9 @@ const defaultTimePhases: TimePhase[] = [
 const createEmptyQuote = (hourlyRate: number): Quote => ({
   id: crypto.randomUUID(),
   clientName: '',
+  clientPhone: '',
   eventDate: '',
+  eventType: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   balloons: [],
@@ -213,11 +215,29 @@ export default function Calculator() {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium">Teléfono del cliente</label>
+                <Input
+                  value={quote.clientPhone}
+                  onChange={(e) => updateQuote({ clientPhone: e.target.value })}
+                  placeholder="Ej: +52 555 123 4567"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Fecha del evento</label>
                 <Input
                   type="date"
                   value={quote.eventDate}
                   onChange={(e) => updateQuote({ eventDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo de decoración</label>
+                <Input
+                  value={quote.eventType}
+                  onChange={(e) => updateQuote({ eventType: e.target.value })}
+                  placeholder="Ej: Cumpleaños infantil, Boda, XV años"
                 />
               </div>
             </div>

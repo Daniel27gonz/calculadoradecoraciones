@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           balloons: Json | null
           client_name: string
+          client_phone: string | null
           created_at: string
           event_date: string | null
           event_type: string | null
@@ -121,6 +122,7 @@ export type Database = {
         Insert: {
           balloons?: Json | null
           client_name: string
+          client_phone?: string | null
           created_at?: string
           event_date?: string | null
           event_type?: string | null
@@ -140,6 +142,7 @@ export type Database = {
         Update: {
           balloons?: Json | null
           client_name?: string
+          client_phone?: string | null
           created_at?: string
           event_date?: string | null
           event_type?: string | null

@@ -54,7 +54,9 @@ export interface ToolAmortization {
 export interface Quote {
   id: string;
   clientName: string;
+  clientPhone: string;
   eventDate: string;
+  eventType: string;
   createdAt: string;
   updatedAt: string;
   balloons: Balloon[];
