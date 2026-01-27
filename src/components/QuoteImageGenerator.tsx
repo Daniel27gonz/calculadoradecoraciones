@@ -18,19 +18,11 @@ const formatCurrency = (amount: number, symbol: string) => {
 };
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
-  ({ quote, summary, currencySymbol, marginPercentage }, ref) => {
+  ({ quote, summary, currencySymbol }, ref) => {
     const eventDateFormatted = quote.eventDate
       ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
       : 'Por definir';
 
-    // Calculate totals for display
-    const materialsTotal = summary.totalBalloons + summary.totalMaterials;
-    const laborTotal = summary.totalLabor + summary.totalTime;
-    const transportTotal = summary.totalTransport;
-    const toolsTotal = summary.toolWear;
-    const extrasTotal = summary.totalExtras;
-    const realCost = summary.totalCost;
-    const profit = summary.netProfit;
     const finalPrice = summary.finalPrice;
 
     return (
@@ -90,139 +82,27 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         </div>
 
-        {/* Cost Breakdown */}
-        <div style={{ marginBottom: '28px' }}>
-          {/* Materials */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>📦</span>
-              <span style={{ fontSize: '14px', color: '#555555' }}>Materiales</span>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
-              {formatCurrency(materialsTotal, currencySymbol)}
-            </span>
-          </div>
-
-          {/* Labor */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🕑</span>
-              <span style={{ fontSize: '14px', color: '#555555' }}>Mano de obra</span>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
-              {formatCurrency(laborTotal, currencySymbol)}
-            </span>
-          </div>
-
-          {/* Transport */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🚚</span>
-              <span style={{ fontSize: '14px', color: '#555555' }}>Transporte</span>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
-              {formatCurrency(transportTotal, currencySymbol)}
-            </span>
-          </div>
-
-          {/* Tools */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>🛠</span>
-              <span style={{ fontSize: '14px', color: '#555555' }}>
-                Herramientas (Desgaste {quote.toolWearPercentage ?? 0}%)
-              </span>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
-              {formatCurrency(toolsTotal, currencySymbol)}
-            </span>
-          </div>
-
-          {/* Extras / Indirect Costs */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '12px' }}>📊</span>
-              <span style={{ fontSize: '14px', color: '#555555' }}>Costos indirectos</span>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#333333' }}>
-              {formatCurrency(extrasTotal, currencySymbol)}
-            </span>
-          </div>
-        </div>
-
-        {/* Real Cost */}
+        {/* Service Concept - Simplified for client */}
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 0',
-            borderTop: '1px solid #f8c8d4',
-            marginBottom: '8px',
+            marginBottom: '28px',
+            padding: '20px',
+            background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+            borderRadius: '12px',
+            border: '1px solid #f8c8d4',
           }}
         >
-          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>Costo Real:</span>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: '#333333' }}>
-            {formatCurrency(realCost, currencySymbol)}
-          </span>
-        </div>
-
-        {/* Profit */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px 0',
-            marginBottom: '24px',
-          }}
-        >
-          <span style={{ fontSize: '15px', fontWeight: 500, color: '#555555' }}>
-            Ganancia ({marginPercentage ?? quote.marginPercentage ?? 0}%):
-          </span>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: '#22c55e' }}>
-            {formatCurrency(profit, currencySymbol)}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ color: '#f5a5b8', fontSize: '18px', marginRight: '10px' }}>🎈</span>
+            <span style={{ fontSize: '16px', fontWeight: 600, color: '#333333' }}>
+              Servicio de decoración con globos
+            </span>
+          </div>
+          {quote.eventType && (
+            <p style={{ fontSize: '14px', color: '#666666', margin: '0 0 0 28px' }}>
+              {quote.eventType}
+            </p>
+          )}
         </div>
 
         {/* Final Price */}
@@ -231,6 +111,9 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             textAlign: 'center',
             padding: '24px',
             marginBottom: '24px',
+            background: 'linear-gradient(135deg, #fdf2f8 0%, #ffffff 100%)',
+            borderRadius: '12px',
+            border: '2px solid #f5a5b8',
           }}
         >
           <p
@@ -242,10 +125,12 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
             }}
           >
             <span>💰</span>
-            <span>PRECIO FINAL</span>
+            <span>PRECIO TOTAL</span>
           </p>
           <p
             style={{
@@ -260,34 +145,33 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </p>
         </div>
 
-        {/* Notes Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <p
-            style={{
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#888888',
-              margin: '0 0 8px 0',
-            }}
-          >
-            Notas:
-          </p>
-          <div
-            style={{
-              minHeight: '60px',
-              padding: '12px',
-              border: '1px solid #f0e0e5',
-              borderRadius: '8px',
-              background: '#fefefe',
-            }}
-          >
-            {quote.notes && (
+        {/* Notes Section - Only show if there are notes */}
+        {quote.notes && (
+          <div style={{ marginBottom: '24px' }}>
+            <p
+              style={{
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#888888',
+                margin: '0 0 8px 0',
+              }}
+            >
+              Notas:
+            </p>
+            <div
+              style={{
+                padding: '12px',
+                border: '1px solid #f0e0e5',
+                borderRadius: '8px',
+                background: '#fefefe',
+              }}
+            >
               <p style={{ fontSize: '13px', color: '#666666', margin: 0, lineHeight: 1.6 }}>
                 {quote.notes}
               </p>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Footer */}
         <p
