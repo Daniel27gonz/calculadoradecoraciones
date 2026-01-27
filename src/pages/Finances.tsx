@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
 import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
+import { TransactionFilters } from '@/components/finances/TransactionFilters';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface Transaction {
   id: string;
@@ -31,6 +37,14 @@ interface Transaction {
   created_at: string;
 }
 
+interface Filters {
+  day: string;
+  month: string;
+  year: string;
+  category: string;
+  type: string;
+}
+
 export default function Finances() {
   const { user, profile } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -38,8 +52,33 @@ export default function Finances() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>({
+    day: '',
+    month: '',
+    year: '',
+    category: '',
+    type: '',
+  });
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
+
+  // Filter transactions based on active filters
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const [year, month, day] = t.transaction_date.split('-');
+      
+      if (filters.day && parseInt(day) !== parseInt(filters.day)) return false;
+      if (filters.month && month !== filters.month) return false;
+      if (filters.year && year !== filters.year) return false;
+      if (filters.category && t.category !== filters.category) return false;
+      if (filters.type && t.type !== filters.type) return false;
+      
+      return true;
+    });
+  }, [transactions, filters]);
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== '');
 
   useEffect(() => {
     if (user) {
@@ -221,20 +260,46 @@ export default function Finances() {
         {/* Transactions List */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
+              <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filtros
+                    {hasActiveFilters && (
+                      <span className="w-2 h-2 bg-primary rounded-full" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
+            </div>
           </CardHeader>
           <CardContent>
+            <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+              <CollapsibleContent className="pb-4">
+                <TransactionFilters
+                  transactions={transactions}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+            
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...
               </div>
-            ) : transactions.length === 0 ? (
+            ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No hay transacciones registradas. ¡Agrega tu primera transacción!
+                {transactions.length === 0 
+                  ? "No hay transacciones registradas. ¡Agrega tu primera transacción!"
+                  : "No hay transacciones que coincidan con los filtros seleccionados."
+                }
               </div>
             ) : (
               <div className="space-y-3">
-                {transactions.map((transaction) => (
+                {filteredTransactions.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
