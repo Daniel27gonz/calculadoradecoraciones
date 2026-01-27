@@ -25,6 +25,10 @@ export const LATAM_CURRENCIES: Currency[] = [
   { code: 'PAB', name: 'Balboa', symbol: 'B/', country: 'Panamá', flag: '🇵🇦' },
   { code: 'DOP', name: 'Peso dominicano', symbol: 'RD$', country: 'República Dominicana', flag: '🇩🇴' },
   { code: 'CUP', name: 'Peso cubano', symbol: '$', country: 'Cuba', flag: '🇨🇺' },
+  { code: 'CAD', name: 'Dólar canadiense', symbol: 'CA$', country: 'Canadá', flag: '🇨🇦' },
+  { code: 'USD_SV', name: 'Dólar estadounidense', symbol: '$', country: 'El Salvador', flag: '🇸🇻' },
+  { code: 'USD_EC', name: 'Dólar estadounidense', symbol: '$', country: 'Ecuador', flag: '🇪🇨' },
+  { code: 'EUR', name: 'Euro', symbol: '€', country: 'España', flag: '🇪🇸' },
 ];
 
 export function getCurrencyByCode(code: string): Currency | undefined {
