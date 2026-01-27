@@ -62,6 +62,9 @@ export type Database = {
           created_at: string
           currency: string | null
           default_hourly_rate: number | null
+          design_additional_notes: string | null
+          design_deposit_message: string | null
+          design_deposit_percentage: number | null
           events_per_month: number | null
           id: string
           logo_url: string | null
@@ -75,6 +78,9 @@ export type Database = {
           created_at?: string
           currency?: string | null
           default_hourly_rate?: number | null
+          design_additional_notes?: string | null
+          design_deposit_message?: string | null
+          design_deposit_percentage?: number | null
           events_per_month?: number | null
           id?: string
           logo_url?: string | null
@@ -88,6 +94,9 @@ export type Database = {
           created_at?: string
           currency?: string | null
           default_hourly_rate?: number | null
+          design_additional_notes?: string | null
+          design_deposit_message?: string | null
+          design_deposit_percentage?: number | null
           events_per_month?: number | null
           id?: string
           logo_url?: string | null
