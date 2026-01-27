@@ -43,19 +43,14 @@ export function Navigation() {
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
               <Calculator className="w-4 h-4 text-primary-foreground" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-display text-lg font-semibold text-foreground">
-                {location.pathname === '/' && 'Inicio'}
-                {location.pathname === '/calculator' && 'Cotizar'}
-                {location.pathname === '/packages' && 'Paquetes'}
-                {location.pathname === '/finances' && 'Finanzas'}
-                {location.pathname === '/history' && 'Historial'}
-                {location.pathname === '/settings' && 'Ajustes'}
-              </span>
-              {isMobile && (
-                <span className="text-xs text-muted-foreground">Tu resumen financiero</span>
-              )}
-            </div>
+            <span className="font-display text-lg font-semibold text-foreground">
+              {location.pathname === '/' && 'Inicio'}
+              {location.pathname === '/calculator' && 'Cotizar'}
+              {location.pathname === '/packages' && 'Paquetes'}
+              {location.pathname === '/finances' && 'Finanzas'}
+              {location.pathname === '/history' && 'Historial'}
+              {location.pathname === '/settings' && 'Ajustes'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Link
