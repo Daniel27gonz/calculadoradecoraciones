@@ -221,69 +221,71 @@ export default function History() {
                       )}
 
                       {/* Actions */}
-                      <div className="pt-2 border-t border-border space-y-2">
-                        {/* Primary actions row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleViewImage(quote)}
-                          >
-                            <Eye className="w-4 h-4 shrink-0" />
-                            <span className="truncate">Ver</span>
-                          </Button>
+                      <div className="pt-3 border-t border-border space-y-3">
+                        {/* Main CTA row - most used actions */}
+                        <div className="grid grid-cols-2 gap-2">
                           <Button
                             variant="gradient"
                             size="sm"
-                            className="w-full"
+                            className="w-full h-11"
                             onClick={() => handleViewImage(quote)}
                           >
                             <Share2 className="w-4 h-4 shrink-0" />
-                            <span className="truncate">Compartir</span>
+                            <span>Compartir</span>
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
-                            className="w-full"
+                            className="w-full h-11"
                             onClick={() => handleDownloadPdf(quote)}
                             disabled={isGenerating}
                           >
                             <FileDown className="w-4 h-4 shrink-0" />
-                            <span className="truncate">{isGenerating ? 'Generando...' : 'Descargar'}</span>
+                            <span>{isGenerating ? 'Generando...' : 'Descargar'}</span>
                           </Button>
                         </div>
-                        {/* Secondary actions row */}
-                        <div className="grid grid-cols-3 gap-2">
+                        
+                        {/* Secondary actions - icon buttons for space efficiency */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => handleViewImage(quote)}
+                              title="Ver cotización"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => handleEdit(quote.id)}
+                              title="Editar cotización"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => handleDuplicate(quote.id)}
+                              title="Duplicar cotización"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                           <Button
-                            variant="soft"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleEdit(quote.id)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(quote.id, quote.clientName)}
+                            title="Eliminar cotización"
                           >
-                            <Edit2 className="w-4 h-4 shrink-0" />
-                            <span className="truncate">Editar</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleDuplicate(quote.id)}
-                          >
-                            <Copy className="w-4 h-4 shrink-0" />
-                            <span className="truncate">Duplicar</span>
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        {/* Delete action - separate row for visibility */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(quote.id, quote.clientName)}
-                        >
-                          <Trash2 className="w-4 h-4 shrink-0" />
-                          <span>Eliminar cotización</span>
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
