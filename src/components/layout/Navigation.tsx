@@ -68,7 +68,7 @@ export function Navigation() {
               )}
             >
               <Wallet className="w-5 h-5" />
-              {!isMobile && <span className="text-sm font-medium">Finanzas</span>}
+              <span className="text-sm font-medium">Finanzas</span>
             </Link>
             {/* User indicator - visible on desktop */}
             {!isMobile && (
