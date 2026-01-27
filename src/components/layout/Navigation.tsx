@@ -55,7 +55,7 @@ export function Navigation() {
       )}
 
       {/* Bottom Navigation (Mobile) / Top Navigation (Desktop) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border shadow-elevated md:top-16 md:bottom-auto md:border-t-0 md:border-b">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border shadow-elevated md:top-0 md:bottom-auto md:border-t-0 md:border-b">
         <div className="container flex items-center justify-between h-16 md:h-20">
           {/* Logo - visible only on desktop */}
           <Link to="/" className="hidden md:flex items-center gap-2">
