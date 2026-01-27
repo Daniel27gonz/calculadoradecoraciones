@@ -1,15 +1,25 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye, Upload, X, Image } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image, Info } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuote } from "@/contexts/QuoteContext";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface QuoteItem {
   id: string;
@@ -42,13 +52,15 @@ export interface QuoteTemplateData {
 }
 
 const Design = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { quotes, calculateCosts } = useQuote();
   const [showPreview, setShowPreview] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [templateData, setTemplateData] = useState<QuoteTemplateData>({
-    businessName: "Mi Negocio",
-    businessLogo: "",
+    businessName: profile?.business_name || "Mi Negocio",
+    businessLogo: profile?.logo_url || "",
     quoteDate: new Date().toLocaleDateString("es-MX", {
       day: "numeric",
       month: "long",
@@ -68,6 +80,81 @@ const Design = () => {
     thankYouMessage: "¡Gracias por confiar en mí para hacer tu evento especial!",
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
   });
+
+  // Load profile data when available
+  useEffect(() => {
+    if (profile?.business_name) {
+      updateField("businessName", profile.business_name);
+    }
+    if (profile?.logo_url) {
+      updateField("businessLogo", profile.logo_url);
+    }
+  }, [profile]);
+
+  // Load selected quote data into template
+  useEffect(() => {
+    if (selectedQuoteId) {
+      const selectedQuote = quotes.find(q => q.id === selectedQuoteId);
+      if (selectedQuote) {
+        const costSummary = calculateCosts(selectedQuote);
+        
+        // Format event date
+        let formattedEventDate = "";
+        if (selectedQuote.eventDate) {
+          try {
+            formattedEventDate = format(new Date(selectedQuote.eventDate), "d 'de' MMMM 'de' yyyy", { locale: es });
+          } catch {
+            formattedEventDate = selectedQuote.eventDate;
+          }
+        }
+
+        // Convert materials and extras to items
+        const items: QuoteItem[] = [
+          ...selectedQuote.materials.map(mat => ({
+            id: mat.id,
+            description: mat.name,
+            quantity: mat.quantity,
+            price: mat.costPerUnit * mat.quantity,
+          })),
+          ...selectedQuote.balloons.map(bal => ({
+            id: bal.id,
+            description: bal.description,
+            quantity: bal.quantity,
+            price: bal.pricePerUnit * bal.quantity,
+          })),
+        ];
+
+        // Convert extras and transport to additional services
+        const additionalServices: AdditionalService[] = [
+          ...selectedQuote.extras.map(extra => ({
+            id: extra.id,
+            description: extra.name,
+            price: extra.pricePerUnit * extra.quantity,
+          })),
+          ...selectedQuote.transportItems.map(transport => ({
+            id: transport.id,
+            description: transport.concept,
+            price: transport.amount,
+          })),
+        ];
+
+        setTemplateData(prev => ({
+          ...prev,
+          clientName: selectedQuote.clientName,
+          clientPhone: selectedQuote.clientPhone || "",
+          eventDate: formattedEventDate,
+          decorationType: selectedQuote.eventType || "",
+          items: items.length > 0 ? items : [{ id: "1", description: "", quantity: 1, price: 0 }],
+          additionalServices,
+        }));
+
+        toast({
+          title: "Datos cargados",
+          description: `Se cargaron los datos de la cotización de ${selectedQuote.clientName}`,
+        });
+      }
+    }
+  }, [selectedQuoteId, quotes, calculateCosts]);
 
   const updateField = <K extends keyof QuoteTemplateData>(
     field: K,
@@ -271,6 +358,38 @@ const Design = () => {
           <QuoteTemplatePreview data={templateData} total={calculateTotal()} />
         ) : (
           <div className="space-y-6">
+            {/* Selector de Cotización */}
+            {quotes.length > 0 && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          Cargar datos de una cotización existente
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Selecciona una cotización para rellenar automáticamente los datos del cliente
+                        </p>
+                      </div>
+                      <Select value={selectedQuoteId} onValueChange={setSelectedQuoteId}>
+                        <SelectTrigger className="w-full md:w-80">
+                          <SelectValue placeholder="Seleccionar cotización..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {quotes.map((quote) => (
+                            <SelectItem key={quote.id} value={quote.id}>
+                              {quote.clientName} - {quote.eventDate || "Sin fecha"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {/* Datos del Negocio */}
             <Card>
               <CardHeader className="pb-4">

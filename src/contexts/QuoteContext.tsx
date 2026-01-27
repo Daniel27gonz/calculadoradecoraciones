@@ -150,7 +150,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         const loadedQuotes: Quote[] = data.map((q: any) => ({
           id: q.id,
           clientName: q.client_name || '',
+          clientPhone: q.client_phone || '',
           eventDate: q.event_date || '',
+          eventType: q.event_type || '',
           createdAt: q.created_at,
           updatedAt: q.updated_at,
           // Use safe parsing for JSONB fields to handle malformed data
@@ -230,7 +232,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         id: quote.id,
         user_id: user.id,
         client_name: validatedData.clientName,
+        client_phone: quote.clientPhone || null,
         event_date: validatedData.eventDate || null,
+        event_type: quote.eventType || null,
         balloons: validatedData.balloons,
         materials: validatedData.materials,
         workers: validatedData.workers,
