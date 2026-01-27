@@ -80,7 +80,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="gradient-hero py-12 px-4">
         <div className="container max-w-4xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft mt-6">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Calculadora para decoradoras</span>
           </div>
