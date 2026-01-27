@@ -9,6 +9,7 @@ import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
+import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -213,6 +214,9 @@ export default function Finances() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Monthly Charts */}
+        <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
 
         {/* Transactions List */}
         <Card>
