@@ -15,8 +15,8 @@ import Finances from "./pages/Finances";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Install from "./pages/Install";
+import Design from "./pages/Design";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -38,6 +38,7 @@ const App = () => (
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/design" element={<Design />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
