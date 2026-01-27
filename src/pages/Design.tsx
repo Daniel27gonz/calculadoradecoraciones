@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 interface QuoteItem {
   id: string;
@@ -39,7 +42,10 @@ export interface QuoteTemplateData {
 }
 
 const Design = () => {
+  const { user } = useAuth();
   const [showPreview, setShowPreview] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [templateData, setTemplateData] = useState<QuoteTemplateData>({
     businessName: "Mi Negocio",
     businessLogo: "",
@@ -135,6 +141,110 @@ const Design = () => {
     return itemsTotal + servicesTotal;
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast({
+        title: "Archivo muy grande",
+        description: "El logo debe ser menor a 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Formato no válido",
+        description: "Por favor sube una imagen (JPG, PNG, GIF, WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para subir un logo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/logo.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("business-logos")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("business-logos")
+        .getPublicUrl(fileName);
+
+      updateField("businessLogo", publicUrl);
+
+      toast({
+        title: "Logo subido",
+        description: "Tu logo se ha guardado correctamente",
+      });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast({
+        title: "Error al subir",
+        description: "No se pudo subir el logo. Intenta de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingLogo(false);
+      // Reset input
+      if (logoInputRef.current) {
+        logoInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!user) return;
+
+    try {
+      // List all files in user's folder and delete them
+      const { data: files } = await supabase.storage
+        .from("business-logos")
+        .list(user.id);
+
+      if (files && files.length > 0) {
+        const filesToDelete = files.map((f) => `${user.id}/${f.name}`);
+        await supabase.storage.from("business-logos").remove(filesToDelete);
+      }
+
+      updateField("businessLogo", "");
+
+      toast({
+        title: "Logo eliminado",
+        description: "El logo ha sido eliminado",
+      });
+    } catch (error) {
+      console.error("Error removing logo:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el logo",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24 pt-20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -169,6 +279,73 @@ const Design = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Logo Upload Section */}
+                <div className="space-y-3">
+                  <Label>Logo del negocio</Label>
+                  <div className="flex items-start gap-4">
+                    {/* Logo Preview */}
+                    <div className="w-20 h-20 rounded-lg border-2 border-dashed border-primary/30 flex items-center justify-center bg-muted/30 overflow-hidden">
+                      {templateData.businessLogo ? (
+                        <img
+                          src={templateData.businessLogo}
+                          alt="Logo del negocio"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <Image className="w-8 h-8 text-muted-foreground" />
+                      )}
+                    </div>
+                    
+                    {/* Upload Controls */}
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="file"
+                        ref={logoInputRef}
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={isUploadingLogo}
+                        className="gap-2"
+                      >
+                        {isUploadingLogo ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            Subiendo...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Subir logo
+                          </>
+                        )}
+                      </Button>
+                      {templateData.businessLogo && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveLogo}
+                          className="gap-2 text-destructive hover:text-destructive"
+                        >
+                          <X className="w-4 h-4" />
+                          Quitar logo
+                        </Button>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Formatos: JPG, PNG, GIF, WebP. Máximo 5MB.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Nombre del negocio</Label>
