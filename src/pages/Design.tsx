@@ -749,16 +749,6 @@ const Design = () => {
               </CardContent>
             </Card>
 
-            {/* Acciones */}
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowPreview(true)}
-                className="flex-1 gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Ver Vista Previa
-              </Button>
-            </div>
           </div>
         )}
       </div>
