@@ -129,12 +129,15 @@ const Design = () => {
     }
   };
 
+  // Track last loaded quote to prevent duplicate notifications
+  const lastLoadedQuoteIdRef = useRef<string | null>(null);
+
   // Load selected quote data into template
   useEffect(() => {
-    if (selectedQuoteId) {
+    if (selectedQuoteId && selectedQuoteId !== lastLoadedQuoteIdRef.current) {
       const selectedQuote = quotes.find(q => q.id === selectedQuoteId);
       if (selectedQuote) {
-        const costSummary = calculateCosts(selectedQuote);
+        lastLoadedQuoteIdRef.current = selectedQuoteId;
         
         // Format event date
         let formattedEventDate = "";
@@ -192,7 +195,7 @@ const Design = () => {
         });
       }
     }
-  }, [selectedQuoteId, quotes, calculateCosts]);
+  }, [selectedQuoteId, quotes]);
 
   const updateField = <K extends keyof QuoteTemplateData>(
     field: K,
