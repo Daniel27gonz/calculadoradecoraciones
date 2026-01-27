@@ -179,7 +179,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           </div>
         </div>
 
-        {/* Tabla de items */}
+        {/* Concepto de servicio simplificado para el cliente */}
         <div className="relative">
           {/* Borde decorativo */}
           <div className="absolute -left-2 top-0 bottom-0 w-1 border-l-2 border-dashed border-pink-200" />
@@ -189,10 +189,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             <thead>
               <tr className="bg-gradient-to-r from-pink-100 to-pink-50">
                 <th className="text-left py-3 px-4 text-pink-500 font-semibold">
-                  DESCRIPCIÓN
-                </th>
-                <th className="text-center py-3 px-4 text-pink-500 font-semibold">
-                  CANTIDAD
+                  SERVICIO
                 </th>
                 <th className="text-right py-3 px-4 text-pink-500 font-semibold">
                   PRECIO
@@ -200,44 +197,21 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((item) => (
-                <tr key={item.id} className="border-b border-pink-50">
-                  <td className="py-3 px-4 text-gray-700">
-                    {item.description || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-center text-gray-700">
-                    {item.quantity}
-                  </td>
-                  <td className="py-3 px-4 text-right text-gray-700">
-                    ${item.price.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
+              <tr className="border-b border-pink-50">
+                <td className="py-4 px-4 text-gray-700">
+                  <div className="font-medium">Servicio de decoración con globos</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {data.decorationType || "Decoración personalizada"}
+                  </div>
+                </td>
+                <td className="py-4 px-4 text-right text-gray-700 font-medium">
+                  ${total.toLocaleString()}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Servicios adicionales */}
-        {data.additionalServices.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-gray-600 font-medium underline">
-              Servicios adicionales:
-            </p>
-            {data.additionalServices.map((service) => (
-              <div
-                key={service.id}
-                className="flex justify-between items-center pl-4 border-b border-pink-50 pb-2"
-              >
-                <span className="text-gray-700">{service.description}</span>
-                <span className="text-gray-700">
-                  ${service.price.toLocaleString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Total */}
         <div className="flex justify-end items-center gap-4 pt-4 border-t-2 border-pink-200">
           <span className="text-xl font-bold text-gray-800">TOTAL:</span>
           <span className="text-2xl font-bold text-gray-900">
