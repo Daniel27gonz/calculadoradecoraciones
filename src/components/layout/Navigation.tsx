@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User, Wallet } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -69,6 +69,18 @@ export function Navigation() {
             >
               <Wallet className="w-5 h-5" />
               <span className="text-sm font-medium">Finanzas</span>
+            </Link>
+            <Link
+              to="/design"
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
+                location.pathname === '/design'
+                  ? "text-primary bg-rose-light"
+                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
+              )}
+            >
+              <Palette className="w-5 h-5" />
+              <span className="text-sm font-medium">Diseño</span>
             </Link>
             {/* User indicator - visible on desktop */}
             {!isMobile && (
