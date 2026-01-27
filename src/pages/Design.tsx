@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye, Upload, X, Image, Info } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +56,7 @@ const Design = () => {
   const { quotes, calculateCosts } = useQuote();
   const [showPreview, setShowPreview] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [templateData, setTemplateData] = useState<QuoteTemplateData>({
@@ -81,15 +82,52 @@ const Design = () => {
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
   });
 
-  // Load profile data when available
+  // Load profile data and design config when available
   useEffect(() => {
-    if (profile?.business_name) {
-      updateField("businessName", profile.business_name);
-    }
-    if (profile?.logo_url) {
-      updateField("businessLogo", profile.logo_url);
+    if (profile) {
+      setTemplateData(prev => ({
+        ...prev,
+        businessName: profile.business_name || prev.businessName,
+        businessLogo: profile.logo_url || prev.businessLogo,
+        depositPercentage: (profile as any).design_deposit_percentage ?? prev.depositPercentage,
+        depositMessage: (profile as any).design_deposit_message || prev.depositMessage,
+        customNote: (profile as any).design_additional_notes || prev.customNote,
+      }));
     }
   }, [profile]);
+
+  // Save design config to profile
+  const saveDesignConfig = async () => {
+    if (!user) return;
+    
+    setIsSavingConfig(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          design_deposit_percentage: templateData.depositPercentage,
+          design_deposit_message: templateData.depositMessage,
+          design_additional_notes: templateData.customNote,
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Configuración guardada",
+        description: "Tus preferencias de diseño se han guardado correctamente",
+      });
+    } catch (error) {
+      console.error("Error saving design config:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
 
   // Load selected quote data into template
   useEffect(() => {
@@ -734,6 +772,27 @@ const Design = () => {
                     placeholder="Ej: ¡Gracias por confiar en mí!"
                   />
                 </div>
+                <Separator className="my-4" />
+                <Button
+                  onClick={saveDesignConfig}
+                  disabled={isSavingConfig}
+                  className="w-full gap-2"
+                >
+                  {isSavingConfig ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Guardar configuración
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Los mensajes personalizados y el porcentaje de anticipo se guardarán en tu perfil
+                </p>
               </CardContent>
             </Card>
 
