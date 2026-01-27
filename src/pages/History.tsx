@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2 } from 'lucide-react';
+import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,8 @@ import { getCurrencyByCode } from '@/lib/currencies';
 import { QuoteImageModal } from '@/components/QuoteImageModal';
 import { ProjectedIncomeSection } from '@/components/ProjectedIncomeSection';
 import { Quote } from '@/types/quote';
+import { useQuotePdfDownload, QuotePdfData } from '@/hooks/useQuotePdfDownload';
+import QuotePdfPreview from '@/components/QuotePdfPreview';
 
 export default function History() {
   const navigate = useNavigate();
@@ -22,7 +24,9 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
-
+  const [pdfQuoteData, setPdfQuoteData] = useState<QuotePdfData | null>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const { isGenerating, convertQuoteToTemplateData, downloadPdf } = useQuotePdfDownload();
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   // Redirect to auth if not logged in
@@ -71,6 +75,21 @@ export default function History() {
   const handleViewImage = (quote: Quote) => {
     setSelectedQuote(quote);
     setShowImageModal(true);
+  };
+
+  const handleDownloadPdf = async (quote: Quote) => {
+    const summary = calculateCosts(quote);
+    const data = convertQuoteToTemplateData(quote, summary);
+    setPdfQuoteData(data);
+    
+    // Wait for the component to render
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    
+    const success = await downloadPdf(pdfRef, `cotizacion-${quote.clientName.replace(/\s+/g, '-').toLowerCase()}`);
+    
+    if (success) {
+      setPdfQuoteData(null);
+    }
   };
 
   if (!user) {
@@ -224,6 +243,19 @@ export default function History() {
                             <span className="truncate">Compartir</span>
                           </Button>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleDownloadPdf(quote)}
+                            disabled={isGenerating}
+                          >
+                            <FileDown className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{isGenerating ? 'Generando...' : 'Descargar'}</span>
+                          </Button>
+                        </div>
+                        {/* Secondary actions row */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
                             variant="soft"
                             size="sm"
                             className="w-full"
@@ -231,6 +263,15 @@ export default function History() {
                           >
                             <Edit2 className="w-4 h-4 shrink-0" />
                             <span className="truncate">Editar</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => handleViewImage(quote)}
+                          >
+                            <Eye className="w-4 h-4 shrink-0" />
+                            <span className="truncate">Ver</span>
                           </Button>
                           <Button
                             variant="outline"
@@ -273,6 +314,13 @@ export default function History() {
             summary={calculateCosts(selectedQuote)}
             currencySymbol={currencySymbol}
           />
+        )}
+
+        {/* Hidden PDF Preview for download */}
+        {pdfQuoteData && (
+          <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none">
+            <QuotePdfPreview ref={pdfRef} data={pdfQuoteData} />
+          </div>
         )}
       </main>
     </div>
