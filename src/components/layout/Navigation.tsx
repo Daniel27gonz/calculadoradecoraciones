@@ -4,10 +4,21 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const navItems = [
+// Mobile bottom nav items (5 items for mobile)
+const mobileNavItems = [
   { path: '/', icon: Home, label: 'Inicio' },
   { path: '/calculator', icon: Calculator, label: 'Cotizar' },
   { path: '/packages', icon: Package, label: 'Paquetes' },
+  { path: '/history', icon: History, label: 'Historial' },
+  { path: '/settings', icon: Settings, label: 'Ajustes' },
+];
+
+// Desktop nav items (includes Finanzas)
+const desktopNavItems = [
+  { path: '/', icon: Home, label: 'Inicio' },
+  { path: '/calculator', icon: Calculator, label: 'Cotizar' },
+  { path: '/packages', icon: Package, label: 'Paquetes' },
+  { path: '/finances', icon: Wallet, label: 'Finanzas' },
   { path: '/history', icon: History, label: 'Historial' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
@@ -65,40 +76,48 @@ export function Navigation() {
             <span className="font-display text-lg font-semibold">Calculadora Para Decoradoras</span>
           </Link>
 
-          {/* Nav items */}
-          <div className="flex items-center justify-around w-full md:w-auto md:gap-2">
-            {navItems.map(({ path, icon: Icon, label }) => {
+          {/* Nav items - Mobile */}
+          <div className="flex md:hidden items-center justify-around w-full">
+            {mobileNavItems.map(({ path, icon: Icon, label }) => {
               const isActive = location.pathname === path;
               return (
                 <Link
                   key={path}
                   to={path}
                   className={cn(
-                    "flex flex-col md:flex-row items-center gap-1 md:gap-2 px-3 py-2 rounded-xl transition-all duration-300",
+                    "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300",
                     isActive
                       ? "text-primary bg-rose-light"
                       : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="text-xs md:text-sm font-medium">{label}</span>
+                  <span className="text-xs font-medium">{label}</span>
                 </Link>
               );
             })}
-            
-            {/* Finanzas - only visible on desktop in main nav */}
-            <Link
-              to="/finances"
-              className={cn(
-                "hidden md:flex flex-col md:flex-row items-center gap-1 md:gap-2 px-3 py-2 rounded-xl transition-all duration-300",
-                isFinancesActive
-                  ? "text-primary bg-rose-light"
-                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-              )}
-            >
-              <Wallet className="w-5 h-5" />
-              <span className="text-xs md:text-sm font-medium">Finanzas</span>
-            </Link>
+          </div>
+
+          {/* Nav items - Desktop */}
+          <div className="hidden md:flex items-center gap-2">
+            {desktopNavItems.map(({ path, icon: Icon, label }) => {
+              const isActive = location.pathname === path;
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  className={cn(
+                    "flex flex-row items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
+                    isActive
+                      ? "text-primary bg-rose-light"
+                      : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{label}</span>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right side - desktop only */}
