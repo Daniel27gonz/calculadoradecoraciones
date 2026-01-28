@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -151,6 +153,27 @@ export function LogoUploadSection() {
         <p className="text-sm text-muted-foreground mt-3">
           Este logo aparecerá en tus cotizaciones cuando las compartas o descargues.
         </p>
+
+        {/* Business Name Section */}
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex items-center gap-2 mb-3">
+            <Store className="w-5 h-5 text-primary" />
+            <Label htmlFor="business-name" className="font-semibold">
+              Nombre de tu negocio
+            </Label>
+          </div>
+          <Input
+            id="business-name"
+            type="text"
+            placeholder="Ej: Decoraciones María"
+            value={profile?.business_name || ''}
+            onChange={(e) => updateProfile({ business_name: e.target.value })}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            Este nombre aparecerá en el encabezado de tus cotizaciones.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
