@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 
 export interface QuotePdfData {
   businessName: string;
+  logoUrl: string | null;
   quoteDate: string;
   clientName: string;
   clientPhone: string;
@@ -65,6 +66,7 @@ export function useQuotePdfDownload() {
 
     return {
       businessName: profile?.business_name || 'Mi Negocio',
+      logoUrl: profile?.logo_url || null,
       quoteDate: format(new Date(quote.createdAt), "d 'de' MMMM 'de' yyyy", { locale: es }),
       clientName: quote.clientName,
       clientPhone: '',

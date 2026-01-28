@@ -38,12 +38,21 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
           <div className="flex items-start justify-between">
             {/* Logo y nombre del negocio */}
             <div className="flex items-center gap-3">
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: 'linear-gradient(to bottom right, #fbcfe8, #fce7f3)' }}
-              >
-                <span className="text-2xl">🎈</span>
-              </div>
+              {data.logoUrl ? (
+                <img
+                  src={data.logoUrl}
+                  alt="Logo"
+                  className="w-16 h-16 rounded-full object-contain"
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(to bottom right, #fbcfe8, #fce7f3)' }}
+                >
+                  <span className="text-2xl">🎈</span>
+                </div>
+              )}
               <span className="text-xl font-bold" style={{ color: '#db2777' }}>
                 {data.businessName}
               </span>

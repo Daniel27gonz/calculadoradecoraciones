@@ -8,6 +8,8 @@ interface QuoteImageGeneratorProps {
   summary: CostSummary;
   currencySymbol: string;
   marginPercentage?: number;
+  logoUrl?: string | null;
+  businessName?: string | null;
 }
 
 const formatCurrency = (amount: number, symbol: string) => {
@@ -18,7 +20,7 @@ const formatCurrency = (amount: number, symbol: string) => {
 };
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
-  ({ quote, summary, currencySymbol }, ref) => {
+  ({ quote, summary, currencySymbol, logoUrl, businessName }, ref) => {
     const eventDateFormatted = quote.eventDate
       ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
       : 'Por definir';
@@ -45,7 +47,31 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             borderBottom: '1px solid #f8c8d4',
           }}
         >
-          <p style={{ fontSize: '14px', color: '#999999', margin: '0 0 8px 0' }}>📍</p>
+          {/* Logo */}
+          {logoUrl ? (
+            <div style={{ marginBottom: '12px' }}>
+              <img
+                src={logoUrl}
+                alt="Logo"
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  objectFit: 'contain',
+                  borderRadius: '12px',
+                }}
+                crossOrigin="anonymous"
+              />
+            </div>
+          ) : (
+            <p style={{ fontSize: '14px', color: '#999999', margin: '0 0 8px 0' }}>📍</p>
+          )}
+          
+          {businessName && (
+            <p style={{ fontSize: '16px', fontWeight: 600, color: '#db2777', margin: '0 0 8px 0' }}>
+              {businessName}
+            </p>
+          )}
+          
           <h1
             style={{
               fontSize: '28px',

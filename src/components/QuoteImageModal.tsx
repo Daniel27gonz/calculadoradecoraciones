@@ -6,6 +6,7 @@ import { QuoteImageGenerator } from './QuoteImageGenerator';
 import { useQuoteImage } from '@/hooks/useQuoteImage';
 import { Quote, CostSummary } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuoteImageModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function QuoteImageModal({
   currencySymbol,
 }: QuoteImageModalProps) {
   const { toast } = useToast();
+  const { profile } = useAuth();
   const imageRef = useRef<HTMLDivElement>(null);
   const { generateImage, shareImage, downloadImage } = useQuoteImage();
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
@@ -199,6 +201,8 @@ export function QuoteImageModal({
               summary={summary}
               currencySymbol={currencySymbol}
               marginPercentage={quote.marginPercentage}
+              logoUrl={profile?.logo_url}
+              businessName={profile?.business_name}
             />
           </div>
 
