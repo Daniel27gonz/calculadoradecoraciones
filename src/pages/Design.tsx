@@ -149,28 +149,22 @@ const Design = () => {
           }
         }
 
-        // Only load services (extras and balloons as services), not internal materials
-        const items: QuoteItem[] = [
-          ...selectedQuote.balloons.map(bal => ({
-            id: bal.id,
-            description: bal.description,
-            quantity: bal.quantity,
-            price: bal.pricePerUnit * bal.quantity,
-          })),
-        ];
+        // Calculate final price from the quote
+        const costs = calculateCosts(selectedQuote);
+        const finalPrice = costs.finalPrice;
 
-        // Convert extras and transport to additional services
-        const additionalServices: AdditionalService[] = [
-          ...selectedQuote.extras.map(extra => ({
-            id: extra.id,
-            description: extra.name,
-            price: extra.pricePerUnit * extra.quantity,
-          })),
-          ...selectedQuote.transportItems.map(transport => ({
-            id: transport.id,
-            description: transport.concept,
-            price: transport.amount,
-          })),
+        // Create a single service item with the event type and final price
+        const serviceDescription = selectedQuote.eventType 
+          ? `Servicio de decoración - ${selectedQuote.eventType}`
+          : "Servicio de decoración con globos";
+
+        const items: QuoteItem[] = [
+          {
+            id: "service-1",
+            description: serviceDescription,
+            quantity: 1,
+            price: finalPrice,
+          }
         ];
 
         setTemplateData(prev => ({
@@ -179,8 +173,8 @@ const Design = () => {
           clientPhone: selectedQuote.clientPhone || "",
           eventDate: formattedEventDate,
           decorationType: selectedQuote.eventType || "",
-          items: items.length > 0 ? items : [{ id: "1", description: "", quantity: 1, price: 0 }],
-          additionalServices,
+          items,
+          additionalServices: [],
         }));
 
         toast({
