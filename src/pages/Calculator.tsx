@@ -15,6 +15,7 @@ import { ToolWearSection } from '@/components/calculator/ToolWearSection';
 import { WastageSection } from '@/components/calculator/WastageSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
+import { LogoUploadSection } from '@/components/calculator/LogoUploadSection';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
@@ -189,6 +190,9 @@ export default function Calculator() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Logo Upload */}
+        <LogoUploadSection />
+
         {/* Currency Selector */}
         <Card>
           <CardHeader className="pb-4">
