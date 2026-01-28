@@ -6,13 +6,14 @@ import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
+import { PendingApproval } from '@/components/PendingApproval';
 import { useEffect, useMemo } from 'react';
 import { getCurrencyByCode } from '@/lib/currencies';
 
 export default function Home() {
   const navigate = useNavigate();
   const { quotes, calculateCosts } = useQuote();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
   
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -73,6 +74,11 @@ export default function Home() {
 
   if (!user) {
     return null;
+  }
+
+  // Show pending approval screen for non-approved users (admins bypass this)
+  if (!isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (
