@@ -574,7 +574,7 @@ const Design = () => {
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-medium text-primary">
-                  Productos y Servicios
+                  Servicios
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
