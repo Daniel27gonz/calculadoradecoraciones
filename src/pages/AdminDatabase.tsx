@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Clock, Database, RefreshCw, Users } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Database, RefreshCw, Users, Search } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -34,7 +35,21 @@ export default function AdminDatabase() {
   const [users, setUsers] = useState<UserWithStatus[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm.trim()) return users;
+    
+    const term = searchTerm.toLowerCase();
+    return users.filter(u => 
+      u.name?.toLowerCase().includes(term) ||
+      u.user_id.toLowerCase().includes(term) ||
+      u.id.toLowerCase().includes(term) ||
+      u.status.toLowerCase().includes(term)
+    );
+  }, [users, searchTerm]);
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -203,20 +218,31 @@ export default function AdminDatabase() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="flex items-center gap-2 px-6 py-3 bg-muted/50 border-b">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {users.length} usuario{users.length !== 1 ? 's' : ''} registrado{users.length !== 1 ? 's' : ''}
-            </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-6 py-4 bg-muted/50 border-b">
+            <div className="relative flex-1 w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, ID o estado..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {filteredUsers.length} de {users.length} usuario{users.length !== 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
           
           {loadingUsers ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-6 h-6 animate-spin text-primary" />
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No hay usuarios registrados
+              {searchTerm ? 'No se encontraron usuarios con ese criterio' : 'No hay usuarios registrados'}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -233,7 +259,7 @@ export default function AdminDatabase() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((userItem) => (
+                  {filteredUsers.map((userItem) => (
                     <TableRow key={userItem.id} className="hover:bg-muted/20">
                       <TableCell className="font-mono text-xs text-muted-foreground">
                         {userItem.id.slice(0, 8)}...
