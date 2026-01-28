@@ -45,9 +45,7 @@ export default function AdminDatabase() {
     const term = searchTerm.toLowerCase();
     return users.filter(u => 
       u.name?.toLowerCase().includes(term) ||
-      u.user_id.toLowerCase().includes(term) ||
-      u.id.toLowerCase().includes(term) ||
-      u.status.toLowerCase().includes(term)
+      u.email?.toLowerCase().includes(term)
     );
   }, [users, searchTerm]);
 
@@ -222,7 +220,7 @@ export default function AdminDatabase() {
             <div className="relative flex-1 w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, ID o estado..."
+                placeholder="Buscar por nombre o correo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -249,59 +247,18 @@ export default function AdminDatabase() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">ID</TableHead>
-                    <TableHead className="font-semibold">User ID</TableHead>
+                    <TableHead className="font-semibold">Correo</TableHead>
                     <TableHead className="font-semibold">Nombre</TableHead>
-                    <TableHead className="font-semibold">Estado</TableHead>
-                    <TableHead className="font-semibold">Creado</TableHead>
-                    <TableHead className="font-semibold">Actualizado</TableHead>
-                    <TableHead className="font-semibold text-center">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((userItem) => (
                     <TableRow key={userItem.id} className="hover:bg-muted/20">
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.user_id.slice(0, 8)}...
+                      <TableCell className="text-sm">
+                        {userItem.email || 'Sin correo'}
                       </TableCell>
                       <TableCell className="font-medium">
                         {userItem.name || 'Sin nombre'}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(userItem.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.created_at)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.status_updated_at)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 border-green-600 hover:bg-green-50"
-                            onClick={() => updateUserStatus(userItem.user_id, 'approved')}
-                            disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Aprobar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                            onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
-                            disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Rechazar
-                          </Button>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
