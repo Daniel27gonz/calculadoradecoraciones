@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, X, Image as ImageIcon, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,32 @@ export function LogoUploadSection() {
   const { user, profile, updateProfile } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync local state when profile loads
+  useEffect(() => {
+    if (profile?.business_name !== undefined) {
+      setBusinessName(profile.business_name || '');
+    }
+  }, [profile?.business_name]);
+
+  // Debounced save for business name
+  const saveBusinessName = useCallback((name: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      updateProfile({ business_name: name });
+    }, 800);
+  }, [updateProfile]);
+
+  const handleBusinessNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBusinessName(value);
+    saveBusinessName(value);
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -166,8 +191,8 @@ export function LogoUploadSection() {
             id="business-name"
             type="text"
             placeholder="Ej: Decoraciones María"
-            value={profile?.business_name || ''}
-            onChange={(e) => updateProfile({ business_name: e.target.value })}
+            value={businessName}
+            onChange={handleBusinessNameChange}
             className="w-full"
           />
           <p className="text-xs text-muted-foreground mt-2">
