@@ -149,14 +149,8 @@ const Design = () => {
           }
         }
 
-        // Convert materials and extras to items
+        // Only load services (extras and balloons as services), not internal materials
         const items: QuoteItem[] = [
-          ...selectedQuote.materials.map(mat => ({
-            id: mat.id,
-            description: mat.name,
-            quantity: mat.quantity,
-            price: mat.costPerUnit * mat.quantity,
-          })),
           ...selectedQuote.balloons.map(bal => ({
             id: bal.id,
             description: bal.description,
