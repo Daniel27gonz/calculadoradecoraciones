@@ -17,6 +17,7 @@ import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PendingApproval } from '@/components/PendingApproval';
 import { Quote, TimePhase } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
@@ -53,8 +54,8 @@ export default function Calculator() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, profile, updateProfile } = useAuth();
-  const { 
+  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin } = useAuth();
+  const {
     quotes, 
     saveQuote, 
     calculateCosts, 
@@ -159,6 +160,11 @@ export default function Calculator() {
 
   if (!user) {
     return null;
+  }
+
+  // Block non-approved users (admins bypass)
+  if (!isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (

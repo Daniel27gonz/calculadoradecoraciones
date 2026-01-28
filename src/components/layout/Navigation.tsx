@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User, Wallet, Palette } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Palette, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -24,7 +24,7 @@ const desktopNavItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const isMobile = useIsMobile();
 
   // Hide navigation on auth page
@@ -50,6 +50,7 @@ export function Navigation() {
               {location.pathname === '/finances' && 'Finanzas'}
               {location.pathname === '/history' && 'Historial'}
               {location.pathname === '/settings' && 'Ajustes'}
+              {location.pathname === '/admin/database' && 'Database'}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -77,6 +78,21 @@ export function Navigation() {
               <Palette className="w-5 h-5" />
               <span className="text-sm font-medium">Diseño</span>
             </Link>
+            {/* Admin Database Link - Only visible for admins */}
+            {isAdmin && (
+              <Link
+                to="/admin/database"
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
+                  location.pathname === '/admin/database'
+                    ? "text-primary bg-rose-light"
+                    : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
+                )}
+              >
+                <Database className="w-5 h-5" />
+                <span className="text-sm font-medium">Database</span>
+              </Link>
+            )}
             {/* User indicator - visible on desktop */}
             {!isMobile && (
               <>

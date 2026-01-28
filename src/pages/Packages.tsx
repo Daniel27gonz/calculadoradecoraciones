@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Copy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { PendingApproval } from '@/components/PendingApproval';
 import { useToast } from '@/hooks/use-toast';
 import { PackageFormDialog } from '@/components/packages/PackageFormDialog';
 import { Package } from '@/types/quote';
@@ -11,9 +13,37 @@ import { Package } from '@/types/quote';
 export default function Packages() {
   const navigate = useNavigate();
   const { packages, savePackage, deletePackage } = useQuote();
+  const { user, isApproved, approvalStatus, isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">🎈</div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  // Block non-approved users (admins bypass)
+  if (!isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
+  }
 
   const handleUsePackage = (packageId: string) => {
     navigate(`/calculator?package=${packageId}`);

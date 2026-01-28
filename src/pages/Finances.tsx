@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, Filter } from 'lucide-react';
@@ -46,9 +48,10 @@ interface Filters {
 }
 
 export default function Finances() {
-  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -108,7 +111,7 @@ export default function Finances() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoadingTransactions(false);
     }
   };
 
@@ -166,20 +169,25 @@ export default function Finances() {
   
   const balance = totalIncome - totalExpenses;
 
-  if (!user) {
+  if (authLoading) {
     return (
-      <div className="min-h-screen pt-20 md:pt-24 pb-24 md:pb-8">
-        <div className="container max-w-4xl">
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground">
-                Inicia sesión para gestionar las finanzas de tu negocio
-              </p>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">💰</div>
+          <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+
+  // Block non-approved users (admins bypass)
+  if (!isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (
@@ -283,7 +291,7 @@ export default function Finances() {
               </CollapsibleContent>
             </Collapsible>
             
-            {loading ? (
+            {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...
               </div>
