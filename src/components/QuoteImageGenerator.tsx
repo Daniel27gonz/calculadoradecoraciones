@@ -209,7 +209,7 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             marginBottom: 0,
           }}
         >
-          Generado con 💜 Calculadora para Decoradoras
+          ♥️ Gracias por confiar en nuestros servicios ✨
         </p>
       </div>
     );
