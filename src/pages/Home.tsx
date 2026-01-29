@@ -86,17 +86,17 @@ export default function Home() {
       {/* Hero Section - Full Screen */}
       <section className="gradient-hero min-h-screen flex items-center justify-center px-4">
         <div className="container max-w-4xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card shadow-soft">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium">Calculadora para decoradoras</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Calculadora para decoradoras</span>
           </div>
           
-          <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight">
+          <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight">
             Calculadora para
             <span className="text-gradient block">Decoradoras de Globos</span>
           </h1>
           
-          <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
             Calcula el precio perfecto para tus decoraciones, 
             visualiza tu ganancia y envía cotizaciones profesionales en minutos.
           </p>
