@@ -270,14 +270,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setIsAdmin(false);
-    setApprovalStatus(null);
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente."
-    });
+    try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setIsAdmin(false);
+      setApprovalStatus(null);
+      
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          title: "Error",
+          description: "Hubo un problema al cerrar sesión. Intenta de nuevo.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente."
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al cerrar sesión.",
+        variant: "destructive"
+      });
+    }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
