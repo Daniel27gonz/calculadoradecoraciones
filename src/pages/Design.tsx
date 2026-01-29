@@ -58,6 +58,8 @@ const Design = () => {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
+  // Fixed total from loaded quote - this ensures consistency across PDF/WhatsApp
+  const [fixedQuoteTotal, setFixedQuoteTotal] = useState<number | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [templateData, setTemplateData] = useState<QuoteTemplateData>({
     businessName: profile?.business_name || "Mi Negocio",
@@ -149,9 +151,12 @@ const Design = () => {
           }
         }
 
-        // Calculate final price from the quote
+        // Calculate final price from the quote - this is the FIXED price
         const costs = calculateCosts(selectedQuote);
         const finalPrice = costs.finalPrice;
+
+        // Store the fixed total for consistent display
+        setFixedQuoteTotal(finalPrice);
 
         // Create a single service item with the event type and final price
         const serviceDescription = selectedQuote.eventType 
@@ -182,6 +187,10 @@ const Design = () => {
           description: `Se cargaron los datos de la cotización de ${selectedQuote.clientName}`,
         });
       }
+    } else if (!selectedQuoteId && lastLoadedQuoteIdRef.current) {
+      // Reset fixed total when quote is deselected
+      lastLoadedQuoteIdRef.current = null;
+      setFixedQuoteTotal(null);
     }
   }, [selectedQuoteId, quotes]);
 
@@ -245,7 +254,14 @@ const Design = () => {
     );
   };
 
+  // Calculate total - use fixed quote total if available, otherwise calculate from template items
   const calculateTotal = () => {
+    // If we have a fixed total from a loaded quote, use it
+    if (fixedQuoteTotal !== null) {
+      return fixedQuoteTotal;
+    }
+    
+    // Otherwise calculate from template items
     const itemsTotal = templateData.items.reduce(
       (sum, item) => sum + item.quantity * item.price,
       0
