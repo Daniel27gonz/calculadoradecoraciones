@@ -202,6 +202,10 @@ const Design = () => {
   };
 
   const addItem = () => {
+    // Clear fixed total when items are added manually
+    if (fixedQuoteTotal !== null) {
+      setFixedQuoteTotal(null);
+    }
     const newItem: QuoteItem = {
       id: Date.now().toString(),
       description: "",
@@ -212,6 +216,10 @@ const Design = () => {
   };
 
   const updateItem = (id: string, field: keyof QuoteItem, value: string | number) => {
+    // Clear fixed total when items are manually edited
+    if (fixedQuoteTotal !== null) {
+      setFixedQuoteTotal(null);
+    }
     updateField(
       "items",
       templateData.items.map((item) =>
@@ -222,6 +230,10 @@ const Design = () => {
 
   const removeItem = (id: string) => {
     if (templateData.items.length > 1) {
+      // Clear fixed total when items are removed
+      if (fixedQuoteTotal !== null) {
+        setFixedQuoteTotal(null);
+      }
       updateField(
         "items",
         templateData.items.filter((item) => item.id !== id)
@@ -230,6 +242,10 @@ const Design = () => {
   };
 
   const addService = () => {
+    // Clear fixed total when services are added manually
+    if (fixedQuoteTotal !== null) {
+      setFixedQuoteTotal(null);
+    }
     const newService: AdditionalService = {
       id: Date.now().toString(),
       description: "",
@@ -239,6 +255,10 @@ const Design = () => {
   };
 
   const updateService = (id: string, field: keyof AdditionalService, value: string | number) => {
+    // Clear fixed total when services are manually edited
+    if (fixedQuoteTotal !== null) {
+      setFixedQuoteTotal(null);
+    }
     updateField(
       "additionalServices",
       templateData.additionalServices.map((service) =>
@@ -248,6 +268,10 @@ const Design = () => {
   };
 
   const removeService = (id: string) => {
+    // Clear fixed total when services are removed
+    if (fixedQuoteTotal !== null) {
+      setFixedQuoteTotal(null);
+    }
     updateField(
       "additionalServices",
       templateData.additionalServices.filter((service) => service.id !== id)
