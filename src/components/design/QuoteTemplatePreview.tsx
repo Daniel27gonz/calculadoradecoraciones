@@ -106,7 +106,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
         <div className="flex items-start justify-between">
           {/* Logo y nombre del negocio */}
           <div className="flex flex-col items-center gap-2">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-200 to-pink-100 flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-200 to-pink-100 flex items-center justify-center overflow-hidden">
               {data.businessLogo ? (
                 <img
                   src={data.businessLogo}
