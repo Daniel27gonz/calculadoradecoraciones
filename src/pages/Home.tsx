@@ -82,26 +82,26 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 pt-12 md:pt-12">
-      {/* Hero Section */}
-      <section className="gradient-hero py-6 px-4">
-        <div className="container max-w-4xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft mt-2">
+    <div className="min-h-screen pb-24 md:pb-8">
+      {/* Hero Section - Full Screen */}
+      <section className="gradient-hero min-h-screen flex items-center justify-center px-4">
+        <div className="container max-w-4xl mx-auto text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Calculadora para decoradoras</span>
           </div>
           
-          <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight">
+          <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight">
             Calculadora para
             <span className="text-gradient block">Decoradoras de Globos</span>
           </h1>
           
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
             Calcula el precio perfecto para tus decoraciones, 
             visualiza tu ganancia y envía cotizaciones profesionales en minutos.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Button asChild variant="gradient" size="xl">
               <Link to="/calculator">
                 <Calculator className="w-5 h-5" />
@@ -125,7 +125,7 @@ export default function Home() {
             </Button>
           </div>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground pt-4">
             ¡Hola, {profile?.name || profile?.business_name || user.email?.split('@')[0]}! 👋
           </p>
         </div>
