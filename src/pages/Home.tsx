@@ -82,7 +82,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 pt-8 md:pt-12">
+    <div className="min-h-screen pb-24 md:pb-8 pt-12 md:pt-12">
       {/* Hero Section */}
       <section className="gradient-hero py-6 px-4">
         <div className="container max-w-4xl mx-auto text-center space-y-6">
