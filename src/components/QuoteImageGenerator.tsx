@@ -41,15 +41,14 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
         {/* Header */}
         <div
           style={{
-            textAlign: 'center',
             marginBottom: '32px',
             paddingBottom: '20px',
             borderBottom: '1px solid #f8c8d4',
           }}
         >
-          {/* Logo */}
-          {logoUrl ? (
-            <div style={{ marginBottom: '12px' }}>
+          {/* Logo and Business Name - Left aligned, vertical */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '16px' }}>
+            {logoUrl ? (
               <img
                 src={logoUrl}
                 alt="Logo"
@@ -61,16 +60,16 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
                 }}
                 crossOrigin="anonymous"
               />
-            </div>
-          ) : (
-            <p style={{ fontSize: '14px', color: '#999999', margin: '0 0 8px 0' }}>📍</p>
-          )}
-          
-          {businessName && (
-            <p style={{ fontSize: '16px', fontWeight: 600, color: '#db2777', margin: '0 0 8px 0' }}>
-              {businessName}
-            </p>
-          )}
+            ) : (
+              <span style={{ fontSize: '24px' }}>📍</span>
+            )}
+            
+            {businessName && (
+              <p style={{ fontSize: '16px', fontWeight: 600, color: '#db2777', margin: '8px 0 0 0' }}>
+                {businessName}
+              </p>
+            )}
+          </div>
           
           <h1
             style={{
@@ -79,6 +78,7 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
               color: '#f5a5b8',
               margin: '0',
               letterSpacing: '2px',
+              textAlign: 'center',
             }}
           >
             Cotización
