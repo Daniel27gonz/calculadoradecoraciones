@@ -58,8 +58,6 @@ const Design = () => {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
-  // Fixed total from loaded quote - this ensures consistency across PDF/WhatsApp
-  const [fixedQuoteTotal, setFixedQuoteTotal] = useState<number | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [templateData, setTemplateData] = useState<QuoteTemplateData>({
     businessName: profile?.business_name || "Mi Negocio",
@@ -151,12 +149,9 @@ const Design = () => {
           }
         }
 
-        // Calculate final price from the quote - this is the FIXED price
+        // Calculate final price from the quote
         const costs = calculateCosts(selectedQuote);
         const finalPrice = costs.finalPrice;
-
-        // Store the fixed total for consistent display
-        setFixedQuoteTotal(finalPrice);
 
         // Create a single service item with the event type and final price
         const serviceDescription = selectedQuote.eventType 
@@ -187,10 +182,6 @@ const Design = () => {
           description: `Se cargaron los datos de la cotización de ${selectedQuote.clientName}`,
         });
       }
-    } else if (!selectedQuoteId && lastLoadedQuoteIdRef.current) {
-      // Reset fixed total when quote is deselected
-      lastLoadedQuoteIdRef.current = null;
-      setFixedQuoteTotal(null);
     }
   }, [selectedQuoteId, quotes]);
 
@@ -202,10 +193,6 @@ const Design = () => {
   };
 
   const addItem = () => {
-    // Clear fixed total when items are added manually
-    if (fixedQuoteTotal !== null) {
-      setFixedQuoteTotal(null);
-    }
     const newItem: QuoteItem = {
       id: Date.now().toString(),
       description: "",
@@ -216,10 +203,6 @@ const Design = () => {
   };
 
   const updateItem = (id: string, field: keyof QuoteItem, value: string | number) => {
-    // Clear fixed total when items are manually edited
-    if (fixedQuoteTotal !== null) {
-      setFixedQuoteTotal(null);
-    }
     updateField(
       "items",
       templateData.items.map((item) =>
@@ -230,10 +213,6 @@ const Design = () => {
 
   const removeItem = (id: string) => {
     if (templateData.items.length > 1) {
-      // Clear fixed total when items are removed
-      if (fixedQuoteTotal !== null) {
-        setFixedQuoteTotal(null);
-      }
       updateField(
         "items",
         templateData.items.filter((item) => item.id !== id)
@@ -242,10 +221,6 @@ const Design = () => {
   };
 
   const addService = () => {
-    // Clear fixed total when services are added manually
-    if (fixedQuoteTotal !== null) {
-      setFixedQuoteTotal(null);
-    }
     const newService: AdditionalService = {
       id: Date.now().toString(),
       description: "",
@@ -255,10 +230,6 @@ const Design = () => {
   };
 
   const updateService = (id: string, field: keyof AdditionalService, value: string | number) => {
-    // Clear fixed total when services are manually edited
-    if (fixedQuoteTotal !== null) {
-      setFixedQuoteTotal(null);
-    }
     updateField(
       "additionalServices",
       templateData.additionalServices.map((service) =>
@@ -268,24 +239,13 @@ const Design = () => {
   };
 
   const removeService = (id: string) => {
-    // Clear fixed total when services are removed
-    if (fixedQuoteTotal !== null) {
-      setFixedQuoteTotal(null);
-    }
     updateField(
       "additionalServices",
       templateData.additionalServices.filter((service) => service.id !== id)
     );
   };
 
-  // Calculate total - use fixed quote total if available, otherwise calculate from template items
   const calculateTotal = () => {
-    // If we have a fixed total from a loaded quote, use it
-    if (fixedQuoteTotal !== null) {
-      return fixedQuoteTotal;
-    }
-    
-    // Otherwise calculate from template items
     const itemsTotal = templateData.items.reduce(
       (sum, item) => sum + item.quantity * item.price,
       0
