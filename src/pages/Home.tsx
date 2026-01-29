@@ -82,11 +82,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
+    <div className="min-h-screen pb-24 md:pb-8 md:pt-16">
       {/* Hero Section */}
-      <section className="gradient-hero py-12 px-4">
+      <section className="gradient-hero py-8 px-4">
         <div className="container max-w-4xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft mt-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft mt-2">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Calculadora para decoradoras</span>
           </div>
