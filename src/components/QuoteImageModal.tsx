@@ -26,12 +26,21 @@ export function QuoteImageModal({
   const { toast } = useToast();
   const { profile } = useAuth();
   const imageRef = useRef<HTMLDivElement>(null);
-  const { generateImage, shareImage, downloadImage } = useQuoteImage();
+  const { generateImage, shareImage, downloadImage, cleanupClone } = useQuoteImage();
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const isMountedRef = useRef(true);
+
+  // Track mounted state
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -45,30 +54,44 @@ export function QuoteImageModal({
       // Longer delay to ensure DOM is fully rendered
       const timer = setTimeout(async () => {
         try {
-          if (imageRef.current) {
+          if (imageRef.current && isMountedRef.current) {
             console.log('Generating image from element:', imageRef.current);
             const blob = await generateImage(imageRef.current);
-            console.log('Generated blob:', blob);
-            if (blob) {
-              setImageBlob(blob);
-              setImageUrl(URL.createObjectURL(blob));
-            } else {
-              setHasError(true);
+            
+            // Only update state if still mounted and modal is open
+            if (isMountedRef.current) {
+              console.log('Generated blob:', blob);
+              if (blob) {
+                setImageBlob(blob);
+                setImageUrl(URL.createObjectURL(blob));
+              } else {
+                setHasError(true);
+              }
+              setIsGenerating(false);
             }
           } else {
-            console.error('imageRef.current is null');
-            setHasError(true);
+            if (isMountedRef.current) {
+              console.error('imageRef.current is null');
+              setHasError(true);
+              setIsGenerating(false);
+            }
           }
         } catch (error) {
           console.error('Error generating image:', error);
-          setHasError(true);
+          if (isMountedRef.current) {
+            setHasError(true);
+            setIsGenerating(false);
+          }
         }
-        setIsGenerating(false);
       }, 500);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        // Clean up any pending clone when modal closes
+        cleanupClone();
+      };
     }
-  }, [open, generateImage, quote, summary]);
+  }, [open, generateImage, cleanupClone]);
 
   useEffect(() => {
     return () => {
@@ -147,22 +170,28 @@ export function QuoteImageModal({
     setIsGenerating(true);
     setTimeout(async () => {
       try {
-        if (imageRef.current) {
+        if (imageRef.current && isMountedRef.current) {
           const blob = await generateImage(imageRef.current);
-          if (blob) {
-            setImageBlob(blob);
-            setImageUrl(URL.createObjectURL(blob));
-          } else {
-            setHasError(true);
+          if (isMountedRef.current) {
+            if (blob) {
+              setImageBlob(blob);
+              setImageUrl(URL.createObjectURL(blob));
+            } else {
+              setHasError(true);
+            }
+            setIsGenerating(false);
           }
-        } else {
+        } else if (isMountedRef.current) {
           setHasError(true);
+          setIsGenerating(false);
         }
       } catch (error) {
         console.error('Error generating image:', error);
-        setHasError(true);
+        if (isMountedRef.current) {
+          setHasError(true);
+          setIsGenerating(false);
+        }
       }
-      setIsGenerating(false);
     }, 500);
   };
 
