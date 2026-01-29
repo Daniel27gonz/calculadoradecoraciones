@@ -100,9 +100,19 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
               {quote.clientName || 'Sin especificar'}
             </span>
           </div>
+          {quote.clientPhone && (
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>📱</span>
+              <span style={{ fontSize: '14px', color: '#666666' }}>Teléfono:</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
+                {quote.clientPhone}
+              </span>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>📅</span>
-            <span style={{ fontSize: '14px', color: '#333333' }}>
+            <span style={{ fontSize: '14px', color: '#666666' }}>Fecha del evento:</span>
+            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
               {eventDateFormatted}
             </span>
           </div>
