@@ -199,18 +199,6 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         )}
 
-        {/* Footer */}
-        <p
-          style={{
-            textAlign: 'center',
-            fontSize: '11px',
-            color: '#bbbbbb',
-            marginTop: '16px',
-            marginBottom: 0,
-          }}
-        >
-          Generado con 💜 Calculadora para Decoradoras
-        </p>
       </div>
     );
   }
