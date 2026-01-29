@@ -270,18 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cerrar la sesión. Intenta de nuevo.",
-        variant: "destructive"
-      });
-      return;
-    }
-    setUser(null);
-    setSession(null);
+    await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
     setApprovalStatus(null);
