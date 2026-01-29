@@ -195,7 +195,7 @@ export default function History() {
                             </span>
                             {quote.eventDate && (
                               <span className="flex items-center gap-1">
-                                📅 {format(new Date(quote.eventDate), "d MMM", { locale: es })}
+                                📅 {format(new Date(quote.eventDate + 'T12:00:00'), "d MMM yyyy", { locale: es })}
                               </span>
                             )}
                           </div>

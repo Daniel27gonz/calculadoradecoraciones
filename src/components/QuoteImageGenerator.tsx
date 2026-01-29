@@ -22,7 +22,7 @@ const formatCurrency = (amount: number, symbol: string) => {
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
   ({ quote, summary, currencySymbol, logoUrl, businessName }, ref) => {
     const eventDateFormatted = quote.eventDate
-      ? format(new Date(quote.eventDate), "d 'de' MMMM, yyyy", { locale: es })
+      ? format(new Date(quote.eventDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
       : 'Por definir';
 
     const finalPrice = summary.finalPrice;
