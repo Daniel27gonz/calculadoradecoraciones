@@ -65,6 +65,7 @@ export type Database = {
           design_additional_notes: string | null
           design_deposit_message: string | null
           design_deposit_percentage: number | null
+          email: string | null
           events_per_month: number | null
           id: string
           logo_url: string | null
@@ -81,6 +82,7 @@ export type Database = {
           design_additional_notes?: string | null
           design_deposit_message?: string | null
           design_deposit_percentage?: number | null
+          email?: string | null
           events_per_month?: number | null
           id?: string
           logo_url?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           design_additional_notes?: string | null
           design_deposit_message?: string | null
           design_deposit_percentage?: number | null
+          email?: string | null
           events_per_month?: number | null
           id?: string
           logo_url?: string | null
@@ -316,6 +319,10 @@ export type Database = {
         Returns: boolean
       }
       is_user_approved: { Args: { _user_id: string }; Returns: boolean }
+      restore_orphaned_user_data: {
+        Args: { p_email: string; p_new_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
