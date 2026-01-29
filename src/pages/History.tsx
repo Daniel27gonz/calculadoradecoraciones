@@ -239,8 +239,8 @@ export default function History() {
 
                       {/* Actions */}
                       <div className="pt-3 border-t border-border space-y-3">
-                        {/* Main CTA row - most used actions */}
-                        <div className="grid grid-cols-2 gap-2">
+                        {/* Main CTA row */}
+                        <div>
                           <Button
                             variant="gradient"
                             size="sm"
@@ -249,16 +249,6 @@ export default function History() {
                           >
                             <Share2 className="w-4 h-4 shrink-0" />
                             <span>Compartir</span>
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="w-full h-11"
-                            onClick={() => handleDownloadPdf(quote)}
-                            disabled={isGenerating}
-                          >
-                            <FileDown className="w-4 h-4 shrink-0" />
-                            <span>{isGenerating ? 'Generando...' : 'Descargar'}</span>
                           </Button>
                         </div>
                         
