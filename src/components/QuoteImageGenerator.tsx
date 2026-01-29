@@ -92,7 +92,7 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
               marginBottom: '0',
             }}
           >
-            Creada el: {format(new Date(quote.createdAt), "d 'de' MMMM, yyyy", { locale: es })}
+            {format(new Date(quote.createdAt), "d 'de' MMMM, yyyy", { locale: es })}
           </p>
         </div>
 
