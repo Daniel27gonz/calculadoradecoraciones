@@ -71,7 +71,7 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             )}
           </div>
           
-          <h1
+        <h1
             style={{
               fontSize: '28px',
               fontWeight: 600,
@@ -83,6 +83,17 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           >
             Cotización
           </h1>
+          <p
+            style={{
+              fontSize: '12px',
+              color: '#94a3b8',
+              textAlign: 'center',
+              marginTop: '8px',
+              marginBottom: '0',
+            }}
+          >
+            Creada el: {format(new Date(quote.createdAt), "d 'de' MMMM, yyyy", { locale: es })}
+          </p>
         </div>
 
         {/* Client Info */}
