@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(null);
   const { toast } = useToast();
+  const restorationAttemptedRef = useRef<Set<string>>(new Set());
 
   const isApproved = approvalStatus === 'approved';
 
@@ -97,6 +98,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       setProfile(data as Profile);
+    }
+  };
+
+  // Function to attempt data restoration for returning users
+  const attemptDataRestoration = async (accessToken: string, userId: string) => {
+    // Only attempt once per user per session
+    if (restorationAttemptedRef.current.has(userId)) {
+      return;
+    }
+    restorationAttemptedRef.current.add(userId);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/restore-user-data`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Data restoration request failed:', response.status);
+        return;
+      }
+
+      const result = await response.json();
+      
+      if (result.restored === true) {
+        const totalRestored = 
+          (result.quotes || 0) + 
+          (result.materials || 0) + 
+          (result.transactions || 0) + 
+          (result.packages || 0);
+
+        if (totalRestored > 0) {
+          toast({
+            title: "¡Datos restaurados!",
+            description: "Hemos restaurado tu información automáticamente. Ya puedes continuar usando la app con normalidad.",
+            duration: 6000,
+          });
+          
+          // Refresh profile to get restored data
+          await fetchProfile(userId);
+        }
+      }
+    } catch (error) {
+      console.error('Error attempting data restoration:', error);
     }
   };
 
@@ -161,14 +212,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // Update profile with name after signup
+    // Update profile with name and email after signup
     if (data.user) {
       setTimeout(async () => {
         await supabase
           .from('profiles')
-          .update({ name })
+          .update({ name, email })
           .eq('user_id', data.user!.id);
       }, 500);
+
+      // Attempt to restore old data for returning users
+      if (data.session) {
+        setTimeout(() => {
+          attemptDataRestoration(data.session!.access_token, data.user!.id);
+        }, 1500);
+      }
     }
 
     toast({
@@ -180,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -194,6 +252,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive"
       });
       return { error };
+    }
+
+    // Attempt to restore old data for returning users
+    if (data.session) {
+      setTimeout(() => {
+        attemptDataRestoration(data.session.access_token, data.user.id);
+      }, 1000);
     }
 
     toast({
