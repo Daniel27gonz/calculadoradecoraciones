@@ -43,7 +43,8 @@ export default function Settings() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    // Force navigation to auth page after signing out
+    window.location.href = '/auth';
   };
 
   const currentCurrency = getCurrencyByCode(profile?.currency || 'USD');
