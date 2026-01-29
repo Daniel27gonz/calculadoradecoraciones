@@ -3,6 +3,7 @@ import { QuoteTemplateData } from "@/pages/Design";
 import { Heart, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { toast } from "@/hooks/use-toast";
 
 interface QuoteTemplatePreviewProps {
@@ -19,7 +20,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
     if (!templateRef.current) return;
 
     setIsDownloading(true);
-    console.log("Descarga iniciada");
+    console.log("Descarga PDF iniciada");
 
     try {
       // Clone the element to avoid modifying the original
@@ -51,16 +52,28 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       const sanitizedName = clientName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").replace(/\s+/g, "-");
       const fileName = `cotizacion-${sanitizedName}-${new Date().toISOString().split("T")[0]}`;
 
-      // Convert to image and download
-      const link = document.createElement("a");
-      link.download = `${fileName}.png`;
-      link.href = canvas.toDataURL("image/png", 1.0);
-      link.click();
+      // Create PDF from canvas
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Calculate PDF dimensions (A4 in mm: 210 x 297)
+      const pdfWidth = 210;
+      const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
+      
+      const pdf = new jsPDF({
+        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
+      });
 
-      console.log("Descarga completada");
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${fileName}.pdf`);
+
+      console.log("Descarga PDF completada");
       toast({
         title: "¡Descargado!",
-        description: "La cotización se ha descargado correctamente",
+        description: "La cotización se ha descargado como PDF",
       });
     } catch (error) {
       console.error("Error en la descarga:", error);
@@ -84,7 +97,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           className="gap-2 bg-primary hover:bg-primary/90"
         >
           <Download className="w-4 h-4" />
-          {isDownloading ? "Descargando..." : "Descargar Cotización"}
+          {isDownloading ? "Descargando..." : "Descargar PDF"}
         </Button>
       </div>
 
