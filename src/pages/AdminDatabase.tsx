@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Clock, Database, RefreshCw, Users, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw, Users, Search } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -38,18 +38,20 @@ export default function AdminDatabase() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  // Filter users based on search term
+  // Filter users - only show pending users and apply search term
+  const pendingUsers = useMemo(() => {
+    return users.filter(u => u.status === 'pending');
+  }, [users]);
+
   const filteredUsers = useMemo(() => {
-    if (!searchTerm.trim()) return users;
+    if (!searchTerm.trim()) return pendingUsers;
     
     const term = searchTerm.toLowerCase();
-    return users.filter(u => 
+    return pendingUsers.filter(u => 
       u.name?.toLowerCase().includes(term) ||
-      u.user_id.toLowerCase().includes(term) ||
-      u.id.toLowerCase().includes(term) ||
-      u.status.toLowerCase().includes(term)
+      u.email?.toLowerCase().includes(term)
     );
-  }, [users, searchTerm]);
+  }, [pendingUsers, searchTerm]);
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -203,8 +205,8 @@ export default function AdminDatabase() {
         <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Database className="w-6 h-6 text-primary" />
-              <CardTitle className="text-xl">Database - Viewing Table Profiles</CardTitle>
+              <Clock className="w-6 h-6 text-yellow-500" />
+              <CardTitle className="text-xl">Usuarios Pendientes de Aprobación</CardTitle>
             </div>
             <Button 
               variant="outline" 
@@ -222,7 +224,7 @@ export default function AdminDatabase() {
             <div className="relative flex-1 w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, ID o estado..."
+                placeholder="Buscar por nombre o correo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -231,7 +233,7 @@ export default function AdminDatabase() {
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                {filteredUsers.length} de {users.length} usuario{users.length !== 1 ? 's' : ''}
+                {filteredUsers.length} pendiente{filteredUsers.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -242,42 +244,26 @@ export default function AdminDatabase() {
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              {searchTerm ? 'No se encontraron usuarios con ese criterio' : 'No hay usuarios registrados'}
+              {searchTerm ? 'No se encontraron usuarios con ese criterio' : 'No hay usuarios pendientes de aprobación'}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">ID</TableHead>
-                    <TableHead className="font-semibold">User ID</TableHead>
+                    <TableHead className="font-semibold">Correo</TableHead>
                     <TableHead className="font-semibold">Nombre</TableHead>
-                    <TableHead className="font-semibold">Estado</TableHead>
-                    <TableHead className="font-semibold">Creado</TableHead>
-                    <TableHead className="font-semibold">Actualizado</TableHead>
                     <TableHead className="font-semibold text-center">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((userItem) => (
                     <TableRow key={userItem.id} className="hover:bg-muted/20">
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.user_id.slice(0, 8)}...
+                      <TableCell className="text-sm">
+                        {userItem.email || 'Sin correo'}
                       </TableCell>
                       <TableCell className="font-medium">
                         {userItem.name || 'Sin nombre'}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(userItem.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.created_at)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.status_updated_at)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
@@ -286,7 +272,7 @@ export default function AdminDatabase() {
                             variant="outline"
                             className="text-green-600 border-green-600 hover:bg-green-50"
                             onClick={() => updateUserStatus(userItem.user_id, 'approved')}
-                            disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
+                            disabled={updatingUser === userItem.user_id}
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Aprobar
@@ -296,7 +282,7 @@ export default function AdminDatabase() {
                             variant="outline"
                             className="text-red-600 border-red-600 hover:bg-red-50"
                             onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
-                            disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
+                            disabled={updatingUser === userItem.user_id}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Rechazar
