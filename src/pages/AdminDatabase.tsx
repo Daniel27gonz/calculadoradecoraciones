@@ -45,8 +45,7 @@ export default function AdminDatabase() {
     const term = searchTerm.toLowerCase();
     return users.filter(u => 
       u.name?.toLowerCase().includes(term) ||
-      u.user_id.toLowerCase().includes(term) ||
-      u.id.toLowerCase().includes(term) ||
+      u.email?.toLowerCase().includes(term) ||
       u.status.toLowerCase().includes(term)
     );
   }, [users, searchTerm]);
@@ -80,7 +79,7 @@ export default function AdminDatabase() {
         const status = statusMap.get(profile.user_id);
         return {
           ...profile,
-          email: profile.name || 'Sin nombre', // We'll show name, actual email is in auth.users
+          email: profile.email || 'Sin email',
           status: status?.status || 'pending',
           status_updated_at: status?.updated_at || profile.created_at
         };
@@ -222,7 +221,7 @@ export default function AdminDatabase() {
             <div className="relative flex-1 w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, ID o estado..."
+                placeholder="Buscar por nombre, email o estado..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -249,8 +248,7 @@ export default function AdminDatabase() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">ID</TableHead>
-                    <TableHead className="font-semibold">User ID</TableHead>
+                    <TableHead className="font-semibold">Email</TableHead>
                     <TableHead className="font-semibold">Nombre</TableHead>
                     <TableHead className="font-semibold">Estado</TableHead>
                     <TableHead className="font-semibold">Creado</TableHead>
@@ -261,13 +259,10 @@ export default function AdminDatabase() {
                 <TableBody>
                   {filteredUsers.map((userItem) => (
                     <TableRow key={userItem.id} className="hover:bg-muted/20">
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.id.slice(0, 8)}...
+                      <TableCell className="font-medium text-sm">
+                        {userItem.email}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {userItem.user_id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="text-sm text-muted-foreground">
                         {userItem.name || 'Sin nombre'}
                       </TableCell>
                       <TableCell>
