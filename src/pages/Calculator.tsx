@@ -15,7 +15,6 @@ import { TransportSection } from '@/components/calculator/TransportSection';
 import { ToolWearSection } from '@/components/calculator/ToolWearSection';
 import { WastageSection } from '@/components/calculator/WastageSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
-import { FurnitureSection } from '@/components/calculator/FurnitureSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { LogoUploadSection } from '@/components/calculator/LogoUploadSection';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -293,12 +292,6 @@ export default function Calculator() {
         <ExtrasSection
           extras={quote.extras}
           onChange={(extras) => updateQuote({ extras })}
-          currencySymbol={currencySymbol}
-        />
-
-        <FurnitureSection
-          furnitureItems={quote.furnitureItems}
-          onChange={(furnitureItems) => updateQuote({ furnitureItems })}
           currencySymbol={currencySymbol}
         />
 
