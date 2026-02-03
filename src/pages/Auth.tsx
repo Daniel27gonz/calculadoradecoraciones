@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import { Eye, EyeOff, Mail, Lock, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,6 +115,20 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Warning message for registration */}
+            {!isLogin && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-red-600 text-sm">
+                    <p className="font-bold mb-1">⚠️ ATENCIÓN – LEE ANTES DE REGISTRARTE</p>
+                    <p className="mb-2">Regístrate únicamente con el mismo correo que usaste al momento de la compra.</p>
+                    <p className="font-semibold">👉 No uses otro correo.</p>
+                    <p>Si te registras con uno diferente, el sistema no podrá reconocer tu pago y NO se te dará acceso a la calculadora.</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name - Only show on signup */}
               {!isLogin && (
