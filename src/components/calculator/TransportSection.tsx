@@ -10,17 +10,20 @@ interface TransportSectionProps {
   currencySymbol?: string;
 }
 
+const DEFAULT_CONCEPTS = [
+  'Compra del material',
+  'Montaje de la decoración'
+];
+
 export function TransportSection({ transportItems, onChange, currencySymbol = '$' }: TransportSectionProps) {
-  const addItem = () => {
-    onChange([
-      ...transportItems,
-      { 
-        id: crypto.randomUUID(), 
-        concept: 'Compra del material', 
-        amountIda: undefined as unknown as number,
-        amountRegreso: undefined as unknown as number
-      },
-    ]);
+  const addDefaultItems = () => {
+    const newItems: TransportItem[] = DEFAULT_CONCEPTS.map(concept => ({
+      id: crypto.randomUUID(),
+      concept,
+      amountIda: undefined as unknown as number,
+      amountRegreso: undefined as unknown as number
+    }));
+    onChange([...transportItems, ...newItems]);
   };
 
   const updateItem = (id: string, updates: Partial<TransportItem>) => {
@@ -47,7 +50,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
               <span>Traslado</span>
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 ml-8 sm:ml-9">
-              Compra del material (ida y regreso)
+              Gastos de transporte (ida y regreso)
             </p>
           </div>
           <div className="px-3 py-1.5 rounded-full bg-secondary border border-border">
@@ -74,7 +77,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
                 {/* Concept label */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground">
-                    {item.concept || 'Compra del material'}
+                    {item.concept}
                   </span>
                 </div>
                 
@@ -126,9 +129,9 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
           </div>
         ))}
 
-        <Button variant="outline" className="w-full h-12 text-base font-medium" onClick={addItem}>
+        <Button variant="outline" className="w-full h-12 text-base font-medium" onClick={addDefaultItems}>
           <Plus className="w-5 h-5 mr-2" />
-          Agregar traslado
+          Agregar traslados
         </Button>
       </CardContent>
     </Card>
