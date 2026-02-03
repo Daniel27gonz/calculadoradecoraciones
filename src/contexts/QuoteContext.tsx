@@ -365,8 +365,10 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Desgaste de herramientas: deshabilitado (ya no se usa)
     const toolWear = 0;
     
-    // Total = suma de todos los conceptos (incluyendo materiales reutilizables)
-    const totalCost = totalBalloons + totalMaterials + totalReusableMaterials + totalLabor + totalTransport + wastage + totalExtras;
+    // Total = suma de todos los conceptos que se muestran en la hoja de cotización
+    // (Materiales no reutilizables + Materiales reutilizables + Merma + Mano de obra + Transporte + Extras)
+    // Nota: totalBalloons no se incluye ya que no se muestra como línea separada
+    const totalCost = totalMaterials + totalReusableMaterials + totalLabor + totalTransport + wastage + totalExtras;
     
     // Precio final con margen
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
