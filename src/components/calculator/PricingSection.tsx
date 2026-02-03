@@ -132,7 +132,7 @@ export function PricingSection({
             <CostLine icon="📉" label={`Merma (${wastagePercentage}%)`} amount={summary.wastage} highlighted />
             <CostLine icon="👩‍🎨" label="Total mano de obra" amount={summary.totalLabor} />
             <CostLine icon="🚗" label="Total transporte" amount={summary.totalTransport} />
-            <CostLine icon="🔧" label={`Desgaste herramientas (${toolWearPercentage}%)`} amount={summary.toolWear} highlighted />
+            
             <CostLine icon="✨" label="Total extras" amount={summary.totalExtras} />
             <CostLine 
               icon="📊" 
