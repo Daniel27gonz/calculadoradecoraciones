@@ -176,6 +176,36 @@ export type Database = {
         }
         Relationships: []
       }
+      reusable_materials: {
+        Row: {
+          cost_per_use: number
+          created_at: string
+          id: string
+          material_cost: number
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_per_use?: number
+          created_at?: string
+          id?: string
+          material_cost?: number
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_per_use?: number
+          created_at?: string
+          id?: string
+          material_cost?: number
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
