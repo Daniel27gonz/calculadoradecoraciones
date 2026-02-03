@@ -10,6 +10,7 @@ import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { MaterialsManager } from '@/components/settings/MaterialsManager';
 import { IndirectExpensesManager } from '@/components/settings/IndirectExpensesManager';
+import { ReusableMaterialsManager } from '@/components/settings/ReusableMaterialsManager';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -161,6 +162,11 @@ export default function Settings() {
 
         {/* Materials Manager */}
         <MaterialsManager />
+
+        {/* Reusable Materials Manager */}
+        {user && (
+          <ReusableMaterialsManager currencySymbol={currentCurrency?.symbol || '$'} />
+        )}
 
         {/* Events Per Month */}
         {user && (
