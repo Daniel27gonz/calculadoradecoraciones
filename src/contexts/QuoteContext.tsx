@@ -382,7 +382,8 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
 
     return {
       totalBalloons,
-      totalMaterials: totalMaterials + totalReusableMaterials, // Combine both material types for display
+      totalMaterials,
+      totalReusableMaterials,
       totalLabor,
       totalTime,
       totalExtras,

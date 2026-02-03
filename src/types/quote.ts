@@ -106,6 +106,7 @@ export interface Package {
 export interface CostSummary {
   totalBalloons: number;
   totalMaterials: number;
+  totalReusableMaterials: number;
   totalLabor: number;
   totalTime: number;
   totalExtras: number;
