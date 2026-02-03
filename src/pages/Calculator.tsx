@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { MaterialSection } from '@/components/calculator/MaterialSection';
+import { ReusableMaterialsSection } from '@/components/calculator/ReusableMaterialsSection';
 import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
@@ -47,6 +48,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   furnitureItems: [],
   transportItems: [],
   indirectExpenses: [],
+  reusableMaterialsUsed: [],
   marginPercentage: 30,
   toolWearPercentage: 7,
   wastagePercentage: 5,
@@ -270,6 +272,12 @@ export default function Calculator() {
         <MaterialSection
           materials={quote.materials}
           onChange={(materials) => updateQuote({ materials })}
+          currencySymbol={currencySymbol}
+        />
+
+        <ReusableMaterialsSection
+          reusableMaterialsUsed={quote.reusableMaterialsUsed}
+          onChange={(reusableMaterialsUsed) => updateQuote({ reusableMaterialsUsed })}
           currencySymbol={currencySymbol}
         />
 

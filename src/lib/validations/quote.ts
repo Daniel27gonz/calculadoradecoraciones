@@ -71,6 +71,15 @@ export const IndirectExpenseSchema = z.object({
   monthlyAmount: z.number().min(0).max(MAX_PRICE),
 });
 
+// ReusableMaterialUsed validation schema
+export const ReusableMaterialUsedSchema = z.object({
+  id: z.string().max(100),
+  reusableMaterialId: z.string().max(100),
+  name: z.string().max(MAX_NAME_LENGTH),
+  costPerUse: z.number().min(0).max(MAX_PRICE),
+  quantity: z.number().min(0).max(MAX_QUANTITY),
+});
+
 // Full Quote validation schema for database operations
 export const QuoteDataSchema = z.object({
   balloons: z.array(BalloonSchema).max(MAX_ITEMS).default([]),
@@ -81,6 +90,7 @@ export const QuoteDataSchema = z.object({
   furnitureItems: z.array(FurnitureItemSchema).max(MAX_ITEMS).default([]),
   transportItems: z.array(TransportItemSchema).max(MAX_ITEMS).default([]),
   indirectExpenses: z.array(IndirectExpenseSchema).max(MAX_ITEMS).default([]),
+  reusableMaterialsUsed: z.array(ReusableMaterialUsedSchema).max(MAX_ITEMS).default([]),
   marginPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(30),
   toolWearPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(7),
   wastagePercentage: z.number().min(1).max(10).default(5),

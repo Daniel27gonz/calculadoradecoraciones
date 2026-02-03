@@ -59,6 +59,14 @@ export interface ToolAmortization {
   recommendedUses: number;
 }
 
+export interface ReusableMaterialUsed {
+  id: string;
+  reusableMaterialId: string;
+  name: string;
+  costPerUse: number;
+  quantity: number;
+}
+
 export interface Quote {
   id: string;
   clientName: string;
@@ -75,6 +83,7 @@ export interface Quote {
   furnitureItems: FurnitureItem[];
   transportItems: TransportItem[];
   indirectExpenses: IndirectExpense[];
+  reusableMaterialsUsed: ReusableMaterialUsed[];
   marginPercentage: number;
   toolWearPercentage: number;
   wastagePercentage: number;

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, FurnitureItem, CostSummary, TransportItem, IndirectExpense } from '@/types/quote';
+import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, FurnitureItem, CostSummary, TransportItem, IndirectExpense, ReusableMaterialUsed } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +13,8 @@ import {
   ExtraSchema,
   FurnitureItemSchema,
   TransportItemSchema,
-  IndirectExpenseSchema
+  IndirectExpenseSchema,
+  ReusableMaterialUsedSchema
 } from '@/lib/validations/quote';
 
 interface QuoteContextType {
@@ -165,6 +166,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           furnitureItems: safeParseQuoteArrayField(q.furniture_items, FurnitureItemSchema, []) as FurnitureItem[],
           transportItems: safeParseQuoteArrayField(q.transport_items, TransportItemSchema, []) as TransportItem[],
           indirectExpenses: [] as IndirectExpense[], // Column doesn't exist yet in DB
+          reusableMaterialsUsed: safeParseQuoteArrayField(q.reusable_materials_used, ReusableMaterialUsedSchema, []) as ReusableMaterialUsed[],
           marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
@@ -212,6 +214,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       furnitureItems: quote.furnitureItems,
       transportItems: quote.transportItems,
       indirectExpenses: quote.indirectExpenses,
+      reusableMaterialsUsed: quote.reusableMaterialsUsed,
       marginPercentage: quote.marginPercentage,
       toolWearPercentage: quote.toolWearPercentage,
       wastagePercentage: quote.wastagePercentage,
@@ -246,6 +249,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         furniture_items: validatedData.furnitureItems,
         transport_items: validatedData.transportItems,
         // indirect_expenses column doesn't exist yet - omitted from save
+        reusable_materials_used: validatedData.reusableMaterialsUsed,
         margin_percentage: validatedData.marginPercentage,
         tool_wear_percentage: validatedData.toolWearPercentage,
         wastage_percentage: validatedData.wastagePercentage,
@@ -338,6 +342,11 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const totalBalloons = quote.balloons.reduce((sum, b) => sum + ((b.pricePerUnit || 0) * (b.quantity || 0)), 0);
     const totalMaterials = quote.materials.reduce((sum, m) => sum + ((m.costPerUnit || 0) * (m.quantity || 0)), 0);
     
+    // Materiales reutilizables
+    const totalReusableMaterials = quote.reusableMaterialsUsed?.reduce(
+      (sum, m) => sum + ((m.costPerUse || 0) * (m.quantity || 0)), 0
+    ) || 0;
+    
     // Mano de obra = trabajadores + tiempo por fases
     const laborFromWorkers = quote.workers.reduce((sum, w) => sum + ((w.hourlyRate || 0) * (w.hours || 0)), 0);
     const laborFromPhases = quote.timePhases.reduce((sum, t) => sum + ((t.rate || 0) * (t.hours || 0)), 0);
@@ -349,7 +358,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Transporte
     const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0) || quote.transportCost || 0;
     
-    // Merma: porcentaje sobre el total de materiales
+    // Merma: porcentaje sobre el total de materiales (no incluye reutilizables)
     const wastagePercentage = quote.wastagePercentage || 5;
     const wastage = totalMaterials * (wastagePercentage / 100);
     
@@ -358,8 +367,8 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const subtotalForToolWear = totalBalloons + totalMaterials + totalLabor;
     const toolWear = subtotalForToolWear * (toolWearPercentage / 100);
     
-    // Total = suma de todos los conceptos
-    const totalCost = totalBalloons + totalMaterials + totalLabor + totalTransport + toolWear + wastage + totalExtras;
+    // Total = suma de todos los conceptos (incluyendo materiales reutilizables)
+    const totalCost = totalBalloons + totalMaterials + totalReusableMaterials + totalLabor + totalTransport + toolWear + wastage + totalExtras;
     
     // Precio final con margen
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
@@ -373,7 +382,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
 
     return {
       totalBalloons,
-      totalMaterials,
+      totalMaterials: totalMaterials + totalReusableMaterials, // Combine both material types for display
       totalLabor,
       totalTime,
       totalExtras,
