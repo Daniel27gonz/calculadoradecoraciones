@@ -12,7 +12,8 @@ interface TransportSectionProps {
 
 const DEFAULT_CONCEPTS = [
   'Compra del material',
-  'Montaje de la decoración'
+  'Montaje de la decoración',
+  'Desmontaje'
 ];
 
 export function TransportSection({ transportItems, onChange, currencySymbol = '$' }: TransportSectionProps) {
