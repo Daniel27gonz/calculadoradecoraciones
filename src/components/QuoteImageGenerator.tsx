@@ -152,6 +152,45 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           )}
         </div>
 
+        {/* Reusable Materials Section */}
+        {quote.reusableMaterialsUsed && quote.reusableMaterialsUsed.length > 0 && (
+          <div
+            style={{
+              marginBottom: '28px',
+              padding: '20px',
+              background: '#fefefe',
+              borderRadius: '12px',
+              border: '1px solid #f8c8d4',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ color: '#f5a5b8', fontSize: '18px', marginRight: '10px' }}>🧮</span>
+              <span style={{ fontSize: '16px', fontWeight: 600, color: '#333333' }}>
+                Materiales reutilizables
+              </span>
+            </div>
+            {quote.reusableMaterialsUsed.map((material, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 0',
+                  borderBottom: index < quote.reusableMaterialsUsed!.length - 1 ? '1px solid #f0e0e5' : 'none',
+                }}
+              >
+                <span style={{ fontSize: '14px', color: '#666666' }}>
+                  {material.name} {material.quantity > 1 ? `(×${material.quantity})` : ''}
+                </span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#333333' }}>
+                  {formatCurrency((material.costPerUse || 0) * (material.quantity || 1), currencySymbol)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Final Price */}
         <div
           style={{
