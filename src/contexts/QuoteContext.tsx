@@ -343,7 +343,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const totalExtras = quote.extras.reduce((sum, e) => sum + ((e.pricePerUnit || 0) * (e.quantity || 0)), 0);
     
     // Transporte
-    const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amount || 0), 0) || quote.transportCost || 0;
+    const totalTransport = quote.transportItems?.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0) || quote.transportCost || 0;
     
     // Merma: porcentaje sobre el total de materiales
     const wastagePercentage = quote.wastagePercentage || 5;

@@ -1,7 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { TransportItem } from '@/types/quote';
 
@@ -15,7 +14,12 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
   const addItem = () => {
     onChange([
       ...transportItems,
-      { id: crypto.randomUUID(), concept: '', amount: undefined as unknown as number },
+      { 
+        id: crypto.randomUUID(), 
+        concept: 'Compra del material', 
+        amountIda: undefined as unknown as number,
+        amountRegreso: undefined as unknown as number
+      },
     ]);
   };
 
@@ -27,7 +31,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
     onChange(transportItems.filter(t => t.id !== id));
   };
 
-  const total = transportItems.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const total = transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -43,7 +47,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
               <span>Traslado</span>
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 ml-8 sm:ml-9">
-              Gasolina, casetas, estacionamiento, etc.
+              Compra del material (ida y regreso)
             </p>
           </div>
           <div className="px-3 py-1.5 rounded-full bg-secondary border border-border">
@@ -56,7 +60,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
       <CardContent className="space-y-4">
         {transportItems.length === 0 && (
           <div className="text-center py-6 text-muted-foreground text-sm">
-            No hay gastos de transporte agregados
+            No hay gastos de traslado agregados
           </div>
         )}
 
@@ -67,37 +71,54 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
           >
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0 space-y-4">
-                {/* Concept */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Concepto
-                  </label>
-                  <Input
-                    value={item.concept}
-                    onChange={(e) => updateItem(item.id, { concept: e.target.value })}
-                    placeholder="Ej: Gasolina ida y vuelta"
-                    className="h-11 text-base"
-                  />
+                {/* Concept label */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {item.concept || 'Compra del material'}
+                  </span>
                 </div>
                 
-                {/* Amount */}
+                {/* Amount Ida */}
                 <NumericField
-                  label="Importe gastado"
+                  label="Cantidad Ida"
                   prefix={currencySymbol}
                   min={0}
                   step={0.01}
-                  value={item.amount ?? ''}
+                  value={item.amountIda ?? ''}
                   onChange={(e) => updateItem(item.id, { 
-                    amount: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                    amountIda: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
                   })}
                   placeholder="0.00"
                 />
+
+                {/* Amount Regreso */}
+                <NumericField
+                  label="Cantidad Regreso"
+                  prefix={currencySymbol}
+                  min={0}
+                  step={0.01}
+                  value={item.amountRegreso ?? ''}
+                  onChange={(e) => updateItem(item.id, { 
+                    amountRegreso: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
+                  })}
+                  placeholder="0.00"
+                />
+
+                {/* Subtotal for this item */}
+                <div className="pt-2 border-t border-border/50">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Subtotal:</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {currencySymbol}{formatCurrency((item.amountIda || 0) + (item.amountRegreso || 0))}
+                    </span>
+                  </div>
+                </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => removeItem(item.id)}
-                className="h-9 w-9 text-destructive hover:bg-destructive/10 shrink-0 mt-6"
+                className="h-9 w-9 text-destructive hover:bg-destructive/10 shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -107,7 +128,7 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
 
         <Button variant="outline" className="w-full h-12 text-base font-medium" onClick={addItem}>
           <Plus className="w-5 h-5 mr-2" />
-          Agregar gasto de transporte
+          Agregar traslado
         </Button>
       </CardContent>
     </Card>
