@@ -12,7 +12,7 @@ import { ReusableMaterialsSection } from '@/components/calculator/ReusableMateri
 import { LaborSection } from '@/components/calculator/LaborSection';
 import { ExtrasSection } from '@/components/calculator/ExtrasSection';
 import { TransportSection } from '@/components/calculator/TransportSection';
-import { ToolWearSection } from '@/components/calculator/ToolWearSection';
+
 import { WastageSection } from '@/components/calculator/WastageSection';
 import { PricingSection } from '@/components/calculator/PricingSection';
 import { CurrencySelector } from '@/components/CurrencySelector';
@@ -301,14 +301,6 @@ export default function Calculator() {
           currencySymbol={currencySymbol}
         />
 
-        <ToolWearSection
-          totalBalloons={summary.totalBalloons}
-          totalMaterials={summary.totalMaterials}
-          totalLabor={summary.totalLabor}
-          toolWearPercentage={quote.toolWearPercentage}
-          onPercentageChange={(toolWearPercentage) => updateQuote({ toolWearPercentage })}
-          currencySymbol={currencySymbol}
-        />
 
         <WastageSection
           totalMaterials={summary.totalMaterials}
