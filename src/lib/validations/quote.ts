@@ -37,7 +37,7 @@ export const WorkerSchema = z.object({
 // TimePhase validation schema
 export const TimePhaseSchema = z.object({
   phase: z.enum(['planning', 'preparation', 'setup', 'teardown']),
-  hours: z.number().min(0).max(MAX_HOURS),
+  hours: z.number().min(0).max(MAX_HOURS).optional().nullable().transform(val => val ?? 0),
   rate: z.number().min(0).max(MAX_PRICE),
 });
 
@@ -61,7 +61,8 @@ export const FurnitureItemSchema = z.object({
 export const TransportItemSchema = z.object({
   id: z.string().max(100),
   concept: z.string().max(MAX_NAME_LENGTH),
-  amount: z.number().min(0).max(MAX_PRICE),
+  amountIda: z.number().min(0).max(MAX_PRICE).optional().default(0),
+  amountRegreso: z.number().min(0).max(MAX_PRICE).optional().default(0),
 });
 
 // IndirectExpense validation schema
