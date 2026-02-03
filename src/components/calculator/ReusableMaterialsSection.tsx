@@ -168,7 +168,7 @@ export function ReusableMaterialsSection({
                 placeholder="1"
               />
               <div className="flex flex-col justify-end">
-                <span className="text-xs text-muted-foreground mb-1">Subtotal</span>
+                <span className="text-xs text-muted-foreground mb-1">Costo por uso:</span>
                 <span className="text-lg font-bold text-accent-foreground tabular-nums">
                   {currencySymbol}{formatCurrency((material.costPerUse || 0) * (material.quantity || 0))}
                 </span>
