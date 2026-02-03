@@ -113,6 +113,7 @@ export interface CostSummary {
   totalTransport: number;
   toolWear: number;
   wastage: number;
+  indirectExpenses: number;
   totalCost: number;
   finalPrice: number;
   netProfit: number;
