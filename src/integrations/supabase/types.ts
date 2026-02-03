@@ -119,6 +119,7 @@ export type Database = {
           event_date: string | null
           event_type: string | null
           extras: Json | null
+          furniture_items: Json | null
           id: string
           margin_percentage: number | null
           materials: Json | null
@@ -139,6 +140,7 @@ export type Database = {
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
+          furniture_items?: Json | null
           id?: string
           margin_percentage?: number | null
           materials?: Json | null
@@ -159,6 +161,7 @@ export type Database = {
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
+          furniture_items?: Json | null
           id?: string
           margin_percentage?: number | null
           materials?: Json | null
