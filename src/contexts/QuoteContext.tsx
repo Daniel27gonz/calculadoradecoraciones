@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, CostSummary, TransportItem, IndirectExpense } from '@/types/quote';
+import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, FurnitureItem, CostSummary, TransportItem, IndirectExpense } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,7 @@ import {
   WorkerSchema,
   TimePhaseSchema,
   ExtraSchema,
+  FurnitureItemSchema,
   TransportItemSchema,
   IndirectExpenseSchema
 } from '@/lib/validations/quote';
@@ -161,6 +162,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           workers: safeParseQuoteArrayField(q.workers, WorkerSchema, []) as Worker[],
           timePhases: safeParseQuoteArrayField(q.time_phases, TimePhaseSchema, []) as TimePhase[],
           extras: safeParseQuoteArrayField(q.extras, ExtraSchema, []) as Extra[],
+          furnitureItems: safeParseQuoteArrayField(q.furniture_items, FurnitureItemSchema, []) as FurnitureItem[],
           transportItems: safeParseQuoteArrayField(q.transport_items, TransportItemSchema, []) as TransportItem[],
           indirectExpenses: [] as IndirectExpense[], // Column doesn't exist yet in DB
           marginPercentage: typeof q.margin_percentage === 'number' ? q.margin_percentage : 30,
@@ -207,6 +209,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       workers: quote.workers,
       timePhases: quote.timePhases,
       extras: quote.extras,
+      furnitureItems: quote.furnitureItems,
       transportItems: quote.transportItems,
       indirectExpenses: quote.indirectExpenses,
       marginPercentage: quote.marginPercentage,
@@ -240,6 +243,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         workers: validatedData.workers,
         time_phases: validatedData.timePhases,
         extras: validatedData.extras,
+        furniture_items: validatedData.furnitureItems,
         transport_items: validatedData.transportItems,
         // indirect_expenses column doesn't exist yet - omitted from save
         margin_percentage: validatedData.marginPercentage,
