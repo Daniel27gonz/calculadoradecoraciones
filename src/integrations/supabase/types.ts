@@ -124,6 +124,7 @@ export type Database = {
           margin_percentage: number | null
           materials: Json | null
           notes: string | null
+          reusable_materials_used: Json | null
           time_phases: Json | null
           tool_wear_percentage: number | null
           transport_items: Json | null
@@ -145,6 +146,7 @@ export type Database = {
           margin_percentage?: number | null
           materials?: Json | null
           notes?: string | null
+          reusable_materials_used?: Json | null
           time_phases?: Json | null
           tool_wear_percentage?: number | null
           transport_items?: Json | null
@@ -166,6 +168,7 @@ export type Database = {
           margin_percentage?: number | null
           materials?: Json | null
           notes?: string | null
+          reusable_materials_used?: Json | null
           time_phases?: Json | null
           tool_wear_percentage?: number | null
           transport_items?: Json | null
