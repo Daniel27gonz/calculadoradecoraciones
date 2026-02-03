@@ -43,7 +43,7 @@ export function PricingSection({
   const { user, profile } = useAuth();
   const [indirectExpensesTotal, setIndirectExpensesTotal] = useState(0);
 
-  // Load indirect expenses from localStorage
+  // Load indirect expenses total for display purposes
   useEffect(() => {
     if (user) {
       const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
@@ -55,15 +55,9 @@ export function PricingSection({
     }
   }, [user]);
 
-  // Calculate indirect expenses per event
   const eventsPerMonth = profile?.events_per_month || 4;
-  const indirectExpensesPerEvent = eventsPerMonth > 0 ? indirectExpensesTotal / eventsPerMonth : 0;
 
-  // Calculate adjusted totals including indirect expenses
-  const adjustedTotalCost = summary.totalCost + indirectExpensesPerEvent;
-  const adjustedFinalPrice = adjustedTotalCost * (1 + marginPercentage / 100);
-  const adjustedNetProfit = adjustedFinalPrice - adjustedTotalCost;
-  const adjustedProfitPercentage = adjustedFinalPrice > 0 ? (adjustedNetProfit / adjustedFinalPrice) * 100 : 0;
+  // Use values from summary (already includes indirect expenses)
   const getProfitColor = (percentage: number) => {
     if (percentage >= 40) return 'text-profit-high';
     if (percentage >= 20) return 'text-profit-medium';
@@ -142,7 +136,7 @@ export function PricingSection({
                   ({formatCurrency(indirectExpensesTotal)}/mes ÷ {eventsPerMonth} eventos)
                 </span>
               }
-              amount={indirectExpensesPerEvent} 
+              amount={summary.indirectExpenses} 
               highlighted 
             />
           </div>
@@ -154,7 +148,7 @@ export function PricingSection({
                 Total General
               </span>
               <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums">
-                {formatCurrency(adjustedTotalCost)}
+                {formatCurrency(summary.totalCost)}
               </span>
             </div>
           </div>
@@ -197,7 +191,7 @@ export function PricingSection({
                 Precio Final
               </span>
               <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums">
-                {formatCurrency(adjustedFinalPrice)}
+                {formatCurrency(summary.finalPrice)}
               </span>
             </div>
           </div>
@@ -205,15 +199,15 @@ export function PricingSection({
       </Card>
 
       {/* Profit Analysis */}
-      <Card className={cn("shadow-card border-2", getProfitBg(adjustedProfitPercentage))}>
+      <Card className={cn("shadow-card border-2", getProfitBg(summary.profitPercentage))}>
         <CardHeader className="pb-3">
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="text-xl sm:text-2xl">📈</span>
               <span>Tu Ganancia</span>
             </span>
-            <span className={cn("text-sm font-medium px-3 py-1 rounded-full bg-background/50", getProfitColor(adjustedProfitPercentage))}>
-              {getProfitLabel(adjustedProfitPercentage)}
+            <span className={cn("text-sm font-medium px-3 py-1 rounded-full bg-background/50", getProfitColor(summary.profitPercentage))}>
+              {getProfitLabel(summary.profitPercentage)}
             </span>
           </CardTitle>
         </CardHeader>
@@ -222,20 +216,20 @@ export function PricingSection({
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
               <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Ganancia Neta</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(adjustedProfitPercentage))}>
-                {currencySymbol}{adjustedNetProfit.toFixed(0)}
+              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+                {currencySymbol}{summary.netProfit.toFixed(0)}
               </p>
             </div>
             <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
               <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Porcentaje</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(adjustedProfitPercentage))}>
-                {adjustedProfitPercentage.toFixed(0)}%
+              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+                {summary.profitPercentage.toFixed(0)}%
               </p>
             </div>
             <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
               <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Por Hora</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(adjustedProfitPercentage))}>
-                {currencySymbol}{(summary.totalTime > 0 ? adjustedNetProfit / summary.totalTime : 0).toFixed(0)}
+              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+                {currencySymbol}{summary.profitPerHour.toFixed(0)}
               </p>
             </div>
           </div>
@@ -249,7 +243,7 @@ export function PricingSection({
             </div>
             <div className="h-3 rounded-full bg-gradient-to-r from-profit-low via-profit-medium to-profit-high relative overflow-hidden">
               <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-card border-2 border-foreground shadow-lg transition-all duration-300" style={{
-              left: `calc(${Math.min(Math.max(adjustedProfitPercentage, 0), 60)}% - 10px)`
+              left: `calc(${Math.min(Math.max(summary.profitPercentage, 0), 60)}% - 10px)`
             }} />
             </div>
           </div>

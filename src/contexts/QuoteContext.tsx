@@ -365,10 +365,22 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Desgaste de herramientas: deshabilitado (ya no se usa)
     const toolWear = 0;
     
+    // Gastos indirectos: cargar desde localStorage y dividir entre eventos por mes
+    let indirectExpenses = 0;
+    if (user) {
+      const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
+      if (stored) {
+        const expenses = JSON.parse(stored);
+        const totalMonthly = expenses.reduce((sum: number, e: { monthlyAmount: number }) => sum + (e.monthlyAmount || 0), 0);
+        const eventsPerMonth = profile?.events_per_month || 4;
+        indirectExpenses = eventsPerMonth > 0 ? totalMonthly / eventsPerMonth : 0;
+      }
+    }
+    
     // Total = suma de todos los conceptos que se muestran en la hoja de cotización
-    // (Materiales no reutilizables + Materiales reutilizables + Merma + Mano de obra + Transporte + Extras)
+    // (Materiales no reutilizables + Materiales reutilizables + Merma + Mano de obra + Transporte + Extras + Gastos indirectos)
     // Nota: totalBalloons no se incluye ya que no se muestra como línea separada
-    const totalCost = totalMaterials + totalReusableMaterials + totalLabor + totalTransport + wastage + totalExtras;
+    const totalCost = totalMaterials + totalReusableMaterials + totalLabor + totalTransport + wastage + totalExtras + indirectExpenses;
     
     // Precio final con margen
     const finalPrice = totalCost * (1 + (quote.marginPercentage || 0) / 100);
@@ -390,6 +402,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       totalTransport,
       toolWear,
       wastage,
+      indirectExpenses,
       totalCost,
       finalPrice,
       netProfit,
