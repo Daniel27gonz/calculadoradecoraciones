@@ -25,10 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 
 const defaultTimePhases: TimePhase[] = [
-  { phase: 'planning', hours: 0, rate: 25 },
-  { phase: 'preparation', hours: 0, rate: 25 },
-  { phase: 'setup', hours: 0, rate: 25 },
-  { phase: 'teardown', hours: 0, rate: 25 },
+  { phase: 'planning', hours: undefined as unknown as number, rate: 25 },
+  { phase: 'preparation', hours: undefined as unknown as number, rate: 25 },
+  { phase: 'setup', hours: undefined as unknown as number, rate: 25 },
+  { phase: 'teardown', hours: undefined as unknown as number, rate: 25 },
 ];
 
 const createEmptyQuote = (hourlyRate: number): Quote => ({
