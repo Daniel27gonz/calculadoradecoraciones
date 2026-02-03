@@ -32,6 +32,13 @@ export interface Extra {
   quantity: number;
 }
 
+export interface FurnitureItem {
+  id: string;
+  name: string;
+  pricePerUnit: number;
+  quantity: number;
+}
+
 export interface TransportItem {
   id: string;
   concept: string;
@@ -65,6 +72,7 @@ export interface Quote {
   workers: Worker[];
   timePhases: TimePhase[];
   extras: Extra[];
+  furnitureItems: FurnitureItem[];
   transportItems: TransportItem[];
   indirectExpenses: IndirectExpense[];
   marginPercentage: number;

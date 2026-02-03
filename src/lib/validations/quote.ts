@@ -49,6 +49,14 @@ export const ExtraSchema = z.object({
   quantity: z.number().min(0).max(MAX_QUANTITY),
 });
 
+// FurnitureItem validation schema
+export const FurnitureItemSchema = z.object({
+  id: z.string().max(100),
+  name: z.string().max(MAX_NAME_LENGTH),
+  pricePerUnit: z.number().min(0).max(MAX_PRICE),
+  quantity: z.number().min(0).max(MAX_QUANTITY),
+});
+
 // TransportItem validation schema
 export const TransportItemSchema = z.object({
   id: z.string().max(100),
@@ -70,6 +78,7 @@ export const QuoteDataSchema = z.object({
   workers: z.array(WorkerSchema).max(MAX_ITEMS).default([]),
   timePhases: z.array(TimePhaseSchema).max(20).default([]),
   extras: z.array(ExtraSchema).max(MAX_ITEMS).default([]),
+  furnitureItems: z.array(FurnitureItemSchema).max(MAX_ITEMS).default([]),
   transportItems: z.array(TransportItemSchema).max(MAX_ITEMS).default([]),
   indirectExpenses: z.array(IndirectExpenseSchema).max(MAX_ITEMS).default([]),
   marginPercentage: z.number().min(0).max(MAX_PERCENTAGE).default(30),
