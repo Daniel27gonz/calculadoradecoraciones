@@ -59,8 +59,8 @@ export function useQuotePdfDownload() {
     quote.transportItems.forEach((transport) => {
       additionalServices.push({
         id: transport.id,
-        description: transport.concept,
-        price: transport.amount,
+        description: transport.concept || 'Compra del material',
+        price: (transport.amountIda || 0) + (transport.amountRegreso || 0),
       });
     });
 

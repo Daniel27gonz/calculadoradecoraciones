@@ -35,7 +35,8 @@ export interface Extra {
 export interface TransportItem {
   id: string;
   concept: string;
-  amount: number;
+  amountIda: number;
+  amountRegreso: number;
 }
 
 export interface IndirectExpense {
