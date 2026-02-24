@@ -114,7 +114,6 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             serviceItems.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—' });
           }
           quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
-          quote.materials.forEach(m => serviceItems.push({ id: m.id, description: m.name, quantity: m.quantity }));
           quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
           quote.furnitureItems.forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
           quote.reusableMaterialsUsed.forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
