@@ -242,6 +242,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         client_phone: quote.clientPhone || null,
         event_date: validatedData.eventDate || null,
         event_type: quote.eventType || null,
+        decoration_description: quote.decorationDescription || null,
         balloons: validatedData.balloons,
         materials: validatedData.materials,
         workers: validatedData.workers,

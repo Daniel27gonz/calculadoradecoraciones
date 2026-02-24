@@ -116,6 +116,7 @@ export type Database = {
           client_name: string
           client_phone: string | null
           created_at: string
+          decoration_description: string | null
           event_date: string | null
           event_type: string | null
           extras: Json | null
@@ -138,6 +139,7 @@ export type Database = {
           client_name: string
           client_phone?: string | null
           created_at?: string
+          decoration_description?: string | null
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
@@ -160,6 +162,7 @@ export type Database = {
           client_name?: string
           client_phone?: string | null
           created_at?: string
+          decoration_description?: string | null
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
