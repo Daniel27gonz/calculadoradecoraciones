@@ -152,29 +152,13 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             </div>
           </div>
 
-          {/* Cost Summary - only show when a quote is loaded */}
-          {s && (
+          {/* Descripción de la decoración */}
+          {data.decorationDescription && (
             <div className="border-b border-pink-100 pb-4">
-              <h3 className="text-lg font-semibold text-pink-500 mb-3">RESUMEN DE COTIZACIÓN:</h3>
-              <div className="space-y-0.5">
-                <SummaryRow icon="🎀" label="Materiales no reutilizables" value={fmt(s.totalMaterials)} />
-                <SummaryRow icon="🧮" label="Materiales reutilizables" value={fmt(s.totalReusableMaterials)} />
-                <SummaryRow icon="📉" label={`Merma (${s.wastagePercentage}%)`} value={fmt(s.wastage)} />
-                <SummaryRow icon="👩‍🎨" label="Total mano de obra" value={fmt(s.totalLabor)} />
-                <SummaryRow icon="🚗" label="Total transporte" value={fmt(s.totalTransport)} />
-                <SummaryRow icon="✨" label="Total extras" value={fmt(s.totalExtras)} />
-                <SummaryRow icon="📊" label="Gastos indirectos" value={fmt(s.indirectExpenses)} />
-
-                <div className="flex justify-between items-center pt-2 mt-2 border-t border-pink-100 font-bold px-2">
-                  <span className="text-gray-800">Total General</span>
-                  <span className="text-gray-800">{fmt(s.totalCost)}</span>
-                </div>
-
-                <div className="flex justify-between items-center text-gray-600 text-sm px-2">
-                  <span>Margen de ganancia ({s.marginPercentage}%)</span>
-                  <span>{fmt(s.finalPrice - s.totalCost)}</span>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-pink-500 mb-3">DESCRIPCIÓN DE LA DECORACIÓN:</h3>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap m-0">
+                {data.decorationDescription}
+              </p>
             </div>
           )}
 

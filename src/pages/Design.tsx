@@ -44,6 +44,7 @@ export interface QuoteTemplateData {
   eventDate: string;
   eventLocation: string;
   decorationType: string;
+  decorationDescription?: string;
   items: QuoteItem[];
   additionalServices: AdditionalService[];
   depositPercentage: number;
@@ -191,6 +192,7 @@ const Design = () => {
           clientPhone: selectedQuote.clientPhone || "",
           eventDate: formattedEventDate,
           decorationType: selectedQuote.eventType || "",
+          decorationDescription: selectedQuote.decorationDescription || "",
           items,
           additionalServices: [],
           costSummary: {
