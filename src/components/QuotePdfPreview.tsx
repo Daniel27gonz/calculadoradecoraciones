@@ -100,6 +100,37 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
             </div>
           )}
 
+          {/* Tabla de servicios cotizados */}
+          {data.items && data.items.length > 0 && (
+            <div className="border-b pb-4" style={{ borderColor: '#fce7f3' }}>
+              <h3 className="text-lg font-semibold mb-3" style={{ color: '#ec4899' }}>SERVICIOS COTIZADOS:</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f9a8d4' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Descripción
+                    </th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                      Cantidad
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item, index) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #fce7f3', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fdf2f8' }}>
+                      <td style={{ padding: '8px 12px', color: '#555', lineHeight: 1.5 }}>
+                        {item.description}
+                      </td>
+                      <td style={{ padding: '8px 12px', color: '#333', fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* Precio Final */}
           <div 
             className="flex justify-end items-center gap-4 pt-2 pb-2 px-4 rounded-lg"

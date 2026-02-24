@@ -46,15 +46,20 @@ export function useQuotePdfDownload() {
   const { profile } = useAuth();
 
   const convertQuoteToTemplateData = (quote: Quote, summary: CostSummary): QuotePdfData => {
-    // Convert materials to items format
-    const items = quote.materials.map((mat) => ({
-      id: mat.id,
-      description: mat.name,
-      quantity: mat.quantity,
-      price: mat.costPerUnit * mat.quantity,
-    }));
+    // Convert all quote items to a unified items list
+    const items: Array<{ id: string; description: string; quantity: number; price: number }> = [];
 
-    // Add balloons as items
+    // Materials
+    quote.materials.forEach((mat) => {
+      items.push({
+        id: mat.id,
+        description: mat.name,
+        quantity: mat.quantity,
+        price: mat.costPerUnit * mat.quantity,
+      });
+    });
+
+    // Balloons
     quote.balloons.forEach((balloon) => {
       items.push({
         id: balloon.id,
@@ -64,21 +69,57 @@ export function useQuotePdfDownload() {
       });
     });
 
-    // Convert extras to additional services
-    const additionalServices = quote.extras.map((extra) => ({
-      id: extra.id,
-      description: extra.name,
-      price: extra.pricePerUnit * extra.quantity,
-    }));
+    // Extras
+    quote.extras.forEach((extra) => {
+      items.push({
+        id: extra.id,
+        description: extra.name,
+        quantity: extra.quantity,
+        price: extra.pricePerUnit * extra.quantity,
+      });
+    });
 
-    // Add transport as additional service if any
+    // Furniture / Reusable materials
+    quote.furnitureItems.forEach((item) => {
+      items.push({
+        id: item.id,
+        description: item.name,
+        quantity: item.quantity,
+        price: item.pricePerUnit * item.quantity,
+      });
+    });
+
+    // Reusable materials used
+    quote.reusableMaterialsUsed.forEach((item) => {
+      items.push({
+        id: item.id,
+        description: item.name,
+        quantity: item.quantity,
+        price: item.costPerUse * item.quantity,
+      });
+    });
+
+    // Workers
+    quote.workers.forEach((worker) => {
+      items.push({
+        id: worker.id,
+        description: `Mano de obra - ${worker.name}`,
+        quantity: 1,
+        price: worker.hourlyRate * worker.hours,
+      });
+    });
+
+    // Transport
     quote.transportItems.forEach((transport) => {
-      additionalServices.push({
+      items.push({
         id: transport.id,
-        description: transport.concept || 'Compra del material',
+        description: transport.concept || 'Transporte',
+        quantity: 1,
         price: (transport.amountIda || 0) + (transport.amountRegreso || 0),
       });
     });
+
+    const additionalServices: Array<{ id: string; description: string; price: number }> = [];
 
     const currencyCode = profile?.currency || 'USD';
     const currency = getCurrencyByCode(currencyCode);
