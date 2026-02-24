@@ -11,16 +11,6 @@ interface QuoteTemplatePreviewProps {
   total: number;
 }
 
-function SummaryRow({ icon, label, value }: { icon: string; label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center py-1.5 px-2">
-      <span className="flex items-center gap-2 text-gray-700 text-sm">
-        <span>{icon}</span> {label}
-      </span>
-      <span className="text-gray-800 font-medium text-sm">{value}</span>
-    </div>
-  );
-}
 
 const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
   const depositAmount = (total * data.depositPercentage) / 100;
