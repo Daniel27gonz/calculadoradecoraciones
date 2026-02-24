@@ -16,6 +16,7 @@ export interface QuotePdfData {
   eventDate: string;
   eventLocation: string;
   decorationType: string;
+  decorationDescription: string;
   items: Array<{ id: string; description: string; quantity: number; price: number }>;
   additionalServices: Array<{ id: string; description: string; price: number }>;
   depositPercentage: number;
@@ -94,6 +95,7 @@ export function useQuotePdfDownload() {
         : '',
       eventLocation: '',
       decorationType: '',
+      decorationDescription: quote.decorationDescription || '',
       items: items.length > 0 ? items : [{ id: '1', description: 'Decoración con globos', quantity: 1, price: summary.finalPrice }],
       additionalServices,
       depositPercentage: 50,
