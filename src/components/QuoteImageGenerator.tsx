@@ -12,20 +12,34 @@ interface QuoteImageGeneratorProps {
   businessName?: string | null;
 }
 
-const formatCurrency = (amount: number, symbol: string) => {
-  return `${symbol}${amount.toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+const fmt = (amount: number, symbol: string) =>
+  `${symbol}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const rowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '6px 0',
+  fontSize: '13px',
 };
+
+function SummaryRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div style={rowStyle}>
+      <span style={{ color: '#555', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{icon}</span> {label}
+      </span>
+      <span style={{ fontWeight: 600, color: '#333' }}>{value}</span>
+    </div>
+  );
+}
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
   ({ quote, summary, currencySymbol, logoUrl, businessName }, ref) => {
+    const cs = currencySymbol;
     const eventDateFormatted = quote.eventDate
       ? format(new Date(quote.eventDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
       : 'Por definir';
-
-    const finalPrice = summary.finalPrice;
 
     return (
       <div
@@ -39,117 +53,81 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            marginBottom: '32px',
-            paddingBottom: '20px',
-            borderBottom: '1px solid #f8c8d4',
-          }}
-        >
-          {/* Logo and Business Name - Left aligned, vertical */}
+        <div style={{ marginBottom: '32px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '16px' }}>
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt="Logo"
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  objectFit: 'contain',
-                  borderRadius: '12px',
-                }}
+                style={{ width: '80px', height: '80px', objectFit: 'contain', borderRadius: '12px' }}
                 crossOrigin="anonymous"
               />
             ) : (
               <span style={{ fontSize: '24px' }}>📍</span>
             )}
-            
             {businessName && (
               <p style={{ fontSize: '16px', fontWeight: 600, color: '#db2777', margin: '8px 0 0 0' }}>
                 {businessName}
               </p>
             )}
           </div>
-          
-        <h1
-            style={{
-              fontSize: '28px',
-              fontWeight: 600,
-              color: '#f5a5b8',
-              margin: '0',
-              letterSpacing: '2px',
-              textAlign: 'center',
-            }}
-          >
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#f5a5b8', margin: '0', letterSpacing: '2px', textAlign: 'center' }}>
             Cotización
           </h1>
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#94a3b8',
-              textAlign: 'center',
-              marginTop: '8px',
-              marginBottom: '0',
-            }}
-          >
+          <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginTop: '8px', marginBottom: '0' }}>
             {format(new Date(quote.createdAt), "d 'de' MMMM, yyyy", { locale: es })}
           </p>
         </div>
 
         {/* Client Info */}
-        <div
-          style={{
-            marginBottom: '28px',
-            paddingBottom: '20px',
-            borderBottom: '1px solid #f8c8d4',
-          }}
-        >
+        <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>👤</span>
-            <span style={{ fontSize: '14px', color: '#666666' }}>Cliente:</span>
-            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
+            <span style={{ color: '#999', fontSize: '14px', marginRight: '8px' }}>👤</span>
+            <span style={{ fontSize: '14px', color: '#666' }}>Cliente:</span>
+            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333' }}>
               {quote.clientName || 'Sin especificar'}
             </span>
           </div>
           {quote.clientPhone && (
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>📱</span>
-              <span style={{ fontSize: '14px', color: '#666666' }}>Teléfono:</span>
-              <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
+              <span style={{ color: '#999', fontSize: '14px', marginRight: '8px' }}>📱</span>
+              <span style={{ fontSize: '14px', color: '#666' }}>Teléfono:</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333' }}>
                 {quote.clientPhone}
               </span>
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#999999', fontSize: '14px', marginRight: '8px' }}>📅</span>
-            <span style={{ fontSize: '14px', color: '#666666' }}>Fecha del evento:</span>
-            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333333' }}>
+            <span style={{ color: '#999', fontSize: '14px', marginRight: '8px' }}>📅</span>
+            <span style={{ fontSize: '14px', color: '#666' }}>Fecha del evento:</span>
+            <span style={{ fontSize: '14px', fontWeight: 600, marginLeft: '8px', color: '#333' }}>
               {eventDateFormatted}
             </span>
           </div>
         </div>
 
-        {/* Service Concept - Simplified for client */}
-        <div
-          style={{
-            marginBottom: '28px',
-            padding: '20px',
-            background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-            borderRadius: '12px',
-            border: '1px solid #f8c8d4',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ color: '#f5a5b8', fontSize: '18px', marginRight: '10px' }}>🎈</span>
-            <span style={{ fontSize: '16px', fontWeight: 600, color: '#333333' }}>
-              Servicio de decoración con globos
-            </span>
+        {/* Cost Summary */}
+        <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#db2777', margin: '0 0 12px 0', letterSpacing: '1px' }}>
+            RESUMEN DE COTIZACIÓN
+          </p>
+          <SummaryRow icon="🎀" label="Materiales no reutilizables" value={fmt(summary.totalMaterials, cs)} />
+          <SummaryRow icon="🧮" label="Materiales reutilizables" value={fmt(summary.totalReusableMaterials, cs)} />
+          <SummaryRow icon="📉" label={`Merma (${quote.wastagePercentage || 0}%)`} value={fmt(summary.wastage, cs)} />
+          <SummaryRow icon="👩‍🎨" label="Total mano de obra" value={fmt(summary.totalLabor, cs)} />
+          <SummaryRow icon="🚗" label="Total transporte" value={fmt(summary.totalTransport, cs)} />
+          <SummaryRow icon="✨" label="Total extras" value={fmt(summary.totalExtras, cs)} />
+          <SummaryRow icon="📊" label="Gastos indirectos" value={fmt(summary.indirectExpenses, cs)} />
+
+          {/* Total General */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', marginTop: '10px', borderTop: '1px solid #f8c8d4', fontWeight: 700, fontSize: '14px' }}>
+            <span style={{ color: '#333' }}>Total General</span>
+            <span style={{ color: '#333' }}>{fmt(summary.totalCost, cs)}</span>
           </div>
-          {quote.eventType && (
-            <p style={{ fontSize: '14px', color: '#666666', margin: '0 0 0 28px' }}>
-              {quote.eventType}
-            </p>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#666', marginTop: '4px' }}>
+            <span>Margen de ganancia ({quote.marginPercentage || 0}%)</span>
+            <span>{fmt(summary.finalPrice - summary.totalCost, cs)}</span>
+          </div>
         </div>
 
         {/* Final Price */}
@@ -163,73 +141,26 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             border: '2px solid #f5a5b8',
           }}
         >
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#999999',
-              margin: '0 0 8px 0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}
-          >
-            <span>💰</span>
-            <span>PRECIO TOTAL</span>
+          <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <span>💰</span><span>PRECIO FINAL</span>
           </p>
-          <p
-            style={{
-              fontSize: '42px',
-              fontWeight: 700,
-              color: '#f5a5b8',
-              margin: '0',
-              letterSpacing: '1px',
-            }}
-          >
-            {formatCurrency(finalPrice, currencySymbol)}
+          <p style={{ fontSize: '42px', fontWeight: 700, color: '#f5a5b8', margin: '0', letterSpacing: '1px' }}>
+            {fmt(summary.finalPrice, cs)}
           </p>
         </div>
 
-        {/* Notes Section - Only show if there are notes */}
+        {/* Notes */}
         {quote.notes && (
           <div style={{ marginBottom: '24px' }}>
-            <p
-              style={{
-                fontSize: '13px',
-                fontWeight: 500,
-                color: '#888888',
-                margin: '0 0 8px 0',
-              }}
-            >
-              Notas:
-            </p>
-            <div
-              style={{
-                padding: '12px',
-                border: '1px solid #f0e0e5',
-                borderRadius: '8px',
-                background: '#fefefe',
-              }}
-            >
-              <p style={{ fontSize: '13px', color: '#666666', margin: 0, lineHeight: 1.6 }}>
-                {quote.notes}
-              </p>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: '#888', margin: '0 0 8px 0' }}>Notas:</p>
+            <div style={{ padding: '12px', border: '1px solid #f0e0e5', borderRadius: '8px', background: '#fefefe' }}>
+              <p style={{ fontSize: '13px', color: '#666', margin: 0, lineHeight: 1.6 }}>{quote.notes}</p>
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <p
-          style={{
-            textAlign: 'center',
-            fontSize: '11px',
-            color: '#bbbbbb',
-            marginTop: '16px',
-            marginBottom: 0,
-          }}
-        >
+        <p style={{ textAlign: 'center', fontSize: '11px', color: '#bbb', marginTop: '16px', marginBottom: 0 }}>
           ♥️ Gracias por confiar en nuestros servicios ✨
         </p>
       </div>
