@@ -109,7 +109,10 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
 
         {/* Tabla de servicios cotizados */}
         {(() => {
-          const serviceItems: Array<{ id: string; description: string; quantity: number }> = [];
+          const serviceItems: Array<{ id: string; description: string; quantity: number | string }> = [];
+          if (quote.decorationDescription) {
+            serviceItems.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—' });
+          }
           quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
           quote.materials.forEach(m => serviceItems.push({ id: m.id, description: m.name, quantity: m.quantity }));
           quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
