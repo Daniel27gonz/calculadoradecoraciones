@@ -603,76 +603,23 @@ const Design = () => {
               </CardContent>
             </Card>
 
-            {/* Items de la Cotización */}
+            {/* Descripción completa de la decoración */}
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-medium text-primary">
-                  Servicios
+                  Descripción completa de la decoración
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {templateData.items.map((item, index) => (
-                  <div key={item.id} className="space-y-3 p-4 bg-muted/30 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">
-                        Item {index + 1}
-                      </span>
-                      {templateData.items.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItem(item.id)}
-                          className="h-8 w-8 text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="md:col-span-1 space-y-2">
-                        <Label>Descripción</Label>
-                        <Input
-                          value={item.description}
-                          onChange={(e) =>
-                            updateItem(item.id, "description", e.target.value)
-                          }
-                          placeholder="Ej: Arreglo de globos básico"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Cantidad</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={item.quantity || ""}
-                          onChange={(e) =>
-                            updateItem(item.id, "quantity", parseInt(e.target.value) || 0)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Precio</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={item.price || ""}
-                          onChange={(e) =>
-                            updateItem(item.id, "price", parseFloat(e.target.value) || 0)
-                          }
-                          placeholder="$0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={addItem}
-                  className="w-full gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Agregar item
-                </Button>
+                <div className="space-y-2">
+                  <Label>Describe los elementos, colores y detalles de la decoración</Label>
+                  <Textarea
+                    value={templateData.decorationDescription || ""}
+                    onChange={(e) => updateField("decorationDescription", e.target.value)}
+                    placeholder="Ej: Arco orgánico en tonos rosa y dorado con guirnalda de flores, backdrop con tela blanca, mesa de dulces decorada con globos..."
+                    rows={5}
+                  />
+                </div>
               </CardContent>
             </Card>
 
