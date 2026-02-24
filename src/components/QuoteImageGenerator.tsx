@@ -106,17 +106,6 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         </div>
 
-        {/* Descripción de la decoración */}
-        {quote.decorationDescription && (
-          <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: '#db2777', margin: '0 0 12px 0', letterSpacing: '1px' }}>
-              DESCRIPCIÓN DE LA DECORACIÓN
-            </p>
-            <p style={{ fontSize: '13px', color: '#555', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-              {quote.decorationDescription}
-            </p>
-          </div>
-        )}
 
         {/* Tabla de servicios cotizados */}
         {(() => {
