@@ -118,6 +118,52 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         )}
 
+        {/* Tabla de servicios cotizados */}
+        {(() => {
+          const serviceItems: Array<{ id: string; description: string; quantity: number }> = [];
+          quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
+          quote.materials.forEach(m => serviceItems.push({ id: m.id, description: m.name, quantity: m.quantity }));
+          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
+          quote.furnitureItems.forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
+          quote.reusableMaterialsUsed.forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
+          quote.workers.forEach(w => serviceItems.push({ id: w.id, description: `Mano de obra - ${w.name}`, quantity: 1 }));
+          quote.transportItems.forEach(t => serviceItems.push({ id: t.id, description: t.concept || 'Transporte', quantity: 1 }));
+
+          if (serviceItems.length === 0) return null;
+
+          return (
+            <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: '#db2777', margin: '0 0 12px 0', letterSpacing: '1px' }}>
+                SERVICIOS COTIZADOS
+              </p>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f8c8d4' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: '#db2777', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Descripción
+                    </th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: '#db2777', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                      Cantidad
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {serviceItems.map((item, index) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #fce7f3', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fdf2f8' }}>
+                      <td style={{ padding: '6px 8px', color: '#555', lineHeight: 1.5 }}>
+                        {item.description}
+                      </td>
+                      <td style={{ padding: '6px 8px', color: '#333', fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+
         {/* Final Price */}
         <div
           style={{
