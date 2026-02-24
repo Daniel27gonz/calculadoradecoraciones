@@ -155,6 +155,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           clientPhone: q.client_phone || '',
           eventDate: q.event_date || '',
           eventType: q.event_type || '',
+          decorationDescription: q.decoration_description || '',
           createdAt: q.created_at,
           updatedAt: q.updated_at,
           // Use safe parsing for JSONB fields to handle malformed data

@@ -37,6 +37,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   clientPhone: '',
   eventDate: '',
   eventType: '',
+  decorationDescription: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   balloons: [],
@@ -253,6 +254,15 @@ export default function Calculator() {
                   placeholder="Ej: Cumpleaños infantil, Boda, XV años"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descripción completa de la decoración</label>
+              <Textarea
+                value={quote.decorationDescription}
+                onChange={(e) => updateQuote({ decorationDescription: e.target.value })}
+                placeholder="Describe los elementos, colores, temática y detalles de la decoración..."
+                rows={4}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Notas</label>
