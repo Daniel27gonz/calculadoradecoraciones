@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { useQuote } from "@/contexts/QuoteContext";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { getCurrencyByCode } from "@/lib/currencies";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,20 @@ export interface QuoteTemplateData {
   depositMessage: string;
   thankYouMessage: string;
   customNote: string;
+  currencySymbol: string;
+  costSummary?: {
+    totalMaterials: number;
+    totalReusableMaterials: number;
+    wastage: number;
+    wastagePercentage: number;
+    totalLabor: number;
+    totalTransport: number;
+    totalExtras: number;
+    indirectExpenses: number;
+    totalCost: number;
+    marginPercentage: number;
+    finalPrice: number;
+  };
 }
 
 const Design = () => {
@@ -80,11 +95,13 @@ const Design = () => {
     depositMessage: "Se solicita un anticipo del {percentage}% para confirmar la fecha",
     thankYouMessage: "¡Gracias por confiar en mí para hacer tu evento especial!",
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
+    currencySymbol: "$",
   });
 
   // Load profile data and design config when available
   useEffect(() => {
     if (profile) {
+      const currency = getCurrencyByCode(profile.currency || 'USD');
       setTemplateData(prev => ({
         ...prev,
         businessName: profile.business_name || prev.businessName,
@@ -92,6 +109,7 @@ const Design = () => {
         depositPercentage: (profile as any).design_deposit_percentage ?? prev.depositPercentage,
         depositMessage: (profile as any).design_deposit_message || prev.depositMessage,
         customNote: (profile as any).design_additional_notes || prev.customNote,
+        currencySymbol: currency?.symbol || '$',
       }));
     }
   }, [profile]);
@@ -175,6 +193,19 @@ const Design = () => {
           decorationType: selectedQuote.eventType || "",
           items,
           additionalServices: [],
+          costSummary: {
+            totalMaterials: costs.totalMaterials,
+            totalReusableMaterials: costs.totalReusableMaterials,
+            wastage: costs.wastage,
+            wastagePercentage: selectedQuote.wastagePercentage || 0,
+            totalLabor: costs.totalLabor,
+            totalTransport: costs.totalTransport,
+            totalExtras: costs.totalExtras,
+            indirectExpenses: costs.indirectExpenses,
+            totalCost: costs.totalCost,
+            marginPercentage: selectedQuote.marginPercentage || 0,
+            finalPrice: costs.finalPrice,
+          },
         }));
 
         toast({
