@@ -105,7 +105,7 @@ export function ReusableMaterialsSection({
           <div>
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="text-xl sm:text-2xl">🧮</span>
-              <span>Materiales reutilizables</span>
+              <span>Materiales reutilizables (Renta)</span>
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 ml-8 sm:ml-9">
               Bases, estructuras, herramientas
