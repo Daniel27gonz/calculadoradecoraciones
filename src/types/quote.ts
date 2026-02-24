@@ -73,6 +73,7 @@ export interface Quote {
   clientPhone: string;
   eventDate: string;
   eventType: string;
+  decorationDescription: string;
   createdAt: string;
   updatedAt: string;
   balloons: Balloon[];
