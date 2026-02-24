@@ -235,7 +235,7 @@ export function MaterialsManager() {
               <Package className="w-5 h-5 text-accent-foreground" />
             </div>
             <div>
-              <CardTitle className="text-lg">Materiales</CardTitle>
+              <CardTitle className="text-lg">Materiales de Consumo (No Reutilizables)</CardTitle>
               <CardDescription>
                 Gestiona tu catálogo de materiales
               </CardDescription>
@@ -261,7 +261,7 @@ export function MaterialsManager() {
             <Package className="w-5 h-5 text-accent-foreground" />
           </div>
           <div>
-            <CardTitle className="text-lg">Materiales</CardTitle>
+            <CardTitle className="text-lg">Materiales de Consumo (No Reutilizables)</CardTitle>
             <CardDescription>
               Registra tus materiales para calcular costos automáticamente
             </CardDescription>
