@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getCurrencyByCode } from '@/lib/currencies';
 
 export interface QuotePdfData {
   businessName: string;
@@ -22,6 +23,20 @@ export interface QuotePdfData {
   thankYouMessage: string;
   customNote: string;
   total: number;
+  currencySymbol: string;
+  summary: {
+    totalMaterials: number;
+    totalReusableMaterials: number;
+    wastage: number;
+    wastagePercentage: number;
+    totalLabor: number;
+    totalTransport: number;
+    totalExtras: number;
+    indirectExpenses: number;
+    totalCost: number;
+    marginPercentage: number;
+    finalPrice: number;
+  };
 }
 
 export function useQuotePdfDownload() {
@@ -64,6 +79,10 @@ export function useQuotePdfDownload() {
       });
     });
 
+    const currencyCode = profile?.currency || 'USD';
+    const currency = getCurrencyByCode(currencyCode);
+    const currencySymbol = currency?.symbol || '$';
+
     return {
       businessName: profile?.business_name || 'Mi Negocio',
       logoUrl: profile?.logo_url || null,
@@ -82,6 +101,20 @@ export function useQuotePdfDownload() {
       thankYouMessage: '¡Gracias por confiar en mí para hacer tu evento especial!',
       customNote: quote.notes || '',
       total: summary.finalPrice,
+      currencySymbol,
+      summary: {
+        totalMaterials: summary.totalMaterials,
+        totalReusableMaterials: summary.totalReusableMaterials,
+        wastage: summary.wastage,
+        wastagePercentage: quote.wastagePercentage || 0,
+        totalLabor: summary.totalLabor,
+        totalTransport: summary.totalTransport,
+        totalExtras: summary.totalExtras,
+        indirectExpenses: summary.indirectExpenses,
+        totalCost: summary.totalCost,
+        marginPercentage: quote.marginPercentage || 0,
+        finalPrice: summary.finalPrice,
+      },
     };
   };
 
