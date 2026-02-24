@@ -263,7 +263,7 @@ export function MaterialsManager() {
           <div>
             <CardTitle className="text-lg">Materiales de Consumo (No Reutilizables)</CardTitle>
             <CardDescription>
-              Registra tus materiales para calcular costos automáticamente
+              Insumos que se utilizan y se desechan en cada evento.
             </CardDescription>
           </div>
         </div>
