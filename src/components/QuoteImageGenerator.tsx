@@ -106,29 +106,17 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         </div>
 
-        {/* Cost Summary */}
-        <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
-          <p style={{ fontSize: '14px', fontWeight: 600, color: '#db2777', margin: '0 0 12px 0', letterSpacing: '1px' }}>
-            RESUMEN DE COTIZACIÓN
-          </p>
-          <SummaryRow icon="🎀" label="Materiales no reutilizables" value={fmt(summary.totalMaterials, cs)} />
-          <SummaryRow icon="🧮" label="Materiales reutilizables" value={fmt(summary.totalReusableMaterials, cs)} />
-          <SummaryRow icon="📉" label={`Merma (${quote.wastagePercentage || 0}%)`} value={fmt(summary.wastage, cs)} />
-          <SummaryRow icon="👩‍🎨" label="Total mano de obra" value={fmt(summary.totalLabor, cs)} />
-          <SummaryRow icon="🚗" label="Total transporte" value={fmt(summary.totalTransport, cs)} />
-          <SummaryRow icon="✨" label="Total extras" value={fmt(summary.totalExtras, cs)} />
-          <SummaryRow icon="📊" label="Gastos indirectos" value={fmt(summary.indirectExpenses, cs)} />
-
-          {/* Total General */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', marginTop: '10px', borderTop: '1px solid #f8c8d4', fontWeight: 700, fontSize: '14px' }}>
-            <span style={{ color: '#333' }}>Total General</span>
-            <span style={{ color: '#333' }}>{fmt(summary.totalCost, cs)}</span>
+        {/* Descripción de la decoración */}
+        {quote.decorationDescription && (
+          <div style={{ marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #f8c8d4' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: '#db2777', margin: '0 0 12px 0', letterSpacing: '1px' }}>
+              DESCRIPCIÓN DE LA DECORACIÓN
+            </p>
+            <p style={{ fontSize: '13px', color: '#555', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+              {quote.decorationDescription}
+            </p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#666', marginTop: '4px' }}>
-            <span>Margen de ganancia ({quote.marginPercentage || 0}%)</span>
-            <span>{fmt(summary.finalPrice - summary.totalCost, cs)}</span>
-          </div>
-        </div>
+        )}
 
         {/* Final Price */}
         <div
