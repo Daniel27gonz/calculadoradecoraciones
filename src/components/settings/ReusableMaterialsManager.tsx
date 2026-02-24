@@ -153,7 +153,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
               <span className="text-xl">🧮</span>
             </div>
             <div>
-              <CardTitle className="text-lg">Materiales reutilizables</CardTitle>
+              <CardTitle className="text-lg">Materiales reutilizables (Renta)</CardTitle>
               <CardDescription>
                 Bases, estructuras, herramientas, mobiliario
               </CardDescription>

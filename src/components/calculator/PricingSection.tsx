@@ -122,7 +122,7 @@ export function PricingSection({
           {/* Cost breakdown */}
           <div className="divide-y divide-border/50">
             <CostLine icon="🎀" label="Materiales no reutilizables" amount={summary.totalMaterials} />
-            <CostLine icon="🧮" label="Materiales reutilizables" amount={summary.totalReusableMaterials} />
+            <CostLine icon="🧮" label="Materiales reutilizables (Renta)" amount={summary.totalReusableMaterials} />
             <CostLine icon="📉" label={`Merma (${wastagePercentage}%)`} amount={summary.wastage} highlighted />
             <CostLine icon="👩‍🎨" label="Total mano de obra" amount={summary.totalLabor} />
             <CostLine icon="🚗" label="Total transporte" amount={summary.totalTransport} />
