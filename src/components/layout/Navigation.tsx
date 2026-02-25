@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User, Wallet, Palette, Database, ClipboardList } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Palette, Database, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -32,7 +32,7 @@ export function Navigation() {
     return null;
   }
 
-  const isFinancesActive = location.pathname === '/finances';
+  
 
   return (
     <>
@@ -55,18 +55,6 @@ export function Navigation() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              to="/finances"
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
-                isFinancesActive
-                  ? "text-primary bg-rose-light"
-                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-              )}
-            >
-              <Wallet className="w-5 h-5" />
-              <span className="text-sm font-medium">Finanzas</span>
-            </Link>
             <Link
               to="/orders"
               className={cn(
