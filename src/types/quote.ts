@@ -69,6 +69,7 @@ export interface ReusableMaterialUsed {
 
 export interface Quote {
   id: string;
+  folio?: number;
   clientName: string;
   clientPhone: string;
   eventDate: string;

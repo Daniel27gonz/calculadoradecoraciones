@@ -151,6 +151,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       if (data) {
         const loadedQuotes: Quote[] = data.map((q: any) => ({
           id: q.id,
+          folio: q.folio || undefined,
           clientName: q.client_name || '',
           clientPhone: q.client_phone || '',
           eventDate: q.event_date || '',
