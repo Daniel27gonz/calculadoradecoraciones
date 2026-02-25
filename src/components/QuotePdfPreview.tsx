@@ -90,15 +90,7 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
             </div>
           </div>
 
-          {/* Descripción de la decoración */}
-          {data.decorationDescription && (
-            <div className="border-b pb-4" style={{ borderColor: '#fce7f3' }}>
-              <h3 className="text-lg font-semibold mb-3" style={{ color: '#ec4899' }}>DESCRIPCIÓN DE LA DECORACIÓN:</h3>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap m-0">
-                {data.decorationDescription}
-              </p>
-            </div>
-          )}
+
 
           {/* Tabla de servicios cotizados */}
           {data.items && data.items.length > 0 && (
