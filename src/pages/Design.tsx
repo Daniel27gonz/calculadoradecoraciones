@@ -36,6 +36,7 @@ interface AdditionalService {
 }
 
 export interface QuoteTemplateData {
+  folio?: number;
   businessName: string;
   businessLogo: string;
   quoteDate: string;
@@ -224,6 +225,7 @@ const Design = () => {
 
         setTemplateData(prev => ({
           ...prev,
+          folio: selectedQuote.folio,
           clientName: selectedQuote.clientName,
           clientPhone: selectedQuote.clientPhone || "",
           eventDate: formattedEventDate,
