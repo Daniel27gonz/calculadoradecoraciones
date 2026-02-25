@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
 
 export interface QuotePdfData {
+  folio?: number;
   businessName: string;
   logoUrl: string | null;
   quoteDate: string;
@@ -133,6 +134,7 @@ export function useQuotePdfDownload() {
     const currencySymbol = currency?.symbol || '$';
 
     return {
+      folio: quote.folio,
       businessName: profile?.business_name || 'Mi Negocio',
       logoUrl: profile?.logo_url || null,
       quoteDate: format(new Date(quote.createdAt), "d 'de' MMMM 'de' yyyy", { locale: es }),

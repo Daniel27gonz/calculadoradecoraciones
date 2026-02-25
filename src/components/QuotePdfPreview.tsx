@@ -50,6 +50,11 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
             <div className="text-right">
               <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">COTIZACIÓN DE</h1>
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">DECORACIÓN CON GLOBOS</h2>
+              {data.folio && (
+                <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
+                  Folio: #{String(data.folio).padStart(4, '0')}
+                </p>
+              )}
             </div>
           </div>
           <div className="text-right mt-4 text-gray-600">Fecha: {data.quoteDate}</div>

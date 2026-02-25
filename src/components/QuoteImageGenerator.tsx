@@ -74,6 +74,11 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#f5a5b8', margin: '0', letterSpacing: '2px', textAlign: 'center' }}>
             Cotización
           </h1>
+          {quote.folio && (
+            <p style={{ fontSize: '13px', color: '#db2777', textAlign: 'center', marginTop: '4px', marginBottom: '0', fontWeight: 600 }}>
+              Folio: #{String(quote.folio).padStart(4, '0')}
+            </p>
+          )}
           <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginTop: '8px', marginBottom: '0' }}>
             {format(new Date(quote.createdAt), "d 'de' MMMM, yyyy", { locale: es })}
           </p>
