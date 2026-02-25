@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import Install from "./pages/Install";
 import Design from "./pages/Design";
 import AdminDatabase from "./pages/AdminDatabase";
+import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/design" element={<Design />} />
               <Route path="/admin/database" element={<AdminDatabase />} />
+              <Route path="/orders" element={<Orders />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
