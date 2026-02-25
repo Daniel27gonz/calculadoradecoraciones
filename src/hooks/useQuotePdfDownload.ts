@@ -48,6 +48,12 @@ export function useQuotePdfDownload() {
   const convertQuoteToTemplateData = (quote: Quote, summary: CostSummary): QuotePdfData => {
     const items: Array<{ id: string; description: string; quantity: number | string; price: number }> = [];
 
+    // Descripción de la decoración como primera fila
+    if (quote.decorationDescription) {
+      items.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—', price: 0 });
+    }
+
+
     // Balloons
     quote.balloons.forEach((balloon) => {
       items.push({
