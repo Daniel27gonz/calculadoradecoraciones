@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle, RefreshCw } from 'lucide-react';
+import { Calculator, Package, History, TrendingUp, Sparkles, MessageCircle, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -122,6 +122,12 @@ export default function Home() {
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="truncate">Únete a nuestra Comunidad Privada 🎀</span>
               </a>
+            </Button>
+            <Button asChild variant="outline" size="default" className="w-full sm:w-auto">
+              <Link to="/finances" className="flex items-center justify-center gap-2">
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="truncate">Finanzas 💰</span>
+              </Link>
             </Button>
             <Button
               variant="soft"
