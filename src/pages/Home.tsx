@@ -14,7 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { quotes, calculateCosts } = useQuote();
   const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
-  
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!loading && !user) {
@@ -37,28 +37,28 @@ export default function Home() {
   }, [quotes, calculateCosts]);
 
   const features = [
-    {
-      icon: Calculator,
-      title: 'Nueva Cotización',
-      description: 'Calcula costos y precios de tu evento',
-      href: '/calculator',
-      color: 'bg-rose-light text-rose-dark',
-    },
-    {
-      icon: Package,
-      title: 'Paquetes',
-      description: 'Plantillas predefinidas para agilizar',
-      href: '/packages',
-      color: 'bg-lavender-light text-accent-foreground',
-    },
-    {
-      icon: History,
-      title: 'Historial',
-      description: `${quotes.length} cotizaciones guardadas`,
-      href: '/history',
-      color: 'bg-secondary text-secondary-foreground',
-    },
-  ];
+  {
+    icon: Calculator,
+    title: 'Nueva Cotización',
+    description: 'Calcula costos y precios de tu evento',
+    href: '/calculator',
+    color: 'bg-rose-light text-rose-dark'
+  },
+  {
+    icon: Package,
+    title: 'Paquetes',
+    description: 'Plantillas predefinidas para agilizar',
+    href: '/packages',
+    color: 'bg-lavender-light text-accent-foreground'
+  },
+  {
+    icon: History,
+    title: 'Historial',
+    description: `${quotes.length} cotizaciones guardadas`,
+    href: '/history',
+    color: 'bg-secondary text-secondary-foreground'
+  }];
+
 
   // Show loading or nothing while checking auth
   if (loading) {
@@ -68,8 +68,8 @@ export default function Home() {
           <div className="text-4xl mb-4 animate-bounce">🎈</div>
           <p className="text-muted-foreground">Cargando...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!user) {
@@ -103,22 +103,22 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Button asChild variant="gradient" size="xl">
-              <Link to="/calculator">
-                <Calculator className="w-5 h-5" />
-                Crear Cotización
-              </Link>
+              
+
+
+
             </Button>
             <Button asChild
-              variant="outline" 
-              size="default"
-              className="w-full sm:w-auto text-xs sm:text-base px-3 sm:px-6 py-2 sm:py-3 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
-            >
+            variant="outline"
+            size="default"
+            className="w-full sm:w-auto text-xs sm:text-base px-3 sm:px-6 py-2 sm:py-3 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950">
+
               <a
                 href="/whatsapp-redirect.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
+                className="flex items-center justify-center gap-2">
+
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="truncate">Únete a nuestra Comunidad Privada 🎀</span>
               </a>
@@ -127,8 +127,8 @@ export default function Home() {
               variant="soft"
               size="default"
               onClick={() => window.location.reload()}
-              className="w-full sm:w-auto"
-            >
+              className="w-full sm:w-auto">
+
               <RefreshCw className="w-4 h-4" />
               Actualizar
             </Button>
@@ -141,8 +141,8 @@ export default function Home() {
       </section>
 
       {/* Quick Stats */}
-      {quotes.length > 0 && (
-        <section className="container max-w-4xl mx-auto px-4 mt-8">
+      {quotes.length > 0 &&
+      <section className="container max-w-4xl mx-auto px-4 mt-8">
           <Card elevated>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -157,13 +157,13 @@ export default function Home() {
             </CardContent>
           </Card>
         </section>
-      )}
+      }
 
       {/* Features Grid */}
       <section className="container max-w-4xl mx-auto px-4 mt-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {features.map(({ icon: Icon, title, description, href, color }) => (
-            <Link key={href} to={href}>
+          {features.map(({ icon: Icon, title, description, href, color }) =>
+          <Link key={href} to={href}>
               <Card className="h-full hover:scale-[1.02] transition-transform duration-300">
                 <CardContent className="p-6 space-y-4">
                   <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
@@ -176,7 +176,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          )}
         </div>
       </section>
 
@@ -190,6 +190,6 @@ export default function Home() {
 
       <InstallPrompt />
       <FirstLoginInstallPrompt />
-    </div>
-  );
+    </div>);
+
 }
