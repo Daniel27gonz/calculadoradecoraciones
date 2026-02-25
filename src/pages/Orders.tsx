@@ -10,6 +10,7 @@ import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
@@ -56,9 +57,34 @@ export default function Orders() {
     const newStatus = quote.status === 'approved' ? 'pending' : 'approved';
     const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
     await saveQuote(updatedQuote);
+
+    const summary = calculateCosts(quote);
+
+    if (newStatus === 'approved') {
+      // Register as income in Finances
+      await supabase.from('transactions').insert({
+        user_id: user!.id,
+        type: 'income',
+        amount: summary.finalPrice,
+        description: `Pedido: ${quote.clientName}${quote.eventType ? ` - ${quote.eventType}` : ''}`,
+        category: 'Pedidos',
+        transaction_date: quote.eventDate || new Date().toISOString().split('T')[0],
+      });
+    } else {
+      // Remove the auto-generated transaction
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('user_id', user!.id)
+        .eq('description', `Pedido: ${quote.clientName}${quote.eventType ? ` - ${quote.eventType}` : ''}`)
+        .eq('category', 'Pedidos');
+    }
+
     toast({
       title: newStatus === 'approved' ? "Pedido aprobado" : "Pedido pendiente",
-      description: `"${quote.clientName}" marcado como ${newStatus === 'approved' ? 'aprobado' : 'pendiente'}`,
+      description: newStatus === 'approved'
+        ? `"${quote.clientName}" aprobado y registrado en Finanzas`
+        : `"${quote.clientName}" revertido a pendiente`,
     });
   };
 
