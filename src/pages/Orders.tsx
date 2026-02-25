@@ -132,19 +132,21 @@ export default function Orders() {
     const summary = calculateCosts(quote);
     try {
       if (!isCurrentlyPaid) {
+        const folioLabel = quote.folio ? `#${String(quote.folio).padStart(4, '0')}` : quote.id;
         await supabase.from('transactions').insert({
           user_id: user!.id,
           type: 'income',
           amount: summary.finalPrice,
-          description: `Pago completo: ${quote.id}`,
+          description: `Pago completo: ${quote.clientName} - Folio ${folioLabel}`,
           category: 'Pagos completos',
           transaction_date: paymentDate || new Date().toISOString().split('T')[0],
         });
         toast({ title: "Pedido marcado como pagado", description: `${currencySymbol}${summary.finalPrice.toFixed(2)} registrado en Finanzas` });
       } else {
+        const folioLabel = quote.folio ? `#${String(quote.folio).padStart(4, '0')}` : quote.id;
         await supabase.from('transactions').delete()
           .eq('user_id', user!.id)
-          .eq('description', `Pago completo: ${quote.id}`);
+          .like('description', `%Folio ${folioLabel}%`);
         toast({ title: "Pedido desmarcado", description: "Ingreso removido de Finanzas" });
       }
     } catch (error) {
@@ -162,12 +164,21 @@ export default function Orders() {
         .eq('user_id', user.id)
         .eq('category', 'Pagos completos');
       if (data) {
-        const ids = new Set(data.map(t => t.description.replace('Pago completo: ', '')));
+        const ids = new Set<string>();
+        data.forEach(t => {
+          // Match by folio in description
+          quotes.forEach(q => {
+            const folioLabel = q.folio ? `#${String(q.folio).padStart(4, '0')}` : q.id;
+            if (t.description.includes(`Folio ${folioLabel}`)) {
+              ids.add(q.id);
+            }
+          });
+        });
         setFullyPaidQuotes(ids);
       }
     };
     loadFullyPaid();
-  }, [user]);
+  }, [user, quotes]);
 
   const filteredQuotes = quotes
     .filter(q => {
