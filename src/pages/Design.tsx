@@ -639,26 +639,6 @@ const Design = () => {
               </CardContent>
             </Card>
 
-            {/* Descripción completa de la decoración */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium text-primary">
-                  Descripción completa de la decoración
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Describe los elementos, colores y detalles de la decoración</Label>
-                  <Textarea
-                    value={templateData.decorationDescription || ""}
-                    onChange={(e) => updateField("decorationDescription", e.target.value)}
-                    placeholder="Ej: Arco orgánico en tonos rosa y dorado con guirnalda de flores, backdrop con tela blanca, mesa de dulces decorada con globos..."
-                    rows={5}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Servicios Adicionales */}
             <Card>
               <CardHeader className="pb-4">
