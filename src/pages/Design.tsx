@@ -172,19 +172,55 @@ const Design = () => {
         const costs = calculateCosts(selectedQuote);
         const finalPrice = costs.finalPrice;
 
-        // Create a single service item with the event type and final price
-        const serviceDescription = selectedQuote.eventType 
-          ? `Servicio de decoración - ${selectedQuote.eventType}`
-          : "Servicio de decoración con globos";
+        // Build service items list matching the image quote format
+        const items: QuoteItem[] = [];
 
-        const items: QuoteItem[] = [
-          {
-            id: "service-1",
-            description: serviceDescription,
-            quantity: 1,
-            price: finalPrice,
-          }
-        ];
+        // Descripción de la decoración como primera fila
+        if (selectedQuote.decorationDescription) {
+          items.push({ id: 'decoration-desc', description: selectedQuote.decorationDescription, quantity: 0, price: 0 });
+        }
+
+        // Balloons
+        selectedQuote.balloons.forEach((b) => {
+          items.push({ id: b.id, description: b.description, quantity: b.quantity, price: b.pricePerUnit * b.quantity });
+        });
+
+        // Furniture
+        selectedQuote.furnitureItems.forEach((f) => {
+          items.push({ id: f.id, description: f.name, quantity: f.quantity, price: f.pricePerUnit * f.quantity });
+        });
+
+        // Reusable materials
+        selectedQuote.reusableMaterialsUsed.forEach((r) => {
+          items.push({ id: r.id, description: r.name, quantity: r.quantity, price: r.costPerUse * r.quantity });
+        });
+
+        // Ayudante (agrupado)
+        if (selectedQuote.workers.length > 0) {
+          const totalWorkerPrice = selectedQuote.workers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
+          items.push({ id: 'ayudante', description: 'Ayudante', quantity: selectedQuote.workers.length, price: totalWorkerPrice });
+        }
+
+        // Extras
+        selectedQuote.extras.forEach((e) => {
+          items.push({ id: e.id, description: e.name, quantity: e.quantity, price: e.pricePerUnit * e.quantity });
+        });
+
+        // Transporte
+        if (selectedQuote.transportItems.length > 0) {
+          const totalTransport = selectedQuote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
+          items.push({ id: 'transporte', description: 'Transporte', quantity: 0, price: totalTransport });
+        }
+
+        // Montaje y Desmontaje
+        const setupPhase = selectedQuote.timePhases.find(p => p.phase === 'setup');
+        const teardownPhase = selectedQuote.timePhases.find(p => p.phase === 'teardown');
+        if (setupPhase && setupPhase.hours > 0) {
+          items.push({ id: 'montaje', description: 'Montaje', quantity: 0, price: setupPhase.hours * setupPhase.rate });
+        }
+        if (teardownPhase && teardownPhase.hours > 0) {
+          items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: 0, price: teardownPhase.hours * teardownPhase.rate });
+        }
 
         setTemplateData(prev => ({
           ...prev,
