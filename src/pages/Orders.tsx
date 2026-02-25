@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ interface QuotePayment {
   amount: number;
   payment_date: string;
   notes: string | null;
+  is_paid: boolean;
   created_at: string;
 }
 
@@ -114,12 +115,53 @@ export default function Orders() {
 
   const handleDeletePayment = async (paymentId: string) => {
     try {
+      // Also remove linked transaction if it was paid
+      const payment = Object.values(payments).flat().find(p => p.id === paymentId);
+      if (payment?.is_paid) {
+        await supabase.from('transactions').delete()
+          .eq('user_id', user!.id)
+          .eq('description', `Anticipo: ${paymentId}`);
+      }
       const { error } = await supabase.from('quote_payments').delete().eq('id', paymentId);
       if (error) throw error;
       toast({ title: "Anticipo eliminado" });
       loadAllPayments();
     } catch (error) {
       console.error('Error deleting payment:', error);
+    }
+  };
+
+  const handleTogglePaid = async (payment: QuotePayment, quote: Quote) => {
+    const newPaidStatus = !payment.is_paid;
+    try {
+      const { error } = await supabase.from('quote_payments')
+        .update({ is_paid: newPaidStatus })
+        .eq('id', payment.id);
+      if (error) throw error;
+
+      if (newPaidStatus) {
+        // Register as income in Finances
+        await supabase.from('transactions').insert({
+          user_id: user!.id,
+          type: 'income',
+          amount: payment.amount,
+          description: `Anticipo: ${payment.id}`,
+          category: 'Anticipos',
+          transaction_date: payment.payment_date,
+        });
+        toast({ title: "Anticipo marcado como pagado", description: `${currencySymbol}${payment.amount.toFixed(2)} registrado en Finanzas` });
+      } else {
+        // Remove the transaction
+        await supabase.from('transactions').delete()
+          .eq('user_id', user!.id)
+          .eq('description', `Anticipo: ${payment.id}`);
+        toast({ title: "Anticipo desmarcado", description: "Ingreso removido de Finanzas" });
+      }
+
+      loadAllPayments();
+    } catch (error) {
+      console.error('Error toggling payment status:', error);
+      toast({ title: "Error", description: "No se pudo actualizar el anticipo", variant: "destructive" });
     }
   };
 
@@ -417,13 +459,29 @@ export default function Orders() {
                           <div className="space-y-2">
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historial de anticipos</p>
                             {quotePayments.map((payment) => (
-                              <div key={payment.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
-                                <div>
-                                  <p className="text-sm font-medium">{currencySymbol}{payment.amount.toFixed(2)}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(payment.payment_date + 'T12:00:00'), "d MMM yyyy", { locale: es })}
-                                    {payment.notes && ` • ${payment.notes}`}
-                                  </p>
+                              <div key={payment.id} className={`flex items-center justify-between rounded-lg px-3 py-2 ${payment.is_paid ? 'bg-green-500/10' : 'bg-muted/30'}`}>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleTogglePaid(payment, quote)}
+                                    className="flex-shrink-0"
+                                    title={payment.is_paid ? 'Desmarcar como pagada' : 'Marcar como pagada'}
+                                  >
+                                    {payment.is_paid ? (
+                                      <CircleCheck className="w-5 h-5 text-green-600" />
+                                    ) : (
+                                      <Circle className="w-5 h-5 text-muted-foreground" />
+                                    )}
+                                  </button>
+                                  <div>
+                                    <p className={`text-sm font-medium ${payment.is_paid ? 'text-green-600' : ''}`}>
+                                      {currencySymbol}{payment.amount.toFixed(2)}
+                                      {payment.is_paid && <span className="text-xs ml-1">• Pagada</span>}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(payment.payment_date + 'T12:00:00'), "d MMM yyyy", { locale: es })}
+                                      {payment.notes && ` • ${payment.notes}`}
+                                    </p>
+                                  </div>
                                 </div>
                                 <Button
                                   variant="ghost"
