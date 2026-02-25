@@ -17,7 +17,7 @@ export interface QuotePdfData {
   eventLocation: string;
   decorationType: string;
   decorationDescription: string;
-  items: Array<{ id: string; description: string; quantity: number; price: number }>;
+  items: Array<{ id: string; description: string; quantity: number | string; price: number }>;
   additionalServices: Array<{ id: string; description: string; price: number }>;
   depositPercentage: number;
   depositMessage: string;
@@ -46,18 +46,7 @@ export function useQuotePdfDownload() {
   const { profile } = useAuth();
 
   const convertQuoteToTemplateData = (quote: Quote, summary: CostSummary): QuotePdfData => {
-    // Convert all quote items to a unified items list
-    const items: Array<{ id: string; description: string; quantity: number; price: number }> = [];
-
-    // Materials
-    quote.materials.forEach((mat) => {
-      items.push({
-        id: mat.id,
-        description: mat.name,
-        quantity: mat.quantity,
-        price: mat.costPerUnit * mat.quantity,
-      });
-    });
+    const items: Array<{ id: string; description: string; quantity: number | string; price: number }> = [];
 
     // Balloons
     quote.balloons.forEach((balloon) => {
@@ -69,17 +58,7 @@ export function useQuotePdfDownload() {
       });
     });
 
-    // Extras
-    quote.extras.forEach((extra) => {
-      items.push({
-        id: extra.id,
-        description: extra.name,
-        quantity: extra.quantity,
-        price: extra.pricePerUnit * extra.quantity,
-      });
-    });
-
-    // Furniture / Reusable materials
+    // Furniture
     quote.furnitureItems.forEach((item) => {
       items.push({
         id: item.id,
@@ -99,25 +78,47 @@ export function useQuotePdfDownload() {
       });
     });
 
-    // Workers
-    quote.workers.forEach((worker) => {
+    // Ayudante (agrupado, sin nombre)
+    if (quote.workers.length > 0) {
+      const totalWorkerPrice = quote.workers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
       items.push({
-        id: worker.id,
-        description: `Mano de obra - ${worker.name}`,
-        quantity: 1,
-        price: worker.hourlyRate * worker.hours,
+        id: 'ayudante',
+        description: 'Ayudante',
+        quantity: quote.workers.length,
+        price: totalWorkerPrice,
+      });
+    }
+
+    // Adicionales del cliente
+    quote.extras.forEach((extra) => {
+      items.push({
+        id: extra.id,
+        description: extra.name,
+        quantity: extra.quantity,
+        price: extra.pricePerUnit * extra.quantity,
       });
     });
 
-    // Transport
-    quote.transportItems.forEach((transport) => {
+    // Transporte (una sola fila sin detalle)
+    if (quote.transportItems.length > 0) {
+      const totalTransportPrice = quote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
       items.push({
-        id: transport.id,
-        description: transport.concept || 'Transporte',
-        quantity: 1,
-        price: (transport.amountIda || 0) + (transport.amountRegreso || 0),
+        id: 'transporte',
+        description: 'Transporte',
+        quantity: '—',
+        price: totalTransportPrice,
       });
-    });
+    }
+
+    // Montaje y Desmontaje
+    const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
+    const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
+    if (setupPhase && setupPhase.hours > 0) {
+      items.push({ id: 'montaje', description: 'Montaje', quantity: '—', price: setupPhase.hours * setupPhase.rate });
+    }
+    if (teardownPhase && teardownPhase.hours > 0) {
+      items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—', price: teardownPhase.hours * teardownPhase.rate });
+    }
 
     const additionalServices: Array<{ id: string; description: string; price: number }> = [];
 
