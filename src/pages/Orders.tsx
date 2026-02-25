@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck } from 'lucide-react';
+import { ArrowLeft, Search, Calendar as CalendarIcon, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { QuoteImageModal } from '@/components/QuoteImageModal';
 import { Quote } from '@/types/quote';
+import { OrdersCalendar } from '@/components/orders/OrdersCalendar';
 
 interface QuotePayment {
   id: string;
@@ -47,6 +48,7 @@ export default function Orders() {
   const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
+  const [showCalendar, setShowCalendar] = useState(false);
   const [showFullPaidDialog, setShowFullPaidDialog] = useState(false);
   const [fullPaidQuote, setFullPaidQuote] = useState<Quote | null>(null);
   const [fullPaidDate, setFullPaidDate] = useState(new Date().toISOString().split('T')[0]);
@@ -267,6 +269,27 @@ export default function Orders() {
           </Card>
         </div>
 
+        {/* Calendar Toggle */}
+        <div className="flex justify-end">
+          <Button
+            variant={showCalendar ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="gap-2"
+          >
+            <CalendarDays className="w-4 h-4" />
+            Agenda
+          </Button>
+        </div>
+
+        {/* Calendar */}
+        {showCalendar && (
+          <OrdersCalendar
+            quotes={quotes}
+            onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
+          />
+        )}
+
         {/* Filters */}
         <div className="space-y-3">
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
@@ -339,7 +362,7 @@ export default function Orders() {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                           {quote.eventDate && (
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
+                              <CalendarIcon className="w-4 h-4" />
                               {format(new Date(quote.eventDate + 'T12:00:00'), "d MMM yyyy", { locale: es })}
                             </span>
                           )}
