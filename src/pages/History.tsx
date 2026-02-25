@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown } from 'lucide-react';
+import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
@@ -91,6 +92,16 @@ export default function History() {
     if (success) {
       setPdfQuoteData(null);
     }
+  };
+
+  const handleToggleStatus = async (quote: Quote) => {
+    const newStatus = quote.status === 'approved' ? 'pending' : 'approved';
+    const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
+    await saveQuote(updatedQuote);
+    toast({
+      title: newStatus === 'approved' ? "Cotización aprobada" : "Cotización pendiente",
+      description: `"${quote.clientName}" marcada como ${newStatus === 'approved' ? 'aprobada' : 'pendiente'}`,
+    });
   };
 
   if (loading) {
@@ -183,11 +194,24 @@ export default function History() {
                   <CardContent className="p-0">
                     <div className="p-4 space-y-4">
                       {/* Header */}
-                      <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between">
                         <div>
-                          <h3 className="font-display text-lg font-semibold">
-                            {quote.clientName}
-                          </h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-display text-lg font-semibold">
+                              {quote.clientName}
+                            </h3>
+                            <Badge
+                              variant={quote.status === 'approved' ? 'default' : 'secondary'}
+                              className={`cursor-pointer text-xs ${quote.status === 'approved' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'}`}
+                              onClick={() => handleToggleStatus(quote)}
+                            >
+                              {quote.status === 'approved' ? (
+                                <><CheckCircle2 className="w-3 h-3 mr-1" /> Aprobada</>
+                              ) : (
+                                <><Clock className="w-3 h-3 mr-1" /> Pendiente</>
+                              )}
+                            </Badge>
+                          </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />

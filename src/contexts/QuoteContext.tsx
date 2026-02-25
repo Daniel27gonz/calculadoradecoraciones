@@ -172,6 +172,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
           notes: q.notes || '',
+          status: (q.status === 'approved' ? 'approved' : 'pending') as 'pending' | 'approved',
         }));
         setQuotes(loadedQuotes);
       }
@@ -256,6 +257,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         tool_wear_percentage: validatedData.toolWearPercentage,
         wastage_percentage: validatedData.wastagePercentage,
         notes: validatedData.notes,
+        status: quote.status || 'pending',
         updated_at: new Date().toISOString(),
       };
 
