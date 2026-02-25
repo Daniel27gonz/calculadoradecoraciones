@@ -10,6 +10,7 @@ interface QuoteImageGeneratorProps {
   marginPercentage?: number;
   logoUrl?: string | null;
   businessName?: string | null;
+  validUntil?: string;
 }
 
 const fmt = (amount: number, symbol: string) =>
@@ -35,7 +36,7 @@ function SummaryRow({ icon, label, value }: { icon: string; label: string; value
 }
 
 export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGeneratorProps>(
-  ({ quote, summary, currencySymbol, logoUrl, businessName }, ref) => {
+  ({ quote, summary, currencySymbol, logoUrl, businessName, validUntil }, ref) => {
     const cs = currencySymbol;
     const eventDateFormatted = quote.eventDate
       ? format(new Date(quote.eventDate + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })
@@ -205,9 +206,24 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           </div>
         )}
 
+        {/* Valid until */}
+        {validUntil && (
+          <p style={{ textAlign: 'center', fontSize: '12px', color: '#888', marginBottom: '16px' }}>
+            Cotización válida hasta: <span style={{ fontWeight: 600, color: '#db2777' }}>
+              {(() => {
+                try {
+                  return format(new Date(validUntil + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es });
+                } catch {
+                  return validUntil;
+                }
+              })()}
+            </span>
+          </p>
+        )}
+
         {/* Footer */}
         <p style={{ textAlign: 'center', fontSize: '11px', color: '#bbb', marginTop: '16px', marginBottom: 0 }}>
-          ♥️ Gracias por confiar en nuestros servicios ✨
+          Gracias por confiar en nuestros servicios
         </p>
       </div>
     );
