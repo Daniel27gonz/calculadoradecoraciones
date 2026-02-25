@@ -285,7 +285,7 @@ export default function Orders() {
         {/* Calendar */}
         {showCalendar && (
           <OrdersCalendar
-            quotes={quotes}
+            quotes={quotes.filter(q => q.status === 'approved')}
             onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
           />
         )}
