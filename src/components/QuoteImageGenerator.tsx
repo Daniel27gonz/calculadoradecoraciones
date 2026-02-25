@@ -122,11 +122,10 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           }
           // Adicionales del cliente
           quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
-          // Transporte
-          quote.transportItems.forEach(t => {
-            const total = (t.amountIda || 0) + (t.amountRegreso || 0);
-            serviceItems.push({ id: t.id, description: t.concept || 'Transporte', quantity: total > 0 ? total : 1 });
-          });
+          // Transporte (solo si hay items registrados)
+          if (quote.transportItems.length > 0) {
+            serviceItems.push({ id: 'transporte', description: 'Transporte', quantity: '—' });
+          }
           // Montaje y Desmontaje
           const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
           const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
