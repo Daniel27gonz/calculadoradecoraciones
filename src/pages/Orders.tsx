@@ -47,6 +47,9 @@ export default function Orders() {
   const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
+  const [showFullPaidDialog, setShowFullPaidDialog] = useState(false);
+  const [fullPaidQuote, setFullPaidQuote] = useState<Quote | null>(null);
+  const [fullPaidDate, setFullPaidDate] = useState(new Date().toISOString().split('T')[0]);
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   useEffect(() => {
@@ -125,22 +128,20 @@ export default function Orders() {
     }
   };
 
-  const handleToggleFullyPaid = async (quote: Quote, isCurrentlyPaid: boolean) => {
+  const handleToggleFullyPaid = async (quote: Quote, isCurrentlyPaid: boolean, paymentDate?: string) => {
     const summary = calculateCosts(quote);
     try {
       if (!isCurrentlyPaid) {
-        // Mark as fully paid - register total in Finances
         await supabase.from('transactions').insert({
           user_id: user!.id,
           type: 'income',
           amount: summary.finalPrice,
           description: `Pago completo: ${quote.id}`,
           category: 'Pagos completos',
-          transaction_date: new Date().toISOString().split('T')[0],
+          transaction_date: paymentDate || new Date().toISOString().split('T')[0],
         });
         toast({ title: "Pedido marcado como pagado", description: `${currencySymbol}${summary.finalPrice.toFixed(2)} registrado en Finanzas` });
       } else {
-        // Unmark - remove from Finances
         await supabase.from('transactions').delete()
           .eq('user_id', user!.id)
           .eq('description', `Pago completo: ${quote.id}`);
@@ -500,26 +501,36 @@ export default function Orders() {
                         </Button>
 
                         {/* Fully paid button */}
-                        <Button
-                          variant={fullyPaidQuotes.has(quote.id) ? 'outline' : 'default'}
-                          size="sm"
-                          className={`w-full ${fullyPaidQuotes.has(quote.id) ? 'border-green-600 text-green-600' : 'bg-green-600 hover:bg-green-700 text-white'}`}
-                          onClick={async () => {
-                            const isPaid = fullyPaidQuotes.has(quote.id);
-                            await handleToggleFullyPaid(quote, isPaid);
-                            setFullyPaidQuotes(prev => {
-                              const next = new Set(prev);
-                              if (isPaid) next.delete(quote.id); else next.add(quote.id);
-                              return next;
-                            });
-                          }}
-                        >
-                          {fullyPaidQuotes.has(quote.id) ? (
-                            <><CheckCircle2 className="w-4 h-4 mr-1" /> Pagado ✓</>
-                          ) : (
-                            <><CircleCheck className="w-4 h-4 mr-1" /> Marcar pago completo</>
-                          )}
-                        </Button>
+                        {fullyPaidQuotes.has(quote.id) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-green-600 text-green-600"
+                            onClick={async () => {
+                              await handleToggleFullyPaid(quote, true);
+                              setFullyPaidQuotes(prev => {
+                                const next = new Set(prev);
+                                next.delete(quote.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-1" /> Pagado ✓
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => {
+                              setFullPaidQuote(quote);
+                              setFullPaidDate(new Date().toISOString().split('T')[0]);
+                              setShowFullPaidDialog(true);
+                            }}
+                          >
+                            <CircleCheck className="w-4 h-4 mr-1" /> Marcar pago completo
+                          </Button>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -582,6 +593,45 @@ export default function Orders() {
               </div>
               <Button className="w-full" onClick={handleAddPayment}>
                 Registrar anticipo
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Full Payment Date Dialog */}
+        <Dialog open={showFullPaidDialog} onOpenChange={setShowFullPaidDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Pago completo</DialogTitle>
+              <DialogDescription>
+                Selecciona la fecha en que se realizó el pago completo.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Fecha de pago</Label>
+                <Input
+                  type="date"
+                  value={fullPaidDate}
+                  onChange={(e) => setFullPaidDate(e.target.value)}
+                />
+              </div>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={async () => {
+                  if (fullPaidQuote) {
+                    await handleToggleFullyPaid(fullPaidQuote, false, fullPaidDate);
+                    setFullyPaidQuotes(prev => {
+                      const next = new Set(prev);
+                      next.add(fullPaidQuote.id);
+                      return next;
+                    });
+                    setShowFullPaidDialog(false);
+                    setFullPaidQuote(null);
+                  }
+                }}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1" /> Confirmar pago completo
               </Button>
             </div>
           </DialogContent>
