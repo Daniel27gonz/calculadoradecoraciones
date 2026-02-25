@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck, Circle } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ export default function Orders() {
   const [newPaymentAmount, setNewPaymentAmount] = useState('');
   const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
+  const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   useEffect(() => {
@@ -115,13 +116,6 @@ export default function Orders() {
 
   const handleDeletePayment = async (paymentId: string) => {
     try {
-      // Also remove linked transaction if it was paid
-      const payment = Object.values(payments).flat().find(p => p.id === paymentId);
-      if (payment?.is_paid) {
-        await supabase.from('transactions').delete()
-          .eq('user_id', user!.id)
-          .eq('description', `Anticipo: ${paymentId}`);
-      }
       const { error } = await supabase.from('quote_payments').delete().eq('id', paymentId);
       if (error) throw error;
       toast({ title: "Anticipo eliminado" });
@@ -131,39 +125,48 @@ export default function Orders() {
     }
   };
 
-  const handleTogglePaid = async (payment: QuotePayment, quote: Quote) => {
-    const newPaidStatus = !payment.is_paid;
+  const handleToggleFullyPaid = async (quote: Quote, isCurrentlyPaid: boolean) => {
+    const summary = calculateCosts(quote);
     try {
-      const { error } = await supabase.from('quote_payments')
-        .update({ is_paid: newPaidStatus })
-        .eq('id', payment.id);
-      if (error) throw error;
-
-      if (newPaidStatus) {
-        // Register as income in Finances
+      if (!isCurrentlyPaid) {
+        // Mark as fully paid - register total in Finances
         await supabase.from('transactions').insert({
           user_id: user!.id,
           type: 'income',
-          amount: payment.amount,
-          description: `Anticipo: ${payment.id}`,
-          category: 'Anticipos',
-          transaction_date: payment.payment_date,
+          amount: summary.finalPrice,
+          description: `Pago completo: ${quote.id}`,
+          category: 'Pagos completos',
+          transaction_date: new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Anticipo marcado como pagado", description: `${currencySymbol}${payment.amount.toFixed(2)} registrado en Finanzas` });
+        toast({ title: "Pedido marcado como pagado", description: `${currencySymbol}${summary.finalPrice.toFixed(2)} registrado en Finanzas` });
       } else {
-        // Remove the transaction
+        // Unmark - remove from Finances
         await supabase.from('transactions').delete()
           .eq('user_id', user!.id)
-          .eq('description', `Anticipo: ${payment.id}`);
-        toast({ title: "Anticipo desmarcado", description: "Ingreso removido de Finanzas" });
+          .eq('description', `Pago completo: ${quote.id}`);
+        toast({ title: "Pedido desmarcado", description: "Ingreso removido de Finanzas" });
       }
-
-      loadAllPayments();
     } catch (error) {
-      console.error('Error toggling payment status:', error);
-      toast({ title: "Error", description: "No se pudo actualizar el anticipo", variant: "destructive" });
+      console.error('Error toggling fully paid:', error);
+      toast({ title: "Error", description: "No se pudo actualizar", variant: "destructive" });
     }
   };
+
+  useEffect(() => {
+    const loadFullyPaid = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('transactions')
+        .select('description')
+        .eq('user_id', user.id)
+        .eq('category', 'Pagos completos');
+      if (data) {
+        const ids = new Set(data.map(t => t.description.replace('Pago completo: ', '')));
+        setFullyPaidQuotes(ids);
+      }
+    };
+    loadFullyPaid();
+  }, [user]);
 
   const filteredQuotes = quotes
     .filter(q => {
@@ -459,29 +462,15 @@ export default function Orders() {
                           <div className="space-y-2">
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historial de anticipos</p>
                             {quotePayments.map((payment) => (
-                              <div key={payment.id} className={`flex items-center justify-between rounded-lg px-3 py-2 ${payment.is_paid ? 'bg-green-500/10' : 'bg-muted/30'}`}>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => handleTogglePaid(payment, quote)}
-                                    className="flex-shrink-0"
-                                    title={payment.is_paid ? 'Desmarcar como pagada' : 'Marcar como pagada'}
-                                  >
-                                    {payment.is_paid ? (
-                                      <CircleCheck className="w-5 h-5 text-green-600" />
-                                    ) : (
-                                      <Circle className="w-5 h-5 text-muted-foreground" />
-                                    )}
-                                  </button>
-                                  <div>
-                                    <p className={`text-sm font-medium ${payment.is_paid ? 'text-green-600' : ''}`}>
-                                      {currencySymbol}{payment.amount.toFixed(2)}
-                                      {payment.is_paid && <span className="text-xs ml-1">• Pagada</span>}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {format(new Date(payment.payment_date + 'T12:00:00'), "d MMM yyyy", { locale: es })}
-                                      {payment.notes && ` • ${payment.notes}`}
-                                    </p>
-                                  </div>
+                              <div key={payment.id} className="flex items-center justify-between rounded-lg px-3 py-2 bg-muted/30">
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {currencySymbol}{payment.amount.toFixed(2)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(payment.payment_date + 'T12:00:00'), "d MMM yyyy", { locale: es })}
+                                    {payment.notes && ` • ${payment.notes}`}
+                                  </p>
                                 </div>
                                 <Button
                                   variant="ghost"
@@ -494,6 +483,30 @@ export default function Orders() {
                               </div>
                             ))}
                           </div>
+                        )}
+
+                        {/* Fully paid toggle - only when balance is 0 */}
+                        {balance <= 0 && totalPaid > 0 && (
+                          <Button
+                            variant={fullyPaidQuotes.has(quote.id) ? 'outline' : 'default'}
+                            size="sm"
+                            className={`w-full ${fullyPaidQuotes.has(quote.id) ? 'border-green-600 text-green-600' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                            onClick={async () => {
+                              const isPaid = fullyPaidQuotes.has(quote.id);
+                              await handleToggleFullyPaid(quote, isPaid);
+                              setFullyPaidQuotes(prev => {
+                                const next = new Set(prev);
+                                if (isPaid) next.delete(quote.id); else next.add(quote.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {fullyPaidQuotes.has(quote.id) ? (
+                              <><CheckCircle2 className="w-4 h-4 mr-1" /> Pagado ✓</>
+                            ) : (
+                              <><CircleCheck className="w-4 h-4 mr-1" /> Marcar como Pagado</>
+                            )}
+                          </Button>
                         )}
 
                         {/* Add payment button */}
