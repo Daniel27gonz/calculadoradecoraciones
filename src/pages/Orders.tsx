@@ -190,30 +190,10 @@ export default function Orders() {
     const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
     await saveQuote(updatedQuote);
 
-    const summary = calculateCosts(quote);
-
-    if (newStatus === 'approved') {
-      await supabase.from('transactions').insert({
-        user_id: user!.id,
-        type: 'income',
-        amount: summary.finalPrice,
-        description: `Pedido: ${quote.clientName}${quote.eventType ? ` - ${quote.eventType}` : ''}`,
-        category: 'Pedidos',
-        transaction_date: quote.eventDate || new Date().toISOString().split('T')[0],
-      });
-    } else {
-      await supabase
-        .from('transactions')
-        .delete()
-        .eq('user_id', user!.id)
-        .eq('description', `Pedido: ${quote.clientName}${quote.eventType ? ` - ${quote.eventType}` : ''}`)
-        .eq('category', 'Pedidos');
-    }
-
     toast({
       title: newStatus === 'approved' ? "Pedido aprobado" : "Pedido pendiente",
       description: newStatus === 'approved'
-        ? `"${quote.clientName}" aprobado y registrado en Finanzas`
+        ? `"${quote.clientName}" aprobado`
         : `"${quote.clientName}" revertido a pendiente`,
     });
   };
