@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Share2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
@@ -17,6 +19,16 @@ import { getCurrencyByCode } from '@/lib/currencies';
 import { QuoteImageModal } from '@/components/QuoteImageModal';
 import { Quote } from '@/types/quote';
 
+interface QuotePayment {
+  id: string;
+  quote_id: string;
+  user_id: string;
+  amount: number;
+  payment_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export default function Orders() {
   const navigate = useNavigate();
   const { quotes, calculateCosts, saveQuote, loadQuotes } = useQuote();
@@ -26,6 +38,13 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
+  const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentQuoteId, setPaymentQuoteId] = useState<string | null>(null);
+  const [newPaymentAmount, setNewPaymentAmount] = useState('');
+  const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   useEffect(() => {
@@ -33,8 +52,76 @@ export default function Orders() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (user) loadQuotes();
+    if (user) {
+      loadQuotes();
+      loadAllPayments();
+    }
   }, [user]);
+
+  const loadAllPayments = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('quote_payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('payment_date', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        const grouped: Record<string, QuotePayment[]> = {};
+        data.forEach((p: any) => {
+          if (!grouped[p.quote_id]) grouped[p.quote_id] = [];
+          grouped[p.quote_id].push(p);
+        });
+        setPayments(grouped);
+      }
+    } catch (error) {
+      console.error('Error loading payments:', error);
+    }
+  };
+
+  const handleAddPayment = async () => {
+    if (!user || !paymentQuoteId || !newPaymentAmount) return;
+    const amount = parseFloat(newPaymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Error", description: "Ingresa un monto válido", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('quote_payments').insert({
+        quote_id: paymentQuoteId,
+        user_id: user.id,
+        amount,
+        payment_date: newPaymentDate,
+        notes: newPaymentNotes || null,
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Anticipo registrado", description: `${currencySymbol}${amount.toFixed(2)} registrado` });
+      setShowPaymentDialog(false);
+      setNewPaymentAmount('');
+      setNewPaymentNotes('');
+      setNewPaymentDate(new Date().toISOString().split('T')[0]);
+      loadAllPayments();
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      toast({ title: "Error", description: "No se pudo registrar el anticipo", variant: "destructive" });
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      const { error } = await supabase.from('quote_payments').delete().eq('id', paymentId);
+      if (error) throw error;
+      toast({ title: "Anticipo eliminado" });
+      loadAllPayments();
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+    }
+  };
 
   const filteredQuotes = quotes
     .filter(q => {
@@ -44,7 +131,6 @@ export default function Orders() {
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      // Sort by event date (upcoming first), then by creation date
       if (a.eventDate && b.eventDate) {
         return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
       }
@@ -61,7 +147,6 @@ export default function Orders() {
     const summary = calculateCosts(quote);
 
     if (newStatus === 'approved') {
-      // Register as income in Finances
       await supabase.from('transactions').insert({
         user_id: user!.id,
         type: 'income',
@@ -71,7 +156,6 @@ export default function Orders() {
         transaction_date: quote.eventDate || new Date().toISOString().split('T')[0],
       });
     } else {
-      // Remove the auto-generated transaction
       await supabase
         .from('transactions')
         .delete()
@@ -185,6 +269,10 @@ export default function Orders() {
           <div className="space-y-3">
             {filteredQuotes.map((quote) => {
               const summary = calculateCosts(quote);
+              const quotePayments = payments[quote.id] || [];
+              const totalPaid = quotePayments.reduce((sum, p) => sum + p.amount, 0);
+              const balance = summary.finalPrice - totalPaid;
+              const isExpanded = expandedQuoteId === quote.id;
 
               return (
                 <Card key={quote.id} className="overflow-hidden">
@@ -205,6 +293,9 @@ export default function Orders() {
                             )}
                           </Badge>
                         </div>
+                        {quote.folio && (
+                          <p className="text-xs text-muted-foreground font-mono">Folio #{String(quote.folio).padStart(4, '0')}</p>
+                        )}
                         {quote.eventType && (
                           <p className="text-sm text-muted-foreground">{quote.eventType}</p>
                         )}
@@ -219,6 +310,11 @@ export default function Orders() {
                       </div>
                       <div className="text-right">
                         <p className="text-xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                        {totalPaid > 0 && (
+                          <p className={`text-xs font-medium ${balance <= 0 ? 'text-green-600' : 'text-yellow-600'}`}>
+                            {balance <= 0 ? '✓ Pagado' : `Saldo: ${currencySymbol}${balance.toFixed(2)}`}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -246,6 +342,16 @@ export default function Orders() {
                         >
                           <Edit2 className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 gap-1"
+                          onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          <span className="text-xs">Anticipos</span>
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </Button>
                       </div>
                       <Button
                         variant={quote.status === 'approved' ? 'outline' : 'default'}
@@ -260,6 +366,93 @@ export default function Orders() {
                         )}
                       </Button>
                     </div>
+
+                    {/* Expandable Deposits Section */}
+                    {isExpanded && (
+                      <div className="pt-3 border-t border-border space-y-3">
+                        {/* Quote details */}
+                        <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Cliente:</span>
+                            <span className="font-medium">{quote.clientName}</span>
+                          </div>
+                          {quote.folio && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Folio:</span>
+                              <span className="font-mono font-medium">#{String(quote.folio).padStart(4, '0')}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Monto total:</span>
+                            <span className="font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</span>
+                          </div>
+                          {quote.decorationDescription && (
+                            <div>
+                              <span className="text-muted-foreground">Descripción:</span>
+                              <p className="mt-1 text-foreground">{quote.decorationDescription}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Payment summary */}
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="bg-muted/30 rounded-lg p-2">
+                            <p className="text-xs text-muted-foreground">Total</p>
+                            <p className="font-bold text-sm">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                          </div>
+                          <div className="bg-green-500/10 rounded-lg p-2">
+                            <p className="text-xs text-muted-foreground">Anticipos</p>
+                            <p className="font-bold text-sm text-green-600">{currencySymbol}{totalPaid.toFixed(2)}</p>
+                          </div>
+                          <div className={`rounded-lg p-2 ${balance <= 0 ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                            <p className="text-xs text-muted-foreground">Saldo</p>
+                            <p className={`font-bold text-sm ${balance <= 0 ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {currencySymbol}{Math.max(0, balance).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Payment list */}
+                        {quotePayments.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historial de anticipos</p>
+                            {quotePayments.map((payment) => (
+                              <div key={payment.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+                                <div>
+                                  <p className="text-sm font-medium">{currencySymbol}{payment.amount.toFixed(2)}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(payment.payment_date + 'T12:00:00'), "d MMM yyyy", { locale: es })}
+                                    {payment.notes && ` • ${payment.notes}`}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  onClick={() => handleDeletePayment(payment.id)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add payment button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setPaymentQuoteId(quote.id);
+                            setShowPaymentDialog(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Registrar anticipo
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -280,6 +473,50 @@ export default function Orders() {
             currencySymbol={currencySymbol}
           />
         )}
+
+        {/* Add Payment Dialog */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Registrar anticipo</DialogTitle>
+              <DialogDescription>
+                Registra un pago parcial o anticipo para este pedido.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Monto ({currencySymbol})</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newPaymentAmount}
+                  onChange={(e) => setNewPaymentAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fecha</Label>
+                <Input
+                  type="date"
+                  value={newPaymentDate}
+                  onChange={(e) => setNewPaymentDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Notas (opcional)</Label>
+                <Input
+                  value={newPaymentNotes}
+                  onChange={(e) => setNewPaymentNotes(e.target.value)}
+                  placeholder="Ej: Anticipo en efectivo"
+                />
+              </div>
+              <Button className="w-full" onClick={handleAddPayment}>
+                Registrar anticipo
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
