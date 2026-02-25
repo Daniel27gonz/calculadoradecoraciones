@@ -142,13 +142,34 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             </div>
           </div>
 
-          {/* Descripción de la decoración */}
-          {data.decorationDescription && (
+          {/* Tabla de servicios cotizados */}
+          {data.items && data.items.length > 0 && (
             <div className="border-b border-pink-100 pb-4">
-              <h3 className="text-lg font-semibold text-pink-500 mb-3">DESCRIPCIÓN DE LA DECORACIÓN:</h3>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap m-0">
-                {data.decorationDescription}
-              </p>
+              <h3 className="text-lg font-semibold text-pink-500 mb-3">SERVICIOS COTIZADOS:</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f9a8d4' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Descripción
+                    </th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                      Cantidad
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item, index) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #fce7f3', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fdf2f8' }}>
+                      <td style={{ padding: '8px 12px', color: '#555', lineHeight: 1.5 }}>
+                        {item.description}
+                      </td>
+                      <td style={{ padding: '8px 12px', color: '#333', fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                        {item.quantity === 0 ? '—' : item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
