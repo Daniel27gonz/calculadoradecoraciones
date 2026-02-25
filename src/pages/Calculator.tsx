@@ -53,6 +53,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   toolWearPercentage: 7,
   wastagePercentage: 5,
   notes: '',
+  status: 'pending',
 });
 
 export default function Calculator() {
