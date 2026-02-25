@@ -114,11 +114,26 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
             serviceItems.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—' });
           }
           quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
-          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
           quote.furnitureItems.forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
           quote.reusableMaterialsUsed.forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
-          quote.workers.forEach(w => serviceItems.push({ id: w.id, description: `Mano de obra - ${w.name}`, quantity: 1 }));
-          quote.transportItems.forEach(t => serviceItems.push({ id: t.id, description: t.concept || 'Transporte', quantity: 1 }));
+          // Ayudante
+          quote.workers.forEach(w => serviceItems.push({ id: w.id, description: `👷 Ayudante - ${w.name}`, quantity: `${w.hours} hrs` }));
+          // Adicionales del cliente
+          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: `⭐ ${e.name}`, quantity: e.quantity }));
+          // Transporte
+          quote.transportItems.forEach(t => {
+            const total = (t.amountIda || 0) + (t.amountRegreso || 0);
+            serviceItems.push({ id: t.id, description: `🚗 ${t.concept || 'Transporte'}`, quantity: total > 0 ? total : 1 });
+          });
+          // Montaje y Desmontaje
+          const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
+          const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
+          if (setupPhase && setupPhase.hours > 0) {
+            serviceItems.push({ id: 'montaje', description: '🔧 Montaje', quantity: `${setupPhase.hours} hrs` });
+          }
+          if (teardownPhase && teardownPhase.hours > 0) {
+            serviceItems.push({ id: 'desmontaje', description: '🔧 Desmontaje', quantity: `${teardownPhase.hours} hrs` });
+          }
 
           if (serviceItems.length === 0) return null;
 
