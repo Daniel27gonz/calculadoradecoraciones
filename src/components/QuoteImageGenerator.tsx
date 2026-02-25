@@ -129,10 +129,10 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
           const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
           if (setupPhase && setupPhase.hours > 0) {
-            serviceItems.push({ id: 'montaje', description: '🔧 Montaje', quantity: '—' });
+            serviceItems.push({ id: 'montaje', description: 'Montaje', quantity: '—' });
           }
           if (teardownPhase && teardownPhase.hours > 0) {
-            serviceItems.push({ id: 'desmontaje', description: '🔧 Desmontaje', quantity: '—' });
+            serviceItems.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—' });
           }
 
           if (serviceItems.length === 0) return null;
