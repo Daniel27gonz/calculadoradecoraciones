@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Download, Share2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { QuoteImageGenerator } from './QuoteImageGenerator';
 import { useQuoteImage } from '@/hooks/useQuoteImage';
@@ -32,6 +34,7 @@ export function QuoteImageModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [validUntil, setValidUntil] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -203,6 +206,36 @@ export function QuoteImageModal({
               marginPercentage={quote.marginPercentage}
               logoUrl={profile?.logo_url}
               businessName={profile?.business_name}
+              validUntil={validUntil}
+            />
+          </div>
+
+          {/* Valid until input */}
+          <div className="space-y-1">
+            <Label className="text-sm">Válido hasta</Label>
+            <Input
+              type="date"
+              value={validUntil}
+              onChange={(e) => {
+                setValidUntil(e.target.value);
+                // Regenerate image after date change
+                setIsGenerating(true);
+                setTimeout(async () => {
+                  try {
+                    if (imageRef.current) {
+                      const blob = await generateImage(imageRef.current);
+                      if (blob) {
+                        setImageBlob(blob);
+                        setImageUrl(URL.createObjectURL(blob));
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error regenerating image:', error);
+                  }
+                  setIsGenerating(false);
+                }, 300);
+              }}
+              className="w-full md:w-64"
             />
           </div>
 
