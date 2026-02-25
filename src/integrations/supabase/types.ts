@@ -115,6 +115,7 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          is_paid: boolean
           notes: string | null
           payment_date: string
           quote_id: string
@@ -124,6 +125,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_paid?: boolean
           notes?: string | null
           payment_date?: string
           quote_id: string
@@ -133,6 +135,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_paid?: boolean
           notes?: string | null
           payment_date?: string
           quote_id?: string
