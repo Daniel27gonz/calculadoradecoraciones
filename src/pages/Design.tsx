@@ -53,6 +53,7 @@ export interface QuoteTemplateData {
   thankYouMessage: string;
   customNote: string;
   currencySymbol: string;
+  validUntil: string;
   costSummary?: {
     totalMaterials: number;
     totalReusableMaterials: number;
@@ -98,6 +99,7 @@ const Design = () => {
     thankYouMessage: "¡Gracias por confiar en mí para hacer tu evento especial!",
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
     currencySymbol: "$",
+    validUntil: "",
   });
 
   // Load profile data and design config when available
@@ -752,6 +754,17 @@ const Design = () => {
                     placeholder="Mensaje especial para tus clientes..."
                     rows={2}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Válido hasta</Label>
+                  <Input
+                    type="date"
+                    value={templateData.validUntil}
+                    onChange={(e) => updateField("validUntil", e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Fecha límite de validez de la cotización
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Mensaje de agradecimiento</Label>

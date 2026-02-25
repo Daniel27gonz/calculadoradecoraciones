@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { QuoteTemplateData } from "@/pages/Design";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Heart, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
@@ -190,6 +192,21 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           <div className="text-center text-gray-600 py-4">
             {data.depositMessage.replace("{percentage}", data.depositPercentage.toString())}
           </div>
+
+          {/* Valid until */}
+          {data.validUntil && (
+            <div className="text-center text-sm text-gray-500 -mt-2 pb-2">
+              Cotización válida hasta: <span className="font-semibold text-pink-600">
+                {(() => {
+                  try {
+                    return format(new Date(data.validUntil + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es });
+                  } catch {
+                    return data.validUntil;
+                  }
+                })()}
+              </span>
+            </div>
+          )}
 
           {/* Custom note */}
           {data.customNote && (
