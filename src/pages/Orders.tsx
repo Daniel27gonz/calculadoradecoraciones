@@ -485,30 +485,6 @@ export default function Orders() {
                           </div>
                         )}
 
-                        {/* Fully paid toggle - only when balance is 0 */}
-                        {balance <= 0 && totalPaid > 0 && (
-                          <Button
-                            variant={fullyPaidQuotes.has(quote.id) ? 'outline' : 'default'}
-                            size="sm"
-                            className={`w-full ${fullyPaidQuotes.has(quote.id) ? 'border-green-600 text-green-600' : 'bg-green-600 hover:bg-green-700 text-white'}`}
-                            onClick={async () => {
-                              const isPaid = fullyPaidQuotes.has(quote.id);
-                              await handleToggleFullyPaid(quote, isPaid);
-                              setFullyPaidQuotes(prev => {
-                                const next = new Set(prev);
-                                if (isPaid) next.delete(quote.id); else next.add(quote.id);
-                                return next;
-                              });
-                            }}
-                          >
-                            {fullyPaidQuotes.has(quote.id) ? (
-                              <><CheckCircle2 className="w-4 h-4 mr-1" /> Pagado ✓</>
-                            ) : (
-                              <><CircleCheck className="w-4 h-4 mr-1" /> Marcar como Pagado</>
-                            )}
-                          </Button>
-                        )}
-
                         {/* Add payment button */}
                         <Button
                           variant="outline"
@@ -521,6 +497,28 @@ export default function Orders() {
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Registrar anticipo
+                        </Button>
+
+                        {/* Fully paid button */}
+                        <Button
+                          variant={fullyPaidQuotes.has(quote.id) ? 'outline' : 'default'}
+                          size="sm"
+                          className={`w-full ${fullyPaidQuotes.has(quote.id) ? 'border-green-600 text-green-600' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                          onClick={async () => {
+                            const isPaid = fullyPaidQuotes.has(quote.id);
+                            await handleToggleFullyPaid(quote, isPaid);
+                            setFullyPaidQuotes(prev => {
+                              const next = new Set(prev);
+                              if (isPaid) next.delete(quote.id); else next.add(quote.id);
+                              return next;
+                            });
+                          }}
+                        >
+                          {fullyPaidQuotes.has(quote.id) ? (
+                            <><CheckCircle2 className="w-4 h-4 mr-1" /> Pagado ✓</>
+                          ) : (
+                            <><CircleCheck className="w-4 h-4 mr-1" /> Marcar pago completo</>
+                          )}
                         </Button>
                       </div>
                     )}
