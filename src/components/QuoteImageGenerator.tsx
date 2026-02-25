@@ -116,14 +116,16 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
           quote.furnitureItems.forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
           quote.reusableMaterialsUsed.forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
-          // Ayudante
-          quote.workers.forEach(w => serviceItems.push({ id: w.id, description: `👷 Ayudante - ${w.name}`, quantity: `${w.hours} hrs` }));
+          // Ayudante (una sola fila con la cantidad total)
+          if (quote.workers.length > 0) {
+            serviceItems.push({ id: 'ayudante', description: 'Ayudante', quantity: quote.workers.length });
+          }
           // Adicionales del cliente
-          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: `⭐ ${e.name}`, quantity: e.quantity }));
+          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
           // Transporte
           quote.transportItems.forEach(t => {
             const total = (t.amountIda || 0) + (t.amountRegreso || 0);
-            serviceItems.push({ id: t.id, description: `🚗 ${t.concept || 'Transporte'}`, quantity: total > 0 ? total : 1 });
+            serviceItems.push({ id: t.id, description: t.concept || 'Transporte', quantity: total > 0 ? total : 1 });
           });
           // Montaje y Desmontaje
           const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
