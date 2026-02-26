@@ -39,7 +39,7 @@ const sidebarItems: SidebarItem[] = [
 
 
 const bottomItems = [
-{ path: '/settings', icon: Settings, label: 'Ajustes' }];
+{ path: '/settings', icon: Settings, label: 'Configuración' }];
 
 
 export function Navigation() {
