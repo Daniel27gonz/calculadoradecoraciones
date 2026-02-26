@@ -10,35 +10,35 @@ type SidebarItem = {
   path?: string;
   icon: any;
   label: string;
-  submenu?: { path: string; icon: any; label: string }[];
+  submenu?: {path: string;icon: any;label: string;}[];
 };
 
 const sidebarItems: SidebarItem[] = [
-  { path: '/', icon: Home, label: 'Inicio' },
-  {
-    icon: Calculator,
-    label: 'Cotizar',
-    submenu: [
-      { path: '/calculator', icon: FilePlus, label: 'Nueva Cotización' },
-      { path: '/packages', icon: PackageOpen, label: 'Paquete' },
-    ],
-  },
-  {
-    icon: Package,
-    label: 'Inventario',
-    submenu: [
-      { path: '/inventory/consumables', icon: Droplets, label: 'Materiales de Consumo' },
-      { path: '/inventory/reusables', icon: Wrench, label: 'Material Reutilizable' },
-    ],
-  },
-  { path: '/history', icon: History, label: 'Historial' },
-  { path: '/finances', icon: Wallet, label: 'Finanzas' },
-  { path: '/orders', icon: Calendar, label: 'Agenda' },
-];
+{ path: '/', icon: Home, label: 'Inicio' },
+{
+  icon: Calculator,
+  label: 'Cotizar',
+  submenu: [
+  { path: '/calculator', icon: FilePlus, label: 'Nueva Cotización' },
+  { path: '/packages', icon: PackageOpen, label: 'Paquete' }]
+
+},
+{
+  icon: Package,
+  label: 'Inventario',
+  submenu: [
+  { path: '/inventory/consumables', icon: Droplets, label: 'Materiales de Consumo' },
+  { path: '/inventory/reusables', icon: Wrench, label: 'Material Reutilizable' }]
+
+},
+{ path: '/history', icon: History, label: 'Historial' },
+{ path: '/finances', icon: Wallet, label: 'Finanzas' },
+{ path: '/orders', icon: Calendar, label: 'Agenda' }];
+
 
 const bottomItems = [
-  { path: '/settings', icon: Settings, label: 'Ajustes' },
-];
+{ path: '/settings', icon: Settings, label: 'Ajustes' }];
+
 
 export function Navigation() {
   const location = useLocation();
@@ -57,119 +57,119 @@ export function Navigation() {
     navigate('/auth');
   };
 
-  const NavContent = () => (
-    <div className="flex flex-col h-full">
+  const NavContent = () =>
+  <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-5 pb-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shadow-soft">
             <span className="text-lg">🎈</span>
           </div>
-          <span className="font-display text-lg font-bold text-foreground">Deco Control</span>
+          
         </div>
       </div>
 
       {/* Main nav */}
       <nav className="flex-1 px-3 space-y-1">
         {sidebarItems.map((item) => {
-          const { icon: Icon, label, submenu, path } = item;
+        const { icon: Icon, label, submenu, path } = item;
 
-          if (submenu) {
-            const isSubActive = submenu.some(s => location.pathname === s.path);
-            return (
-              <div key={label}>
+        if (submenu) {
+          const isSubActive = submenu.some((s) => location.pathname === s.path);
+          return (
+            <div key={label}>
                 <button
-                  onClick={() => setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }))}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full",
-                    isSubActive
-                      ? "bg-rose-light text-primary shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  )}
-                >
+                onClick={() => setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }))}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full",
+                  isSubActive ?
+                  "bg-rose-light text-primary shadow-sm" :
+                  "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                )}>
+
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span>{label}</span>
                   <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform duration-200", openMenus[label] && "rotate-90")} />
                 </button>
-                {openMenus[label] && (
-                  <div className="ml-4 mt-1 space-y-1">
+                {openMenus[label] &&
+              <div className="ml-4 mt-1 space-y-1">
                     {submenu.map(({ path: subPath, icon: SubIcon, label: subLabel }) => {
-                      const isActive = location.pathname === subPath;
-                      return (
-                        <Link
-                          key={subPath}
-                          to={subPath}
-                          onClick={() => setMobileOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                            isActive
-                              ? "bg-rose-light text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                          )}
-                        >
+                  const isActive = location.pathname === subPath;
+                  return (
+                    <Link
+                      key={subPath}
+                      to={subPath}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                        isActive ?
+                        "bg-rose-light text-primary" :
+                        "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      )}>
+
                           <SubIcon className="w-4 h-4 flex-shrink-0" />
                           <span>{subLabel}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
+                        </Link>);
 
-          const isActive = location.pathname === path;
-          return (
-            <Link
-              key={path}
-              to={path!}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-rose-light text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
+                })}
+                  </div>
+              }
+              </div>);
+
+        }
+
+        const isActive = location.pathname === path;
+        return (
+          <Link
+            key={path}
+            to={path!}
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              isActive ?
+              "bg-rose-light text-primary shadow-sm" :
+              "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            )}>
+
               <Icon className="w-5 h-5 flex-shrink-0" />
               <span>{label}</span>
               {isActive && <ChevronRight className="w-4 h-4 ml-auto opacity-50" />}
-            </Link>
-          );
-        })}
+            </Link>);
+
+      })}
       </nav>
 
       {/* Bottom section */}
       <div className="px-3 pb-4 space-y-1 border-t border-border pt-3 mt-2">
         {bottomItems.map(({ path, icon: Icon, label }) => {
-          const isActive = location.pathname === path;
-          return (
-            <Link
-              key={path}
-              to={path}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-rose-light text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
+        const isActive = location.pathname === path;
+        return (
+          <Link
+            key={path}
+            to={path}
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              isActive ?
+              "bg-rose-light text-primary shadow-sm" :
+              "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            )}>
+
               <Icon className="w-5 h-5 flex-shrink-0" />
               <span>{label}</span>
-            </Link>
-          );
-        })}
+            </Link>);
+
+      })}
         <button
-          onClick={() => { handleSignOut(); setMobileOpen(false); }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
-        >
+        onClick={() => {handleSignOut();setMobileOpen(false);}}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 w-full">
+
           <LogOut className="w-5 h-5 flex-shrink-0" />
           <span>Cerrar sesión</span>
         </button>
       </div>
-    </div>
-  );
+    </div>;
+
 
   // Mobile: hamburger + drawer
   if (isMobile) {
@@ -181,39 +181,39 @@ export function Navigation() {
             <Menu className="w-6 h-6 text-foreground" />
           </button>
           <span className="font-display text-lg font-semibold text-foreground flex-1">Deco Control</span>
-          {user && (
-            <Link to="/settings" className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-rose-light">
+          {user &&
+          <Link to="/settings" className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-rose-light">
               <User className="w-4 h-4 text-rose-dark" />
               <span className="text-xs font-medium text-rose-dark max-w-[100px] truncate">
                 {profile?.name || user.email?.split('@')[0]}
               </span>
             </Link>
-          )}
+          }
         </div>
 
         {/* Drawer overlay */}
-        {mobileOpen && (
-          <div className="fixed inset-0 z-[60] flex">
+        {mobileOpen &&
+        <div className="fixed inset-0 z-[60] flex">
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
             <div className="relative w-64 bg-card border-r border-border shadow-elevated animate-slide-in-left z-10">
               <button
-                onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 p-1 rounded-lg hover:bg-muted transition-colors"
-              >
+              onClick={() => setMobileOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg hover:bg-muted transition-colors">
+
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
               <NavContent />
             </div>
           </div>
-        )}
-      </>
-    );
+        }
+      </>);
+
   }
 
   // Desktop: fixed sidebar
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-card border-r border-border z-40 shadow-sm">
       <NavContent />
-    </aside>
-  );
+    </aside>);
+
 }
