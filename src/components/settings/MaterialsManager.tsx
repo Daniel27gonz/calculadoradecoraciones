@@ -520,7 +520,14 @@ export function MaterialsManager() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Cantidad</Label>
+                  <Label className="text-xs">
+                    Cantidad
+                    {newPurchase.material_id && (() => {
+                      const selectedMat = materials.find(m => m.id === newPurchase.material_id);
+                      const unitLabel = UNITS.find(u => u.value === selectedMat?.purchase_unit)?.label || selectedMat?.purchase_unit;
+                      return unitLabel ? <span className="text-muted-foreground ml-1">({unitLabel}s)</span> : null;
+                    })()}
+                  </Label>
                   <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
