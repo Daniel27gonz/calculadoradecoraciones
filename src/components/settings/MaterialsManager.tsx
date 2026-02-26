@@ -69,8 +69,9 @@ export function MaterialsManager() {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  // New purchase form
+  // Purchase form
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
   const [newPurchase, setNewPurchase] = useState({
     material_id: '',
     purchase_date: format(new Date(), 'yyyy-MM-dd'),
@@ -261,6 +262,49 @@ export function MaterialsManager() {
       }
 
       toast({ title: 'Compra eliminada' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  const handleEditPurchase = (purchase: Purchase) => {
+    setEditingPurchase(purchase);
+    const mat = materials.find(m => m.id === purchase.material_id);
+    setNewPurchase({
+      material_id: purchase.material_id,
+      purchase_date: purchase.purchase_date,
+      purchase_unit: mat?.purchase_unit || '',
+      presentation_price: String(purchase.quantity_presentations > 0 ? purchase.total_paid / purchase.quantity_presentations : 0),
+      quantity: String(purchase.quantity_presentations),
+      provider: purchase.provider || '',
+    });
+    setPurchaseDialogOpen(true);
+  };
+
+  const handleUpdatePurchase = async () => {
+    if (!user || !editingPurchase) return;
+    const qty = Number(newPurchase.quantity);
+    const presPrice = Number(newPurchase.presentation_price);
+    const paid = presPrice * qty;
+    if (!qty || qty <= 0) {
+      toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('material_purchases').update({
+        material_id: newPurchase.material_id,
+        purchase_date: newPurchase.purchase_date,
+        quantity_presentations: qty,
+        units_added: qty,
+        total_paid: paid,
+        provider: newPurchase.provider.trim() || null,
+      }).eq('id', editingPurchase.id);
+      if (error) throw error;
+      toast({ title: 'Compra actualizada' });
+      setPurchaseDialogOpen(false);
+      setEditingPurchase(null);
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -466,7 +510,7 @@ export function MaterialsManager() {
 
       {/* ===== TAB COMPRAS ===== */}
       <TabsContent value="purchases" className="space-y-4 mt-4">
-        <Button onClick={() => setPurchaseDialogOpen(true)} className="w-full" variant="gradient">
+        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
           <Plus className="w-4 h-4 mr-1" /> Registrar Compra
         </Button>
 
@@ -487,9 +531,14 @@ export function MaterialsManager() {
                       <span>C/U: <strong>{fmt(p.cost_per_unit)}</strong></span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => handleDeletePurchase(p)}>
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditPurchase(p)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeletePurchase(p)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -504,7 +553,7 @@ export function MaterialsManager() {
         {/* New purchase dialog */}
         <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
           <DialogContent className="bg-background">
-            <DialogHeader><DialogTitle>Registrar Compra</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingPurchase ? 'Editar Compra' : 'Registrar Compra'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Material</Label>
@@ -564,7 +613,9 @@ export function MaterialsManager() {
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setPurchaseDialogOpen(false)}>Cancelar</Button>
-              <Button variant="gradient" onClick={handleAddPurchase}>Registrar</Button>
+              <Button variant="gradient" onClick={editingPurchase ? handleUpdatePurchase : handleAddPurchase}>
+                {editingPurchase ? 'Guardar' : 'Registrar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
