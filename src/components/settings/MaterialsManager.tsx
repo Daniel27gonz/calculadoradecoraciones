@@ -22,9 +22,22 @@ const PURCHASE_UNITS = [
   { value: 'kilo', label: 'Kilo' },
 ];
 
+const CATEGORIES = [
+  { value: 'globos', label: 'Globos' },
+  { value: 'flores', label: 'Flores' },
+  { value: 'telas', label: 'Telas y Manteles' },
+  { value: 'velas', label: 'Velas e Iluminación' },
+  { value: 'papeleria', label: 'Papelería' },
+  { value: 'adhesivos', label: 'Adhesivos y Pegamentos' },
+  { value: 'cintas', label: 'Cintas y Listones' },
+  { value: 'desechables', label: 'Desechables' },
+  { value: 'otros', label: 'Otros' },
+];
+
 interface Material {
   id: string;
   name: string;
+  category: string;
   purchase_unit: string;
   presentation_price: number | null;
   quantity_per_presentation: number | null;
@@ -40,6 +53,7 @@ export function MaterialsManager() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newMaterial, setNewMaterial] = useState<Omit<Material, 'id' | 'cost_per_unit'>>({
     name: '',
+    category: '',
     purchase_unit: '',
     presentation_price: null,
     quantity_per_presentation: null,
@@ -69,6 +83,7 @@ export function MaterialsManager() {
       setMaterials(data?.map(m => ({
         id: m.id,
         name: m.name,
+        category: m.category || '',
         purchase_unit: m.purchase_unit || '',
         presentation_price: m.presentation_price,
         quantity_per_presentation: m.quantity_per_presentation,
@@ -109,10 +124,10 @@ export function MaterialsManager() {
       const { error } = await supabase.from('user_materials').insert({
         user_id: user.id,
         name: newMaterial.name.trim(),
+        category: newMaterial.category || 'otros',
         purchase_unit: newMaterial.purchase_unit.trim() || null,
         presentation_price: newMaterial.presentation_price,
         quantity_per_presentation: newMaterial.quantity_per_presentation,
-        category: 'general',
       });
 
       if (error) throw error;
@@ -124,6 +139,7 @@ export function MaterialsManager() {
 
       setNewMaterial({
         name: '',
+        category: '',
         purchase_unit: '',
         presentation_price: null,
         quantity_per_presentation: null,
@@ -186,6 +202,7 @@ export function MaterialsManager() {
         .from('user_materials')
         .update({
           name: editingMaterial.name.trim(),
+          category: editingMaterial.category || 'otros',
           purchase_unit: editingMaterial.purchase_unit.trim() || null,
           presentation_price: editingMaterial.presentation_price,
           quantity_per_presentation: editingMaterial.quantity_per_presentation,
@@ -271,12 +288,32 @@ export function MaterialsManager() {
       <CardContent className="space-y-6">
         {/* Form to add new material */}
         <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-          <div className="space-y-2">
-            <Label>Nombre del material</Label>
-            <Input
-              value={newMaterial.name}
-              onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nombre del material</Label>
+              <Input
+                value={newMaterial.name}
+                onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Categoría</Label>
+              <Select
+                value={newMaterial.category}
+                onValueChange={(value) => setNewMaterial(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecciona categoría" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -361,7 +398,8 @@ export function MaterialsManager() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{material.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {material.purchase_unit && `Compra: ${material.purchase_unit}`}
+                      {CATEGORIES.find(c => c.value === material.category)?.label || material.category}
+                      {material.purchase_unit && ` · ${material.purchase_unit}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -415,6 +453,25 @@ export function MaterialsManager() {
                     value={editingMaterial.name}
                     onChange={(e) => setEditingMaterial(prev => prev ? { ...prev, name: e.target.value } : null)}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Categoría</Label>
+                  <Select
+                    value={editingMaterial.category}
+                    onValueChange={(value) => setEditingMaterial(prev => prev ? { ...prev, category: value } : null)}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecciona categoría" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
