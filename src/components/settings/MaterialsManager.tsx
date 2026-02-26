@@ -746,50 +746,38 @@ export function MaterialsManager() {
           </CardHeader>
           <CardContent className="p-0">
             {materials.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-xs text-muted-foreground w-12">#</th>
-                      <th className="text-left p-3 font-medium text-xs text-muted-foreground">Descripción</th>
-                      <th className="text-left p-3 font-medium text-xs text-muted-foreground">Unidad</th>
-                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Entrada</th>
-                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Salida</th>
-                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Existencia</th>
-                      <th className="text-center p-3 font-medium text-xs text-muted-foreground">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {materials.map((m, index) => {
-                      const totalDeducted = deductions[m.id] || 0;
-                      const stockReal = m.total_purchased - totalDeducted;
-                      const isLow = stockReal <= m.stock_minimum;
-                      const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
+              <div className="divide-y">
+                {materials.map((m, index) => {
+                  const totalDeducted = deductions[m.id] || 0;
+                  const stockReal = m.total_purchased - totalDeducted;
+                  const isLow = stockReal <= m.stock_minimum;
+                  const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
 
-                      return (
-                        <tr key={m.id} className="border-b last:border-0 hover:bg-muted/30">
-                          <td className="p-3 text-muted-foreground">{index + 1}</td>
-                          <td className="p-3 font-medium">{m.name}</td>
-                          <td className="p-3 text-muted-foreground">{unitLabel}</td>
-                          <td className="p-3 text-right text-green-600 font-semibold">{m.total_purchased}</td>
-                          <td className="p-3 text-right text-orange-600 font-semibold">{totalDeducted}</td>
-                          <td className={`p-3 text-right font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
-                            {stockReal}
-                          </td>
-                          <td className="p-3 text-center">
-                            <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
-                              {isLow ? (
-                                <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
-                              ) : (
-                                <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
-                              )}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                  return (
+                    <div key={m.id} className="p-3 hover:bg-muted/30">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm">{index + 1}. {m.name}</p>
+                          <p className="text-xs text-muted-foreground">{unitLabel}</p>
+                        </div>
+                        <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
+                          {isLow ? (
+                            <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
+                          ) : (
+                            <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
+                          )}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-4 mt-1.5 text-xs">
+                        <span className="text-green-600 font-semibold">Entrada: {m.total_purchased}</span>
+                        <span className="text-orange-600 font-semibold">Salida: {totalDeducted}</span>
+                        <span className={`font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
+                          Stock: {stockReal}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-6 text-muted-foreground">

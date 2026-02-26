@@ -197,31 +197,33 @@ export default function AdminDatabase() {
   }
 
   return (
-    <div className="container mx-auto py-20 px-4 pb-24">
+    <div className="min-h-screen pb-24 md:pb-8 pt-16 md:pt-20">
+      <main className="container max-w-4xl mx-auto px-4 py-6">
       <Card className="border-primary/20">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Database className="w-6 h-6 text-primary" />
-              <CardTitle className="text-xl">Database - Viewing Table Profiles</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Database className="w-5 h-5 text-primary shrink-0" />
+              <CardTitle className="text-base sm:text-xl truncate">Database - Profiles</CardTitle>
             </div>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={fetchUsers}
               disabled={loadingUsers}
+              className="shrink-0"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loadingUsers ? 'animate-spin' : ''}`} />
-              Actualizar
+              <RefreshCw className={`w-4 h-4 ${loadingUsers ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline ml-2">Actualizar</span>
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-6 py-4 bg-muted/50 border-b">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 sm:px-6 py-4 bg-muted/50 border-b">
             <div className="relative flex-1 w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, email o estado..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -244,68 +246,112 @@ export default function AdminDatabase() {
               {searchTerm ? 'No se encontraron usuarios con ese criterio' : 'No hay usuarios registrados'}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">Email</TableHead>
-                    <TableHead className="font-semibold">Nombre</TableHead>
-                    <TableHead className="font-semibold">Estado</TableHead>
-                    <TableHead className="font-semibold">Creado</TableHead>
-                    <TableHead className="font-semibold">Actualizado</TableHead>
-                    <TableHead className="font-semibold text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((userItem) => (
-                    <TableRow key={userItem.id} className="hover:bg-muted/20">
-                      <TableCell className="font-medium text-sm">
-                        {userItem.email}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {userItem.name || 'Sin nombre'}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(userItem.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.created_at)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(userItem.status_updated_at)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 border-green-600 hover:bg-green-50"
-                            onClick={() => updateUserStatus(userItem.user_id, 'approved')}
-                            disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Aprobar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                            onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
-                            disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Rechazar
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="font-semibold">Email</TableHead>
+                      <TableHead className="font-semibold">Nombre</TableHead>
+                      <TableHead className="font-semibold">Estado</TableHead>
+                      <TableHead className="font-semibold">Creado</TableHead>
+                      <TableHead className="font-semibold">Actualizado</TableHead>
+                      <TableHead className="font-semibold text-center">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((userItem) => (
+                      <TableRow key={userItem.id} className="hover:bg-muted/20">
+                        <TableCell className="font-medium text-sm">
+                          {userItem.email}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {userItem.name || 'Sin nombre'}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(userItem.status)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(userItem.created_at)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(userItem.status_updated_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              onClick={() => updateUserStatus(userItem.user_id, 'approved')}
+                              disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Aprobar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
+                              disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Rechazar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y">
+                {filteredUsers.map((userItem) => (
+                  <div key={userItem.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{userItem.email}</p>
+                        <p className="text-xs text-muted-foreground">{userItem.name || 'Sin nombre'}</p>
+                      </div>
+                      {getStatusBadge(userItem.status)}
+                    </div>
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span>Creado: {formatDate(userItem.created_at)}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => updateUserStatus(userItem.user_id, 'approved')}
+                        disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Aprobar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
+                        disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Rechazar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
+      </main>
     </div>
   );
 }

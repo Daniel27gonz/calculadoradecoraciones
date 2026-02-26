@@ -176,27 +176,19 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
           </div>
         ) : (
           <div className="space-y-2">
-            {/* Header */}
-            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2 pb-1 border-b">
-              <div className="col-span-5">Material</div>
-              <div className="col-span-3 text-right">Costo material</div>
-              <div className="col-span-3 text-right">Costo por uso</div>
-              <div className="col-span-1"></div>
-            </div>
-            
             {materials.map((material) => (
               <div
                 key={material.id}
-                className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors gap-2"
               >
-                <div className="col-span-5 font-medium truncate">{material.name}</div>
-                <div className="col-span-3 text-right text-muted-foreground text-sm">
-                  {currencySymbol}{material.material_cost.toFixed(2)}
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{material.name}</p>
+                  <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                    <span>Costo: {currencySymbol}{material.material_cost.toFixed(2)}</span>
+                    <span className="text-primary font-medium">Uso: {currencySymbol}{material.cost_per_use.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="col-span-3 text-right text-sm font-medium text-primary">
-                  {currencySymbol}{material.cost_per_use.toFixed(2)}
-                </div>
-                <div className="col-span-1 flex justify-end gap-1">
+                <div className="flex gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
