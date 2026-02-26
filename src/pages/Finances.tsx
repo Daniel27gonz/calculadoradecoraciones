@@ -153,12 +153,21 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  // Calculate totals
-  const totalIncome = transactions
+  // Calculate totals for current month only
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  const currentMonthTransactions = transactions.filter(t => {
+    const [y, m] = t.transaction_date.split('-');
+    return parseInt(y) === currentYear && parseInt(m) === currentMonth + 1;
+  });
+
+  const totalIncome = currentMonthTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
-  const totalExpenses = transactions
+  const totalExpenses = currentMonthTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
