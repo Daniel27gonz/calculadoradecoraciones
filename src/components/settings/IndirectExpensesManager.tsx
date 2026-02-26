@@ -118,7 +118,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
             <span className="text-xl">📊</span>
           </div>
           <div className="flex-1">
-            <CardTitle className="text-lg">Gastos indirectos</CardTitle>
+            <CardTitle className="text-lg">Gastos del mes</CardTitle>
             <CardDescription>
               Agrega tus gastos fijos mensuales (renta, luz, internet, etc.)
             </CardDescription>
