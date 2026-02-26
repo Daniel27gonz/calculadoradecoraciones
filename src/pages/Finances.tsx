@@ -209,7 +209,7 @@ export default function Finances() {
           </div>
           <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
             <Plus className="w-4 h-4" />
-            Transacción
+            Agregar más
           </Button>
         </div>
 
