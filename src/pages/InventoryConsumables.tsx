@@ -30,7 +30,7 @@ const CATEGORIES = [
   { value: 'globos', label: 'Globos' },
   { value: 'adhesivos', label: 'Adhesivos' },
   { value: 'cintas', label: 'Cintas' },
-  { value: 'decoracion', label: 'Decoración' },
+  { value: 'vinil', label: 'Vinil' },
   { value: 'otros', label: 'Otros' },
 ];
 
