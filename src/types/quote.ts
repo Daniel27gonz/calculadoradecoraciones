@@ -90,7 +90,7 @@ export interface Quote {
   toolWearPercentage: number;
   wastagePercentage: number;
   notes: string;
-  status: 'pending' | 'approved';
+  status: 'pending' | 'approved' | 'delivered';
   // Legacy field for backwards compatibility
   transportCost?: number;
 }
