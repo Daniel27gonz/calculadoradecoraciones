@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw } from 'lucide-react';
+import balloonBg from '@/assets/balloon-bg.jpg';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,7 +68,17 @@ export default function Home() {
   const userName = profile?.name || profile?.business_name || user.email?.split('@')[0];
 
   return (
-    <div className="p-4 md:p-8 space-y-6 pb-8">
+    <div className="relative p-4 md:p-8 space-y-6 pb-8 min-h-screen">
+      {/* Blurred balloon background */}
+      <div
+        className="fixed inset-0 -z-10 opacity-[0.12] blur-[2px]"
+        style={{
+          backgroundImage: `url(${balloonBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
       {/* Welcome header */}
       <div className="text-center px-2">
         <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-foreground tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
