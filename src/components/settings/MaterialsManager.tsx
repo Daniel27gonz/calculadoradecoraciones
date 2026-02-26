@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, CheckCircle2, Search } from 'lucide-react';
+import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, CheckCircle2, Search, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,8 @@ export function MaterialsManager() {
     provider: '',
   });
 
+  const [deductions, setDeductions] = useState<Record<string, number>>({});
+
   const currency = getCurrencyByCode(profile?.currency || 'USD');
   const fmt = (v: number | null) => v === null ? '-' : `${currency?.symbol || '$'}${v.toFixed(2)}`;
 
@@ -90,13 +92,21 @@ export function MaterialsManager() {
     if (!user) return;
     setLoading(true);
     try {
-      const [matRes, purRes] = await Promise.all([
+      const [matRes, purRes, dedRes] = await Promise.all([
         supabase.from('user_materials').select('id, name, category, purchase_unit, stock_minimum').eq('user_id', user.id).order('name'),
         supabase.from('material_purchases').select('*').eq('user_id', user.id).order('purchase_date', { ascending: false }),
+        supabase.from('stock_deductions').select('material_id, quantity_deducted').eq('user_id', user.id),
       ]);
 
       if (matRes.error) throw matRes.error;
       if (purRes.error) throw purRes.error;
+
+      // Calculate deductions per material
+      const deductionsByMaterial: Record<string, number> = {};
+      (dedRes.data || []).forEach(d => {
+        deductionsByMaterial[d.material_id] = (deductionsByMaterial[d.material_id] || 0) + Number(d.quantity_deducted);
+      });
+      setDeductions(deductionsByMaterial);
 
       // Calculate total purchased per material from purchases
       const purchasesByMaterial: Record<string, number> = {};
@@ -274,14 +284,21 @@ export function MaterialsManager() {
 
   return (
     <Tabs defaultValue="materials" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="materials" className="gap-2">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="materials" className="gap-1 text-xs sm:text-sm">
           <Package className="w-4 h-4" />
-          Materiales
+          <span className="hidden sm:inline">Materiales</span>
+          <span className="sm:hidden">Mat.</span>
         </TabsTrigger>
-        <TabsTrigger value="purchases" className="gap-2">
+        <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm">
           <ShoppingCart className="w-4 h-4" />
-          Compras
+          <span className="hidden sm:inline">Compras</span>
+          <span className="sm:hidden">Comp.</span>
+        </TabsTrigger>
+        <TabsTrigger value="stock" className="gap-1 text-xs sm:text-sm">
+          <ClipboardList className="w-4 h-4" />
+          <span className="hidden sm:inline">Existencia</span>
+          <span className="sm:hidden">Stock</span>
         </TabsTrigger>
       </TabsList>
 
@@ -530,6 +547,69 @@ export function MaterialsManager() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </TabsContent>
+
+      {/* ===== TAB CONTROL DE EXISTENCIA ===== */}
+      <TabsContent value="stock" className="space-y-4 mt-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ClipboardList className="w-5 h-5" />
+              Control de Existencia
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Stock real = Total comprado − Usado en pedidos confirmados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {materials.length > 0 ? (
+              <div className="space-y-2">
+                {materials.map(m => {
+                  const totalDeducted = deductions[m.id] || 0;
+                  const stockReal = m.total_purchased - totalDeducted;
+                  const isLow = stockReal <= m.stock_minimum;
+                  const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
+
+                  return (
+                    <div key={m.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm truncate">{m.name}</p>
+                          <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
+                            {isLow ? (
+                              <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
+                            ) : (
+                              <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
+                            )}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {CATEGORIES.find(c => c.value === m.category)?.label || m.category} · {unitLabel}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-lg font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
+                          {stockReal}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          {m.total_purchased} compr. − {totalDeducted} usados
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          mín: {m.stock_minimum}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No hay materiales registrados</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
