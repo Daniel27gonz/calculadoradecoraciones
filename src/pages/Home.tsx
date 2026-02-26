@@ -81,91 +81,67 @@ export default function Home() {
 
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        {/* LEFT: Resumen del Mes + Alertas (span 2) */}
-        <div className="lg:col-span-2 space-y-5">
-
-          {/* Resumen del Mes */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Resumen del Mes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Ventas */}
-                <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
-                  <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="w-4 h-4 text-profit-high" />
-                    <span className="text-xs font-medium text-muted-foreground">Ingresos del mes</span>
-                  </div>
-                  <p className="text-xl font-bold text-profit-high">{formatMoney(totalRevenue)}</p>
-                </div>
-                {/* Gastos */}
-                <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CreditCard className="w-4 h-4 text-destructive" />
-                    <span className="text-xs font-medium text-muted-foreground">Gastos del mes</span>
-                  </div>
-                  <p className="text-xl font-bold text-destructive">{formatMoney(totalCosts)}</p>
-                </div>
-                {/* Ganancia */}
-                <div className="bg-profit-medium/10 rounded-xl p-4 border border-profit-medium/20">
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="w-4 h-4 text-profit-medium" />
-                    <span className="text-xs font-medium text-muted-foreground">Ganancia limpia</span>
-                  </div>
-                  <p className="text-xl font-bold text-profit-medium">{formatMoney(profit)}</p>
-                </div>
-              </div>
-              {/* Pagos pendientes */}
-              {pendingQuotes.length > 0 &&
-              <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3 border border-border">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-profit-medium" />
-                    <span className="text-sm font-medium">Pagos pendientes</span>
-                  </div>
-                  <span className="text-sm font-bold">{pendingQuotes.length} cotizaciones</span>
-                </div>
-              }
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* RIGHT: Acciones Rápidas */}
-        <div className="space-y-5">
-
-          {/* Acciones Rápidas */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2.5">
-                {[
-                { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
-                { to: '/orders', icon: Calendar, label: 'Ver Agenda', color: 'bg-accent/40 text-accent-foreground' },
-                { to: '/finances', icon: Wallet, label: 'Ver Finanzas', color: 'bg-profit-high/15 text-profit-high' },
-                { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' }].
-                map(({ to, icon: Icon, label, color }) =>
-                <Link
-                  key={to}
-                  to={to}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card">
-
-                    <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-medium text-center leading-tight">{label}</span>
-                  </Link>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Acciones Rápidas - horizontal */}
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {[
+          { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
+          { to: '/orders', icon: Calendar, label: 'Agenda', color: 'bg-accent/40 text-accent-foreground' },
+          { to: '/finances', icon: Wallet, label: 'Finanzas', color: 'bg-profit-high/15 text-profit-high' },
+          { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' },
+        ].map(({ to, icon: Icon, label, color }) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+          >
+            <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
+              <Icon className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-medium text-center leading-tight">{label}</span>
+          </Link>
+        ))}
       </div>
+
+      {/* Resumen del Mes */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Resumen del Mes</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-4 h-4 text-profit-high" />
+                <span className="text-xs font-medium text-muted-foreground">Ingresos del mes</span>
+              </div>
+              <p className="text-xl font-bold text-profit-high">{formatMoney(totalRevenue)}</p>
+            </div>
+            <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="w-4 h-4 text-destructive" />
+                <span className="text-xs font-medium text-muted-foreground">Gastos del mes</span>
+              </div>
+              <p className="text-xl font-bold text-destructive">{formatMoney(totalCosts)}</p>
+            </div>
+            <div className="bg-profit-medium/10 rounded-xl p-4 border border-profit-medium/20">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-profit-medium" />
+                <span className="text-xs font-medium text-muted-foreground">Ganancia limpia</span>
+              </div>
+              <p className="text-xl font-bold text-profit-medium">{formatMoney(profit)}</p>
+            </div>
+          </div>
+          {pendingQuotes.length > 0 && (
+            <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3 border border-border">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-profit-medium" />
+                <span className="text-sm font-medium">Pagos pendientes</span>
+              </div>
+              <span className="text-sm font-bold">{pendingQuotes.length} cotizaciones</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <InstallPrompt />
       <FirstLoginInstallPrompt />
