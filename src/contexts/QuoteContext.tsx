@@ -173,7 +173,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
           notes: q.notes || '',
-          status: (q.status === 'approved' ? 'approved' : 'pending') as 'pending' | 'approved',
+          status: (q.status === 'approved' ? 'approved' : q.status === 'delivered' ? 'delivered' : 'pending') as 'pending' | 'approved' | 'delivered',
         }));
         setQuotes(loadedQuotes);
       }
