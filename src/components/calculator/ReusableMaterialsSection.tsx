@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, ChevronDown, Package } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, Package, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { ReusableMaterialUsed } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,25 +32,61 @@ export function ReusableMaterialsSection({
 }: ReusableMaterialsSectionProps) {
   const [savedMaterials, setSavedMaterials] = useState<SavedReusableMaterial[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newCostPerUse, setNewCostPerUse] = useState('');
+  const [newMaterialCost, setNewMaterialCost] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fetchSavedMaterials = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('reusable_materials')
+      .select('id, name, cost_per_use')
+      .eq('user_id', user.id)
+      .order('name');
+
+    if (!error && data) {
+      setSavedMaterials(data);
+    }
+  };
 
   useEffect(() => {
-    const fetchSavedMaterials = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('reusable_materials')
-        .select('id, name, cost_per_use')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (!error && data) {
-        setSavedMaterials(data);
-      }
-    };
-
     fetchSavedMaterials();
   }, []);
+
+  const handleCreateMaterial = async () => {
+    if (!newName.trim() || !newCostPerUse) return;
+    setIsSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setIsSaving(false); return; }
+
+    const { data, error } = await supabase
+      .from('reusable_materials')
+      .insert({
+        user_id: user.id,
+        name: newName.trim(),
+        cost_per_use: Number(newCostPerUse),
+        material_cost: Number(newMaterialCost) || 0,
+      })
+      .select('id, name, cost_per_use')
+      .single();
+
+    if (error) {
+      toast.error('Error al crear material');
+    } else if (data) {
+      toast.success('Material creado y agregado');
+      setSavedMaterials(prev => [...prev, data]);
+      addMaterial(data);
+      setNewName('');
+      setNewCostPerUse('');
+      setNewMaterialCost('');
+      setShowCreateForm(false);
+    }
+    setIsSaving(false);
+  };
 
   const addMaterial = (saved: SavedReusableMaterial) => {
     // Check if already added
@@ -119,11 +157,17 @@ export function ReusableMaterialsSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {reusableMaterialsUsed.length === 0 && savedMaterials.length === 0 && (
+        {reusableMaterialsUsed.length === 0 && savedMaterials.length === 0 && !showCreateForm && (
           <div className="text-center py-6 text-muted-foreground">
             <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No tienes materiales reutilizables configurados</p>
-            <p className="text-xs mt-1">Agrégalos desde Ajustes → Materiales reutilizables</p>
+            <Button
+              variant="link"
+              className="text-xs mt-1"
+              onClick={() => setShowCreateForm(true)}
+            >
+              + Crear uno nuevo aquí
+            </Button>
           </div>
         )}
 
@@ -177,49 +221,92 @@ export function ReusableMaterialsSection({
           </div>
         ))}
 
-        {/* Add materials dropdown */}
-        {savedMaterials.length > 0 && (
-          <Collapsible 
-            open={isDropdownOpen} 
-            onOpenChange={setIsDropdownOpen}
-          >
-            <CollapsibleTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-full h-12 text-base font-medium justify-between"
-              >
-                <span className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Agregar material reutilizable
-                </span>
-                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+        {/* Create new material form */}
+        {showCreateForm && (
+          <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-sm">Crear nuevo material reutilizable</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowCreateForm(false)}>
+                <X className="w-4 h-4" />
               </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
-                {availableMaterials.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground text-sm">
-                    Todos los materiales ya fueron agregados
-                  </div>
-                ) : (
-                  availableMaterials.map((saved) => (
-                    <button
-                      key={saved.id}
-                      type="button"
-                      onClick={() => addMaterial(saved)}
-                      className="w-full text-left px-4 py-3 hover:bg-accent/20 border-b border-border/50 last:border-b-0 transition-colors"
-                    >
-                      <div className="font-medium text-sm">{saved.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+            </div>
+            <Input
+              placeholder="Nombre del material"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <NumericField
+                label="Costo por uso"
+                value={newCostPerUse}
+                onChange={(e) => setNewCostPerUse(e.target.value)}
+                placeholder="0.00"
+                min={0}
+              />
+              <NumericField
+                label="Costo del material"
+                value={newMaterialCost}
+                onChange={(e) => setNewMaterialCost(e.target.value)}
+                placeholder="0.00 (opcional)"
+                min={0}
+              />
+            </div>
+            <Button
+              onClick={handleCreateMaterial}
+              disabled={!newName.trim() || !newCostPerUse || isSaving}
+              className="w-full"
+              size="sm"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? 'Guardando...' : 'Guardar y agregar'}
+            </Button>
+          </div>
         )}
+
+        {/* Add materials dropdown */}
+        <Collapsible 
+          open={isDropdownOpen} 
+          onOpenChange={setIsDropdownOpen}
+        >
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full h-12 text-base font-medium justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Agregar material reutilizable
+              </span>
+              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+              {availableMaterials.map((saved) => (
+                <button
+                  key={saved.id}
+                  type="button"
+                  onClick={() => addMaterial(saved)}
+                  className="w-full text-left px-4 py-3 hover:bg-accent/20 border-b border-border/50 last:border-b-0 transition-colors"
+                >
+                  <div className="font-medium text-sm">{saved.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
+                  </div>
+                </button>
+              ))}
+              {/* Create new option at bottom of list */}
+              <button
+                type="button"
+                onClick={() => { setShowCreateForm(true); setIsDropdownOpen(false); }}
+                className="w-full text-left px-4 py-3 hover:bg-primary/10 border-t border-border transition-colors text-primary font-medium text-sm flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Crear nuevo material
+              </button>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );
