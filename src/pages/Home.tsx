@@ -69,17 +69,17 @@ export default function Home() {
   return (
     <div className="p-4 md:p-8 space-y-6 pb-8">
       {/* Welcome header */}
-      <div className="text-center">
-        <h1 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-foreground tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
           Bienvenida a DecoControl
         </h1>
-        <p className="text-muted-foreground mt-2 text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
           Tu centro de control para tu negocio de decoración
         </p>
       </div>
 
       {/* Acciones Rápidas - horizontal */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
         {[
           { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
           { to: '/orders', icon: Calendar, label: 'Agenda', color: 'bg-accent/40 text-accent-foreground' },
@@ -89,7 +89,7 @@ export default function Home() {
           <Link
             key={to}
             to={to}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+            className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
           >
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
               <Icon className="w-5 h-5" />
@@ -99,7 +99,7 @@ export default function Home() {
         ))}
         <button
           onClick={() => window.location.reload()}
-          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
         >
           <div className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
             <RefreshCw className="w-5 h-5" />
@@ -110,7 +110,7 @@ export default function Home() {
           href="https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
         >
           <div className="w-10 h-10 rounded-xl bg-profit-high/15 text-profit-high flex items-center justify-center">
             <Users className="w-5 h-5" />
