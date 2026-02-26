@@ -27,7 +27,7 @@ const sidebarItems: SidebarItem[] = [
 },
 {
   icon: Package,
-  label: 'Inventario',
+  label: 'Materiales',
   submenu: [
   { path: '/inventory/consumables', icon: Droplets, label: 'Materiales de Consumo' },
   { path: '/inventory/reusables', icon: Wrench, label: 'Material Reutilizable' }]
