@@ -81,6 +81,16 @@ export function MaterialsManager() {
     provider: '',
   });
 
+  // Quick purchase from material card
+  const [quickPurchaseDialogOpen, setQuickPurchaseDialogOpen] = useState(false);
+  const [quickPurchaseMaterial, setQuickPurchaseMaterial] = useState<Material | null>(null);
+  const [quickPurchase, setQuickPurchase] = useState({ price: '', quantity: '' });
+
+  // Create new material inline from purchases tab
+  const [isCreatingNewMaterial, setIsCreatingNewMaterial] = useState(false);
+  const [newMatInline, setNewMatInline] = useState({ name: '', category: 'otros', purchase_unit: 'pieza' });
+  const [purchaseMaterialSearch, setPurchaseMaterialSearch] = useState('');
+
   const [deductions, setDeductions] = useState<Record<string, number>>({});
 
   const currency = getCurrencyByCode(profile?.currency || 'USD');
@@ -358,11 +368,134 @@ export function MaterialsManager() {
 
   const purchaseCostPerUnit = useMemo(() => {
     const presPrice = Number(newPurchase.presentation_price);
-    const selectedMat = materials.find(m => m.id === newPurchase.material_id);
-    const qtyPerPres = selectedMat?.purchase_unit ? 1 : 1; // each presentation = 1 unit
     if (!presPrice) return null;
     return presPrice;
   }, [newPurchase.presentation_price, newPurchase.material_id, materials]);
+
+  // Filtered materials for purchase dialog search
+  const filteredPurchaseMaterials = useMemo(() => {
+    if (!purchaseMaterialSearch.trim()) return materials;
+    const q = purchaseMaterialSearch.toLowerCase();
+    return materials.filter(m => m.name.toLowerCase().includes(q));
+  }, [materials, purchaseMaterialSearch]);
+
+  const materialExistsForSearch = useMemo(() => {
+    if (!purchaseMaterialSearch.trim()) return true;
+    const q = purchaseMaterialSearch.toLowerCase().trim();
+    return materials.some(m => m.name.toLowerCase() === q);
+  }, [materials, purchaseMaterialSearch]);
+
+  // Quick purchase total
+  const quickPurchaseTotal = useMemo(() => {
+    const qty = Number(quickPurchase.quantity);
+    const price = Number(quickPurchase.price);
+    if (!qty || qty <= 0 || !price) return null;
+    return price * qty;
+  }, [quickPurchase.quantity, quickPurchase.price]);
+
+  // ---- Quick purchase from material card ----
+  const openQuickPurchase = (mat: Material) => {
+    setQuickPurchaseMaterial(mat);
+    setQuickPurchase({ price: '', quantity: '' });
+    setQuickPurchaseDialogOpen(true);
+  };
+
+  const handleQuickPurchase = async () => {
+    if (!user || !quickPurchaseMaterial) return;
+    const qty = Number(quickPurchase.quantity);
+    const price = Number(quickPurchase.price);
+    const total = price * qty;
+    if (!qty || qty <= 0 || !price || price <= 0) {
+      toast({ title: 'Error', description: 'Completa precio y cantidad', variant: 'destructive' });
+      return;
+    }
+    try {
+      await supabase.from('material_purchases').insert({
+        user_id: user.id,
+        material_id: quickPurchaseMaterial.id,
+        purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        quantity_presentations: qty,
+        units_added: qty,
+        total_paid: total,
+      });
+      const newStock = quickPurchaseMaterial.total_purchased + qty;
+      await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', quickPurchaseMaterial.id);
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: total,
+        description: `Compra material: ${quickPurchaseMaterial.name}`,
+        category: 'Materiales',
+        transaction_date: format(new Date(), 'yyyy-MM-dd'),
+      });
+      toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
+      setQuickPurchaseDialogOpen(false);
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  // ---- Create material + purchase in one action ----
+  const handleCreateMaterialAndPurchase = async () => {
+    if (!user) return;
+    const name = newMatInline.name.trim();
+    if (!name) {
+      toast({ title: 'Error', description: 'El nombre del material es requerido', variant: 'destructive' });
+      return;
+    }
+    const qty = Number(newPurchase.quantity);
+    const presPrice = Number(newPurchase.presentation_price);
+    const paid = presPrice * qty;
+    if (!qty || qty <= 0) {
+      toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+    try {
+      // 1. Create material
+      const { data: matData, error: matErr } = await supabase.from('user_materials').insert({
+        user_id: user.id,
+        name,
+        category: newMatInline.category,
+        purchase_unit: newPurchase.purchase_unit || newMatInline.purchase_unit,
+        stock_minimum: 0,
+        stock_current: qty,
+        cost_per_unit: presPrice,
+      }).select('id').single();
+      if (matErr) throw matErr;
+
+      // 2. Register purchase
+      await supabase.from('material_purchases').insert({
+        user_id: user.id,
+        material_id: matData.id,
+        purchase_date: newPurchase.purchase_date,
+        quantity_presentations: qty,
+        units_added: qty,
+        total_paid: paid,
+        provider: newPurchase.provider.trim() || null,
+      });
+
+      // 3. Register expense
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${name}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+      });
+
+      toast({ title: 'Material creado y compra registrada ✅', description: `${name} agregado con ${qty} unidades` });
+      setPurchaseDialogOpen(false);
+      setIsCreatingNewMaterial(false);
+      setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' });
+      setPurchaseMaterialSearch('');
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
 
   if (!user) {
     return (
@@ -479,6 +612,9 @@ export function MaterialsManager() {
                       </p>
                     </div>
                     <div className="flex gap-1 shrink-0">
+                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => openQuickPurchase(m)}>
+                        <ShoppingCart className="w-3.5 h-3.5" /> Compra
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingMaterial({ ...m }); setEditDialogOpen(true); }}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
@@ -589,21 +725,70 @@ export function MaterialsManager() {
         )}
 
         {/* New purchase dialog */}
-        <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
-          <DialogContent className="bg-background">
+        <Dialog open={purchaseDialogOpen} onOpenChange={(open) => { setPurchaseDialogOpen(open); if (!open) { setIsCreatingNewMaterial(false); setPurchaseMaterialSearch(''); } }}>
+          <DialogContent className="bg-background max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingPurchase ? 'Editar Compra' : 'Registrar Compra'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              {/* Material selector with search */}
               <div className="space-y-1">
                 <Label className="text-xs">Material</Label>
-                <Select value={newPurchase.material_id} onValueChange={(v) => {
-                  const mat = materials.find(m => m.id === v);
-                  setNewPurchase(p => ({ ...p, material_id: v, purchase_unit: mat?.purchase_unit || '' }));
-                }}>
-                  <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar material" /></SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {materials.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                {!isCreatingNewMaterial ? (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Buscar material..."
+                      value={purchaseMaterialSearch}
+                      onChange={(e) => setPurchaseMaterialSearch(e.target.value)}
+                    />
+                    {purchaseMaterialSearch.trim() && !materialExistsForSearch && (
+                      <button
+                        onClick={() => {
+                          setIsCreatingNewMaterial(true);
+                          setNewMatInline(p => ({ ...p, name: purchaseMaterialSearch.trim() }));
+                        }}
+                        className="w-full text-left p-2.5 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Plus className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">
+                            Crear "{purchaseMaterialSearch.trim()}" y registrar compra
+                          </span>
+                        </div>
+                      </button>
+                    )}
+                    <Select value={newPurchase.material_id} onValueChange={(v) => {
+                      const mat = materials.find(m => m.id === v);
+                      setNewPurchase(p => ({ ...p, material_id: v, purchase_unit: mat?.purchase_unit || '' }));
+                      setPurchaseMaterialSearch('');
+                    }}>
+                      <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar material" /></SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        {(purchaseMaterialSearch.trim() ? filteredPurchaseMaterials : materials).map(m => (
+                          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-primary">Nuevo material</span>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => { setIsCreatingNewMaterial(false); setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' }); }}>
+                        Cancelar
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Nombre del material"
+                      value={newMatInline.name}
+                      onChange={(e) => setNewMatInline(p => ({ ...p, name: e.target.value }))}
+                    />
+                    <Select value={newMatInline.category} onValueChange={(v) => setNewMatInline(p => ({ ...p, category: v }))}>
+                      <SelectTrigger className="bg-background"><SelectValue placeholder="Categoría" /></SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Fecha</Label>
@@ -612,7 +797,7 @@ export function MaterialsManager() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Unidad de compra</Label>
-                  <Select value={newPurchase.purchase_unit} onValueChange={(v) => setNewPurchase(p => ({ ...p, purchase_unit: v }))}>
+                  <Select value={newPurchase.purchase_unit || (isCreatingNewMaterial ? newMatInline.purchase_unit : '')} onValueChange={(v) => { setNewPurchase(p => ({ ...p, purchase_unit: v })); if (isCreatingNewMaterial) setNewMatInline(p => ({ ...p, purchase_unit: v })); }}>
                     <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent className="bg-background z-50">
                       {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
@@ -651,9 +836,47 @@ export function MaterialsManager() {
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setPurchaseDialogOpen(false)}>Cancelar</Button>
-              <Button variant="gradient" onClick={editingPurchase ? handleUpdatePurchase : handleAddPurchase}>
-                {editingPurchase ? 'Guardar' : 'Registrar'}
-              </Button>
+              {isCreatingNewMaterial ? (
+                <Button variant="gradient" onClick={handleCreateMaterialAndPurchase}>
+                  Crear material y registrar
+                </Button>
+              ) : (
+                <Button variant="gradient" onClick={editingPurchase ? handleUpdatePurchase : handleAddPurchase}>
+                  {editingPurchase ? 'Guardar' : 'Registrar'}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Quick purchase dialog (from material card) */}
+        <Dialog open={quickPurchaseDialogOpen} onOpenChange={setQuickPurchaseDialogOpen}>
+          <DialogContent className="bg-background">
+            <DialogHeader>
+              <DialogTitle>Registrar Compra</DialogTitle>
+              {quickPurchaseMaterial && (
+                <p className="text-sm text-muted-foreground mt-1">{quickPurchaseMaterial.name}</p>
+              )}
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Precio pagado (por unidad)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0.00" value={quickPurchase.price} onChange={(e) => setQuickPurchase(p => ({ ...p, price: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cantidad comprada</Label>
+                <Input type="number" min="1" placeholder="0" value={quickPurchase.quantity} onChange={(e) => setQuickPurchase(p => ({ ...p, quantity: e.target.value }))} />
+              </div>
+              {quickPurchaseTotal !== null && (
+                <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                  <span className="text-sm">Total a registrar:</span>
+                  <span className="text-lg font-bold text-primary">{fmt(quickPurchaseTotal)}</span>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setQuickPurchaseDialogOpen(false)}>Cancelar</Button>
+              <Button variant="gradient" onClick={handleQuickPurchase}>Registrar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
