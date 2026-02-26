@@ -455,15 +455,6 @@ export default function Orders() {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          onClick={() => navigate(`/calculator?edit=${quote.id}`)}
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
                           size="sm"
                           className="h-9 gap-1"
                           onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
@@ -473,18 +464,6 @@ export default function Orders() {
                           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </Button>
                       </div>
-                      <Button
-                        variant={quote.status === 'approved' ? 'outline' : 'default'}
-                        size="sm"
-                        onClick={() => handleToggleStatus(quote)}
-                        className={`shrink-0 ${quote.status === 'approved' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}`}
-                      >
-                        {quote.status === 'approved' ? (
-                          <><Clock className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Marcar </span>pendiente</>
-                        ) : (
-                          <><CheckCircle2 className="w-4 h-4 mr-1" /> Aprobar</>
-                        )}
-                      </Button>
                     </div>
 
                     {/* Expandable Deposits Section */}
