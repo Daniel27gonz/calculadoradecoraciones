@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users } from 'lucide-react';
+import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,6 +100,26 @@ export default function Home() {
             <span className="text-xs font-medium text-center leading-tight">{label}</span>
           </Link>
         ))}
+        <button
+          onClick={() => window.location.reload()}
+          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+        >
+          <div className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
+            <RefreshCw className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-medium text-center leading-tight">Actualizar</span>
+        </button>
+        <a
+          href="https://chat.whatsapp.com/JkznOdiR8yh3nEYnjiSLKm"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card min-w-[90px] flex-1"
+        >
+          <div className="w-10 h-10 rounded-xl bg-profit-high/15 text-profit-high flex items-center justify-center">
+            <Users className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-medium text-center leading-tight">Comunidad</span>
+        </a>
       </div>
 
       {/* Resumen del Mes */}
