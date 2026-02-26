@@ -74,8 +74,9 @@ export function MaterialsManager() {
   const [newPurchase, setNewPurchase] = useState({
     material_id: '',
     purchase_date: format(new Date(), 'yyyy-MM-dd'),
+    purchase_unit: '',
+    presentation_price: '',
     quantity: '',
-    total_paid: '',
     provider: '',
   });
 
@@ -212,7 +213,8 @@ export function MaterialsManager() {
       return;
     }
     const qty = Number(newPurchase.quantity);
-    const paid = Number(newPurchase.total_paid);
+    const presPrice = Number(newPurchase.presentation_price);
+    const paid = presPrice * qty;
     if (!qty || qty <= 0) {
       toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
       return;
@@ -239,7 +241,7 @@ export function MaterialsManager() {
 
       toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty})` });
       setPurchaseDialogOpen(false);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), quantity: '', total_paid: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -265,12 +267,20 @@ export function MaterialsManager() {
     }
   };
 
-  const purchaseCostPerUnit = useMemo(() => {
+  const purchaseTotalPaid = useMemo(() => {
     const qty = Number(newPurchase.quantity);
-    const paid = Number(newPurchase.total_paid);
-    if (!qty || qty <= 0) return null;
-    return paid / qty;
-  }, [newPurchase.quantity, newPurchase.total_paid]);
+    const presPrice = Number(newPurchase.presentation_price);
+    if (!qty || qty <= 0 || !presPrice) return null;
+    return presPrice * qty;
+  }, [newPurchase.quantity, newPurchase.presentation_price]);
+
+  const purchaseCostPerUnit = useMemo(() => {
+    const presPrice = Number(newPurchase.presentation_price);
+    const selectedMat = materials.find(m => m.id === newPurchase.material_id);
+    const qtyPerPres = selectedMat?.purchase_unit ? 1 : 1; // each presentation = 1 unit
+    if (!presPrice) return null;
+    return presPrice;
+  }, [newPurchase.presentation_price, newPurchase.material_id, materials]);
 
   if (!user) {
     return (
@@ -498,7 +508,10 @@ export function MaterialsManager() {
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Material</Label>
-                <Select value={newPurchase.material_id} onValueChange={(v) => setNewPurchase(p => ({ ...p, material_id: v }))}>
+                <Select value={newPurchase.material_id} onValueChange={(v) => {
+                  const mat = materials.find(m => m.id === v);
+                  setNewPurchase(p => ({ ...p, material_id: v, purchase_unit: mat?.purchase_unit || '' }));
+                }}>
                   <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar material" /></SelectTrigger>
                   <SelectContent className="bg-background z-50">
                     {materials.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
@@ -511,19 +524,29 @@ export function MaterialsManager() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">
-                    Cantidad
-                    {newPurchase.material_id && (() => {
-                      const selectedMat = materials.find(m => m.id === newPurchase.material_id);
-                      const unitLabel = UNITS.find(u => u.value === selectedMat?.purchase_unit)?.label || selectedMat?.purchase_unit;
-                      return unitLabel ? <span className="text-muted-foreground ml-1">({unitLabel}s)</span> : null;
-                    })()}
-                  </Label>
+                  <Label className="text-xs">Unidad de compra</Label>
+                  <Select value={newPurchase.purchase_unit} onValueChange={(v) => setNewPurchase(p => ({ ...p, purchase_unit: v }))}>
+                    <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Precio de la presentación</Label>
+                  <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.presentation_price} onChange={(e) => setNewPurchase(p => ({ ...p, presentation_price: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Cantidad de presentaciones</Label>
                   <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Precio total</Label>
-                  <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.total_paid} onChange={(e) => setNewPurchase(p => ({ ...p, total_paid: e.target.value }))} />
+                  <Label className="text-xs">Monto total</Label>
+                  <div className="h-9 flex items-center px-3 rounded-md border bg-muted text-sm font-semibold">
+                    {purchaseTotalPaid !== null ? fmt(purchaseTotalPaid) : '-'}
+                  </div>
                 </div>
               </div>
               <div className="space-y-1">
@@ -533,7 +556,7 @@ export function MaterialsManager() {
 
               {/* Auto cost per unit */}
               <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-                <span className="text-sm">Costo unitario:</span>
+                <span className="text-sm">Costo por presentación:</span>
                 <span className="text-lg font-bold text-primary">
                   {purchaseCostPerUnit !== null ? fmt(purchaseCostPerUnit) : '-'}
                 </span>
