@@ -204,7 +204,7 @@ export default function Finances() {
               Finanzas del Negocio
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Registra tus ingresos y gastos
+              Control de ingresos y gastos del mes actual
             </p>
           </div>
           <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
