@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logoDecocontrol from '@/assets/logo-decocontrol.png';
 import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,12 +61,8 @@ export function Navigation() {
   const NavContent = () =>
   <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-5 pb-6">
-        
-
-
-
-
+      <div className="p-4 pb-4 flex justify-center">
+        <img src={logoDecocontrol} alt="DecoControl" className="h-12 object-contain" />
 
       </div>
 
