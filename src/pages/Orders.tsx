@@ -203,11 +203,58 @@ export default function Orders() {
     const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
     await saveQuote(updatedQuote);
 
+    if (user && newStatus === 'approved') {
+      // Deduct materials from inventory based on quote materials
+      try {
+        // Get user's inventory materials
+        const { data: inventoryMaterials } = await supabase
+          .from('user_materials')
+          .select('id, name')
+          .eq('user_id', user.id);
+
+        if (inventoryMaterials && quote.materials.length > 0) {
+          const deductions = quote.materials
+            .map(qm => {
+              const match = inventoryMaterials.find(
+                im => im.name.toLowerCase() === qm.name.toLowerCase()
+              );
+              if (match) {
+                return {
+                  user_id: user.id,
+                  quote_id: quote.id,
+                  material_id: match.id,
+                  quantity_deducted: qm.quantity,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+
+          if (deductions.length > 0) {
+            await supabase.from('stock_deductions').insert(deductions);
+          }
+        }
+      } catch (e) {
+        console.error('Error deducting materials:', e);
+      }
+    } else if (user && newStatus === 'pending') {
+      // Revert: remove deductions for this quote
+      try {
+        await supabase
+          .from('stock_deductions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('quote_id', quote.id);
+      } catch (e) {
+        console.error('Error reverting deductions:', e);
+      }
+    }
+
     toast({
       title: newStatus === 'approved' ? "Pedido aprobado" : "Pedido pendiente",
       description: newStatus === 'approved'
-        ? `"${quote.clientName}" aprobado`
-        : `"${quote.clientName}" revertido a pendiente`,
+        ? `"${quote.clientName}" aprobado - materiales descontados del inventario`
+        : `"${quote.clientName}" revertido a pendiente - materiales restaurados`,
     });
   };
 
