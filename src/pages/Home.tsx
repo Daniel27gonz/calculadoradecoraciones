@@ -44,25 +44,26 @@ export default function Home() {
     return currency?.symbol || '$';
   }, [profile?.currency]);
 
-  const { totalRevenue, totalCosts, profit } = useMemo(() => {
+  const { totalIncome, totalExpenses, balance } = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
-    let revenue = 0;
-    let costs = 0;
-    quotes
-      .filter((q) => {
-        if (!q.eventDate) return false;
-        const [y, m] = q.eventDate.split('-');
-        return parseInt(y) === currentYear && parseInt(m) === currentMonth;
-      })
-      .forEach((quote) => {
-        const c = calculateCosts(quote);
-        revenue += c.finalPrice;
-        costs += c.totalCost;
-      });
-    return { totalRevenue: revenue, totalCosts: costs, profit: revenue - costs };
-  }, [quotes, calculateCosts]);
+    
+    const currentMonthTx = transactions.filter(t => {
+      const [y, m] = t.transaction_date.split('-');
+      return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+    });
+
+    const income = currentMonthTx
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    const expenses = currentMonthTx
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return { totalIncome: income, totalExpenses: expenses, balance: income - expenses };
+  }, [transactions]);
 
 
   const pendingQuotes = useMemo(() => {
@@ -163,26 +164,26 @@ export default function Home() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
+           <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
               <div className="flex items-center gap-2 mb-1">
                 <DollarSign className="w-4 h-4 text-profit-high" />
                 <span className="text-xs font-medium text-muted-foreground">Ingresos del mes</span>
               </div>
-              <p className="text-xl font-bold text-profit-high">{formatMoney(totalRevenue)}</p>
+              <p className="text-xl font-bold text-profit-high">{formatMoney(totalIncome)}</p>
             </div>
             <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
               <div className="flex items-center gap-2 mb-1">
                 <CreditCard className="w-4 h-4 text-destructive" />
                 <span className="text-xs font-medium text-muted-foreground">Gastos del mes</span>
               </div>
-              <p className="text-xl font-bold text-destructive">{formatMoney(totalCosts)}</p>
+              <p className="text-xl font-bold text-destructive">{formatMoney(totalExpenses)}</p>
             </div>
-            <div className="bg-profit-medium/10 rounded-xl p-4 border border-profit-medium/20">
+            <div className={`${balance >= 0 ? 'bg-profit-medium/10 border-profit-medium/20' : 'bg-orange-50 border-orange-200'} rounded-xl p-4 border`}>
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="w-4 h-4 text-profit-medium" />
-                <span className="text-xs font-medium text-muted-foreground">Ganancia limpia</span>
+                <TrendingUp className={`w-4 h-4 ${balance >= 0 ? 'text-profit-medium' : 'text-orange-600'}`} />
+                <span className="text-xs font-medium text-muted-foreground">{balance >= 0 ? 'Ganancia' : 'Pérdida'}</span>
               </div>
-              <p className="text-xl font-bold text-profit-medium">{formatMoney(profit)}</p>
+              <p className={`text-xl font-bold ${balance >= 0 ? 'text-profit-medium' : 'text-orange-600'}`}>{formatMoney(balance)}</p>
             </div>
           </div>
           {pendingQuotes.length > 0 && (
