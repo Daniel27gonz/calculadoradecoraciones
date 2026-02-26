@@ -177,7 +177,7 @@ export function Navigation() {
           <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
             <Menu className="w-6 h-6 text-foreground" />
           </button>
-          <span className="font-display text-lg font-semibold text-foreground flex-1">Deco Control</span>
+          <img src={logoDecocontrol} alt="DecoControl" className="h-8 object-contain flex-1" />
           {user &&
           <Link to="/settings" className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-rose-light">
               <User className="w-4 h-4 text-rose-dark" />
