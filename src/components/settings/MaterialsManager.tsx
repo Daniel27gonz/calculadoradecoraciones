@@ -331,15 +331,6 @@ export function MaterialsManager() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">Unidad</Label>
-                <Select value={newMaterial.purchase_unit} onValueChange={(v) => setNewMaterial(p => ({ ...p, purchase_unit: v }))}>
-                  <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
                 <Label className="text-xs">Stock mínimo</Label>
                 <Input
                   type="number"
