@@ -18,7 +18,7 @@ const sidebarItems: SidebarItem[] = [
 { path: '/', icon: Home, label: 'Inicio' },
 {
   icon: Calculator,
-  label: 'Cotizar',
+  label: 'Calcular',
   submenu: [
   { path: '/calculator', icon: FilePlus, label: 'Nueva Cotización' },
   { path: '/packages', icon: PackageOpen, label: 'Paquete' }]
