@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoDecocontrol from '@/assets/logo-decocontrol.png';
-import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, Palette } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, Palette, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -139,6 +139,20 @@ export function Navigation() {
 
       {/* Bottom section */}
       <div className="px-3 pb-4 space-y-1 border-t border-border pt-3 mt-2">
+        {isAdmin && (
+          <Link
+            to="/admin/database"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              location.pathname === '/admin/database' ?
+              "bg-rose-light text-primary shadow-sm" :
+              "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            )}>
+              <Database className="w-5 h-5 flex-shrink-0" />
+              <span>Database</span>
+            </Link>
+        )}
         {bottomItems.map(({ path, icon: Icon, label }) => {
         const isActive = location.pathname === path;
         return (
@@ -152,11 +166,9 @@ export function Navigation() {
               "bg-rose-light text-primary shadow-sm" :
               "text-muted-foreground hover:text-foreground hover:bg-muted/60"
             )}>
-
               <Icon className="w-5 h-5 flex-shrink-0" />
               <span>{label}</span>
             </Link>);
-
       })}
         <button
         onClick={() => {handleSignOut();setMobileOpen(false);}}
