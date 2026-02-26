@@ -582,46 +582,48 @@ export function MaterialsManager() {
               Stock real = Total comprado − Usado en pedidos confirmados
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {materials.length > 0 ? (
-              <div className="space-y-2">
-                {materials.map(m => {
-                  const totalDeducted = deductions[m.id] || 0;
-                  const stockReal = m.total_purchased - totalDeducted;
-                  const isLow = stockReal <= m.stock_minimum;
-                  const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-3 font-medium text-xs text-muted-foreground w-12">#</th>
+                      <th className="text-left p-3 font-medium text-xs text-muted-foreground">Descripción</th>
+                      <th className="text-left p-3 font-medium text-xs text-muted-foreground">Unidad</th>
+                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Existencia</th>
+                      <th className="text-center p-3 font-medium text-xs text-muted-foreground">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {materials.map((m, index) => {
+                      const totalDeducted = deductions[m.id] || 0;
+                      const stockReal = m.total_purchased - totalDeducted;
+                      const isLow = stockReal <= m.stock_minimum;
+                      const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
 
-                  return (
-                    <div key={m.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm truncate">{m.name}</p>
-                          <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
-                            {isLow ? (
-                              <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
-                            ) : (
-                              <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
-                            )}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {CATEGORIES.find(c => c.value === m.category)?.label || m.category} · {unitLabel}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className={`text-lg font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
-                          {stockReal}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground leading-tight">
-                          {m.total_purchased} compr. − {totalDeducted} usados
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          mín: {m.stock_minimum}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                      return (
+                        <tr key={m.id} className="border-b last:border-0 hover:bg-muted/30">
+                          <td className="p-3 text-muted-foreground">{index + 1}</td>
+                          <td className="p-3 font-medium">{m.name}</td>
+                          <td className="p-3 text-muted-foreground">{unitLabel}</td>
+                          <td className={`p-3 text-right font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
+                            {stockReal}
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                              {isLow ? (
+                                <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
+                              ) : (
+                                <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
+                              )}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <div className="text-center py-6 text-muted-foreground">
