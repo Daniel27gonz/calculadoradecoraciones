@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,7 +23,14 @@ const sidebarItems: SidebarItem[] = [
       { path: '/packages', icon: PackageOpen, label: 'Paquete' },
     ],
   },
-  
+  {
+    icon: Package,
+    label: 'Inventario',
+    submenu: [
+      { path: '/inventory/consumables', icon: Droplets, label: 'Materiales de Consumo' },
+      { path: '/inventory/reusables', icon: Wrench, label: 'Material Reutilizable' },
+    ],
+  },
   { path: '/history', icon: History, label: 'Historial' },
   { path: '/finances', icon: Wallet, label: 'Finanzas' },
   { path: '/orders', icon: Calendar, label: 'Agenda' },
@@ -39,7 +46,7 @@ export function Navigation() {
   const { user, profile, signOut, isAdmin } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [cotizarOpen, setCotizarOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   if (location.pathname === '/auth') {
     return null;
@@ -72,7 +79,7 @@ export function Navigation() {
             return (
               <div key={label}>
                 <button
-                  onClick={() => setCotizarOpen(!cotizarOpen)}
+                  onClick={() => setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }))}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full",
                     isSubActive
@@ -82,9 +89,9 @@ export function Navigation() {
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span>{label}</span>
-                  <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform duration-200", cotizarOpen && "rotate-90")} />
+                  <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform duration-200", openMenus[label] && "rotate-90")} />
                 </button>
-                {cotizarOpen && (
+                {openMenus[label] && (
                   <div className="ml-4 mt-1 space-y-1">
                     {submenu.map(({ path: subPath, icon: SubIcon, label: subLabel }) => {
                       const isActive = location.pathname === subPath;
