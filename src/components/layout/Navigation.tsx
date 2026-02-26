@@ -20,7 +20,7 @@ const sidebarItems: SidebarItem[] = [
   icon: Calculator,
   label: 'Calcular',
   submenu: [
-  { path: '/indirect-expenses', icon: Receipt, label: 'Gastos Indirectos' },
+  { path: '/indirect-expenses', icon: Receipt, label: 'Gastos del Mes' },
   { path: '/calculator', icon: FilePlus, label: 'Nueva Cotización' },
   { path: '/packages', icon: PackageOpen, label: 'Paquete' }]
 
