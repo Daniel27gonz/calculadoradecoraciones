@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -42,6 +42,11 @@ interface Filters {
   type: string;
 }
 
+interface QuoteStats {
+  totalQuotes: number;
+  paidQuotes: number;
+}
+
 export default function Finances() {
   const navigate = useNavigate();
   const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
@@ -50,6 +55,7 @@ export default function Finances() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [quoteStats, setQuoteStats] = useState<QuoteStats>({ totalQuotes: 0, paidQuotes: 0 });
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
@@ -81,6 +87,7 @@ export default function Finances() {
   useEffect(() => {
     if (user) {
       fetchTransactions();
+      fetchQuoteStats();
     }
   }, [user]);
 
@@ -107,6 +114,34 @@ export default function Finances() {
       });
     } finally {
       setLoadingTransactions(false);
+    }
+  };
+
+  const fetchQuoteStats = async () => {
+    try {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      const endDate = currentMonth === 12
+        ? `${currentYear + 1}-01-01`
+        : `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+
+      const { data: allQuotes, error: err1 } = await supabase
+        .from('quotes')
+        .select('id, status, created_at')
+        .eq('user_id', user?.id)
+        .gte('created_at', startDate)
+        .lt('created_at', endDate);
+
+      if (err1) throw err1;
+
+      const total = allQuotes?.length || 0;
+      const paid = allQuotes?.filter(q => q.status === 'delivered' || q.status === 'approved').length || 0;
+
+      setQuoteStats({ totalQuotes: total, paidQuotes: paid });
+    } catch (error) {
+      console.error('Error fetching quote stats:', error);
     }
   };
 
@@ -260,6 +295,39 @@ export default function Finances() {
                   <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quote Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="bg-purple-50 border-purple-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-full">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">Cotizaciones Realizadas</p>
+                  <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
+                  <p className="text-xs text-purple-500">Este mes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-emerald-50 border-emerald-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 rounded-full">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-emerald-600 font-medium">Cotizaciones Pagadas</p>
+                  <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
+                  <p className="text-xs text-emerald-500">Este mes</p>
                 </div>
               </div>
             </CardContent>
