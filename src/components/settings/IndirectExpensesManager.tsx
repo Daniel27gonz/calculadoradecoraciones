@@ -136,7 +136,17 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     setExpenses(expenses.filter(e => e.id !== id));
   };
 
-  const total = expenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const currentMonthExpenses = expenses.filter(e => {
+    if (!e.paymentDate) return false;
+    const [y, m] = e.paymentDate.split('-');
+    return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+  });
+
+  const total = currentMonthExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
