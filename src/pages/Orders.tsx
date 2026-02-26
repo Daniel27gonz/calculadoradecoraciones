@@ -476,7 +476,7 @@ export default function Orders() {
 
                     {/* Expandable Deposits Section */}
                     {isExpanded && (
-                      <div className="pt-3 border-t border-border space-y-3">
+                      <div className="pt-3 border-t border-border space-y-3 animate-fade-in">
                         {/* Quote details */}
                         <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
                           <div className="flex justify-between">
