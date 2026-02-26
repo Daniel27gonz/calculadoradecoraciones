@@ -1,11 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, User, Globe, LogOut, Calendar } from 'lucide-react';
+import { ArrowLeft, User, Globe, LogOut, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { MaterialsManager } from '@/components/settings/MaterialsManager';
@@ -14,21 +12,7 @@ import { ReusableMaterialsManager } from '@/components/settings/ReusableMaterial
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { defaultHourlyRate, setDefaultHourlyRate } = useQuote();
   const { user, profile, updateProfile, signOut } = useAuth();
-  const { toast } = useToast();
-
-  const handleRateChange = (value: number) => {
-    setDefaultHourlyRate(value);
-    if (user && profile) {
-      updateProfile({ default_hourly_rate: value });
-    } else {
-      toast({
-        title: "Guardado",
-        description: "Tu tarifa por hora ha sido actualizada",
-      });
-    }
-  };
 
   const handleCurrencyChange = (currencyCode: string) => {
     if (user && profile) {
@@ -124,39 +108,6 @@ export default function Settings() {
                 Moneda actual: {currentCurrency.flag} {currentCurrency.name} ({currentCurrency.symbol})
               </p>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Default Hourly Rate */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-rose-dark" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Tarifa por hora</CardTitle>
-                <CardDescription>
-                  Tu tarifa predeterminada para nuevas cotizaciones
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <span className="text-2xl text-muted-foreground">
-                {currentCurrency?.symbol || '$'}
-              </span>
-              <Input
-                type="number"
-                min="0"
-                value={defaultHourlyRate ?? ''}
-                onChange={(e) => handleRateChange(e.target.value === '' ? 0 : Number(e.target.value))}
-                placeholder=""
-                className="text-2xl font-bold h-14 w-32"
-              />
-              <span className="text-muted-foreground">por hora</span>
-            </div>
           </CardContent>
         </Card>
 
