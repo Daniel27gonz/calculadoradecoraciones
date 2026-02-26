@@ -91,24 +91,22 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
   return (
     <div className="flex flex-wrap items-center gap-2">
       {/* Type Filter */}
-      <Select value={filters.type || 'all_types'} onValueChange={(v) => handleChange('type', v === 'all_types' ? '' : v)}>
-        <SelectTrigger className="h-9 w-auto min-w-[130px] rounded-full border-border bg-background text-sm">
-          <SelectValue placeholder="Todos los tipos" />
+      <Select value={filters.type || undefined} onValueChange={(v) => handleChange('type', v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
+          <SelectValue placeholder="Tipo" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
-          <SelectItem value="all_types">Todos los tipos</SelectItem>
           <SelectItem value="income">Ingresos</SelectItem>
           <SelectItem value="expense">Gastos</SelectItem>
         </SelectContent>
       </Select>
 
       {/* Category Filter */}
-      <Select value={filters.category || 'all_categories'} onValueChange={(v) => handleChange('category', v === 'all_categories' ? '' : v)}>
-        <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-full border-border bg-background text-sm">
+      <Select value={filters.category || undefined} onValueChange={(v) => handleChange('category', v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[120px] rounded-full border-border bg-background text-sm">
           <SelectValue placeholder="Categoría" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
-          <SelectItem value="all_categories">Todas las categorías</SelectItem>
           {categories.map((cat) => (
             <SelectItem key={cat} value={cat}>
               {cat}
@@ -118,12 +116,11 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       </Select>
 
       {/* Month Filter */}
-      <Select value={filters.month || 'all_months'} onValueChange={(v) => handleChange('month', v === 'all_months' ? '' : v)}>
-        <SelectTrigger className="h-9 w-auto min-w-[130px] rounded-full border-border bg-background text-sm">
+      <Select value={filters.month || undefined} onValueChange={(v) => handleChange('month', v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
           <SelectValue placeholder="Mes" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
-          <SelectItem value="all_months">Todos los meses</SelectItem>
           {MONTHS.map((month) => (
             <SelectItem key={month.value} value={month.value}>
               {month.label}
@@ -133,12 +130,11 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       </Select>
 
       {/* Year Filter */}
-      <Select value={filters.year || 'all_years'} onValueChange={(v) => handleChange('year', v === 'all_years' ? '' : v)}>
-        <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
+      <Select value={filters.year || undefined} onValueChange={(v) => handleChange('year', v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[80px] rounded-full border-border bg-background text-sm">
           <SelectValue placeholder="Año" />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
-          <SelectItem value="all_years">Todos los años</SelectItem>
           {years.map((year) => (
             <SelectItem key={year} value={year}>
               {year}
