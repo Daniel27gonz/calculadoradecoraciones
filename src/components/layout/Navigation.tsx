@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoDecocontrol from '@/assets/logo-decocontrol.png';
-import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, FileDown, Database } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, FileDown, Database, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,6 +20,7 @@ const sidebarItems: SidebarItem[] = [
   icon: Calculator,
   label: 'Calcular',
   submenu: [
+  { path: '/indirect-expenses', icon: Receipt, label: 'Gastos Indirectos' },
   { path: '/calculator', icon: FilePlus, label: 'Nueva Cotización' },
   { path: '/packages', icon: PackageOpen, label: 'Paquete' }]
 
