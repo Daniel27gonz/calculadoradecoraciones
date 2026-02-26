@@ -29,13 +29,22 @@ export default function Home() {
   }, [profile?.currency]);
 
   const { totalRevenue, totalCosts, profit } = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
     let revenue = 0;
     let costs = 0;
-    quotes.forEach((quote) => {
-      const c = calculateCosts(quote);
-      revenue += c.finalPrice;
-      costs += c.totalCost;
-    });
+    quotes
+      .filter((q) => {
+        if (!q.eventDate) return false;
+        const [y, m] = q.eventDate.split('-');
+        return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+      })
+      .forEach((quote) => {
+        const c = calculateCosts(quote);
+        revenue += c.finalPrice;
+        costs += c.totalCost;
+      });
     return { totalRevenue: revenue, totalCosts: costs, profit: revenue - costs };
   }, [quotes, calculateCosts]);
 
