@@ -554,6 +554,15 @@ export default function Orders() {
                             <CircleCheck className="w-4 h-4 mr-1" /> Marcar pago completo
                           </Button>
                         )}
+
+                        {/* Entregado button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          Entregado
+                        </Button>
                       </div>
                     )}
                   </CardContent>
