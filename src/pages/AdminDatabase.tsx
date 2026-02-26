@@ -8,7 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Clock, Database, RefreshCw, Users, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Database, RefreshCw, Users, Search, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface UserProfile {
   id: string;
@@ -161,6 +172,32 @@ export default function AdminDatabase() {
     }
   };
 
+  const deleteUser = async (userId: string, userEmail: string) => {
+    setUpdatingUser(userId);
+    try {
+      // Delete from user_approval_status, profiles, and related data
+      await supabase.from('user_approval_status').delete().eq('user_id', userId);
+      await supabase.from('user_roles').delete().eq('user_id', userId);
+      await supabase.from('profiles').delete().eq('user_id', userId);
+
+      toast({
+        title: "Usuario eliminado",
+        description: `${userEmail} ha sido eliminado del sistema.`
+      });
+
+      setUsers(prev => prev.filter(u => u.user_id !== userId));
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el usuario.",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -279,27 +316,57 @@ export default function AdminDatabase() {
                           {formatDate(userItem.status_updated_at)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-1">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              className="text-green-600 border-green-600 hover:bg-green-50 text-xs px-2"
                               onClick={() => updateUserStatus(userItem.user_id, 'approved')}
                               disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
                             >
-                              <CheckCircle className="w-4 h-4 mr-1" />
+                              <CheckCircle className="w-3.5 h-3.5 mr-1" />
                               Aprobar
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              className="text-red-600 border-red-600 hover:bg-red-50 text-xs px-2"
                               onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
                               disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
                             >
-                              <XCircle className="w-4 h-4 mr-1" />
+                              <XCircle className="w-3.5 h-3.5 mr-1" />
                               Rechazar
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-destructive border-destructive hover:bg-destructive/10 text-xs px-2"
+                                  disabled={updatingUser === userItem.user_id}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                  Eliminar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Se eliminará a <strong>{userItem.email}</strong> del sistema. Esta acción no se puede deshacer.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteUser(userItem.user_id, userItem.email)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -324,27 +391,57 @@ export default function AdminDatabase() {
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Creado: {formatDate(userItem.created_at)}</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 min-w-0 text-green-600 border-green-600 hover:bg-green-50"
+                        className="flex-1 text-green-600 border-green-600 hover:bg-green-50 text-xs"
                         onClick={() => updateUserStatus(userItem.user_id, 'approved')}
                         disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
                       >
                         <CheckCircle className="w-4 h-4 mr-1 shrink-0" />
-                        <span className="truncate">Aprobar</span>
+                        Aprobar
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 min-w-0 text-red-600 border-red-600 hover:bg-red-50"
+                        className="flex-1 text-red-600 border-red-600 hover:bg-red-50 text-xs"
                         onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
                         disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
                       >
                         <XCircle className="w-4 h-4 mr-1 shrink-0" />
-                        <span className="truncate">Rechazar</span>
+                        Rechazar
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-destructive border-destructive hover:bg-destructive/10 text-xs"
+                            disabled={updatingUser === userItem.user_id}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1 shrink-0" />
+                            Eliminar
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Se eliminará a <strong>{userItem.email}</strong> del sistema. Esta acción no se puede deshacer.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteUser(userItem.user_id, userItem.email)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ))}
