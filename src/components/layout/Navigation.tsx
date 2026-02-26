@@ -35,7 +35,7 @@ const sidebarItems: SidebarItem[] = [
 },
 { path: '/history', icon: History, label: 'Historial' },
 { path: '/design', icon: FileDown, label: 'Cotización (PDF)' },
-{ path: '/finances', icon: Wallet, label: 'Finanzas' },
+{ path: '/finances', icon: Wallet, label: 'Mi Dinero' },
 { path: '/orders', icon: Calendar, label: 'Agenda' }];
 
 
