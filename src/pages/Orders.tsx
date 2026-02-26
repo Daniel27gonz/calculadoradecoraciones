@@ -307,27 +307,6 @@ export default function Orders() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="cursor-pointer" onClick={() => setStatusFilter('all')}>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{quotes.length}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer border-yellow-500/30" onClick={() => setStatusFilter('pending')}>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-              <p className="text-xs text-muted-foreground">Pendientes</p>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer border-green-500/30" onClick={() => setStatusFilter('approved')}>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{approvedCount}</p>
-              <p className="text-xs text-muted-foreground">Aprobados</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Calendar Toggle */}
         <div className="flex justify-end">
@@ -352,13 +331,6 @@ export default function Orders() {
 
         {/* Filters */}
         <div className="space-y-3">
-          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-            <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">Todos</TabsTrigger>
-              <TabsTrigger value="pending" className="flex-1">Pendientes</TabsTrigger>
-              <TabsTrigger value="approved" className="flex-1">Aprobados</TabsTrigger>
-            </TabsList>
-          </Tabs>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
