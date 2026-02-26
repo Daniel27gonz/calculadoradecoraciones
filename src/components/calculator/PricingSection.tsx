@@ -43,13 +43,22 @@ export function PricingSection({
   const { user, profile } = useAuth();
   const [indirectExpensesTotal, setIndirectExpensesTotal] = useState(0);
 
-  // Load indirect expenses total for display purposes
+  // Load indirect expenses total for display purposes (only current month)
   useEffect(() => {
     if (user) {
       const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
       if (stored) {
-        const expenses = JSON.parse(stored);
-        const total = expenses.reduce((sum: number, e: { monthlyAmount: number }) => sum + (e.monthlyAmount || 0), 0);
+        const expenses = JSON.parse(stored) as { monthlyAmount: number; paymentDate?: string }[];
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const total = expenses
+          .filter(e => {
+            if (!e.paymentDate) return false;
+            const [y, m] = e.paymentDate.split('-');
+            return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+          })
+          .reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
         setIndirectExpensesTotal(total);
       }
     }
