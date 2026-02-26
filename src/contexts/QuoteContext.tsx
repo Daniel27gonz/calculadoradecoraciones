@@ -377,8 +377,16 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     if (user) {
       const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
       if (stored) {
-        const expenses = JSON.parse(stored);
-        const totalMonthly = expenses.reduce((sum: number, e: { monthlyAmount: number }) => sum + (e.monthlyAmount || 0), 0);
+        const expenses = JSON.parse(stored) as { monthlyAmount: number; paymentDate?: string }[];
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentMonthExpenses = expenses.filter(e => {
+          if (!e.paymentDate) return false;
+          const [y, m] = e.paymentDate.split('-');
+          return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+        });
+        const totalMonthly = currentMonthExpenses.reduce((sum: number, e) => sum + (e.monthlyAmount || 0), 0);
         const eventsPerMonth = profile?.events_per_month || 4;
         indirectExpenses = eventsPerMonth > 0 ? totalMonthly / eventsPerMonth : 0;
       }
