@@ -508,13 +508,8 @@ export function MaterialsManager() {
   }
 
   return (
-    <Tabs defaultValue="materials" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="materials" className="gap-1 text-xs sm:text-sm">
-          <Package className="w-4 h-4" />
-          <span className="hidden sm:inline">Materiales</span>
-          <span className="sm:hidden">Mat.</span>
-        </TabsTrigger>
+    <Tabs defaultValue="purchases" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm">
           <ShoppingCart className="w-4 h-4" />
           <span className="hidden sm:inline">Compras</span>
@@ -527,160 +522,52 @@ export function MaterialsManager() {
         </TabsTrigger>
       </TabsList>
 
-      {/* ===== TAB MATERIALES ===== */}
-      <TabsContent value="materials" className="space-y-4 mt-4">
-        {/* Add material form */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Nuevo Material</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Edit material dialog (kept for editing from other places) */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-background">
+          <DialogHeader><DialogTitle>Editar Material</DialogTitle></DialogHeader>
+          {editingMaterial && (
+            <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Nombre</Label>
-                <Input
-                  placeholder="Ej: Globo R12 Rosa"
-                  value={newMaterial.name}
-                  onChange={(e) => setNewMaterial(p => ({ ...p, name: e.target.value }))}
-                />
+                <Input value={editingMaterial.name} onChange={(e) => setEditingMaterial(p => p ? { ...p, name: e.target.value } : null)} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Categoría</Label>
-                <Select value={newMaterial.category} onValueChange={(v) => setNewMaterial(p => ({ ...p, category: v }))}>
-                  <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                <Select value={editingMaterial.category} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, category: v } : null)}>
+                  <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-background z-50">
                     {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Stock mínimo</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={newMaterial.stock_minimum || ''}
-                  onChange={(e) => setNewMaterial(p => ({ ...p, stock_minimum: Number(e.target.value) || 0 }))}
-                />
-              </div>
-            </div>
-            <Button onClick={handleAddMaterial} className="w-full" variant="gradient" size="sm">
-              <Plus className="w-4 h-4 mr-1" /> Agregar Material
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar material..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Materials list */}
-        {loading ? (
-          <div className="text-center py-6 text-muted-foreground text-sm">Cargando...</div>
-        ) : filteredMaterials.length > 0 ? (
-          <div className="space-y-2">
-            {filteredMaterials.map((m) => {
-              const isLow = m.total_purchased <= m.stock_minimum;
-              return (
-                <Card key={m.id} className="overflow-hidden">
-                  <div className="flex items-center p-3 gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">{m.name}</p>
-                        <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
-                          {isLow ? (
-                            <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
-                          ) : (
-                            <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
-                          )}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {CATEGORIES.find(c => c.value === m.category)?.label || m.category} · {UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit}
-                      </p>
-                      <p className="text-xs mt-1">
-                        Stock: <span className={`font-semibold ${isLow ? 'text-destructive' : 'text-foreground'}`}>{m.total_purchased}</span>
-                        <span className="text-muted-foreground"> / mín: {m.stock_minimum}</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => openQuickPurchase(m)}>
-                        <ShoppingCart className="w-3.5 h-3.5" /> Compra
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingMaterial({ ...m }); setEditDialogOpen(true); }}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteMaterial(m.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <Package className="w-10 h-10 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No hay materiales registrados</p>
-          </div>
-        )}
-
-        {/* Edit material dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="bg-background">
-            <DialogHeader><DialogTitle>Editar Material</DialogTitle></DialogHeader>
-            {editingMaterial && (
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Nombre</Label>
-                  <Input value={editingMaterial.name} onChange={(e) => setEditingMaterial(p => p ? { ...p, name: e.target.value } : null)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Categoría</Label>
-                  <Select value={editingMaterial.category} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, category: v } : null)}>
+                  <Label className="text-xs">Unidad</Label>
+                  <Select value={editingMaterial.purchase_unit} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, purchase_unit: v } : null)}>
                     <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-background z-50">
-                      {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                      {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Unidad</Label>
-                    <Select value={editingMaterial.purchase_unit} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, purchase_unit: v } : null)}>
-                      <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Stock mínimo</Label>
-                    <Input type="number" min="0" value={editingMaterial.stock_minimum || ''} onChange={(e) => setEditingMaterial(p => p ? { ...p, stock_minimum: Number(e.target.value) || 0 } : null)} />
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-muted text-sm">
-                  <span className="text-muted-foreground">Stock actual (automático): </span>
-                  <span className="font-bold">{editingMaterial.total_purchased}</span>
+                <div className="space-y-1">
+                  <Label className="text-xs">Stock mínimo</Label>
+                  <Input type="number" min="0" value={editingMaterial.stock_minimum || ''} onChange={(e) => setEditingMaterial(p => p ? { ...p, stock_minimum: Number(e.target.value) || 0 } : null)} />
                 </div>
               </div>
-            )}
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-              <Button variant="gradient" onClick={handleUpdateMaterial}>Guardar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </TabsContent>
+              <div className="p-3 rounded-lg bg-muted text-sm">
+                <span className="text-muted-foreground">Stock actual (automático): </span>
+                <span className="font-bold">{editingMaterial.total_purchased}</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button variant="gradient" onClick={handleUpdateMaterial}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== TAB COMPRAS ===== */}
       <TabsContent value="purchases" className="space-y-4 mt-4">
