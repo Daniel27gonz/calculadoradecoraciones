@@ -430,8 +430,7 @@ export default function Orders() {
                           className="h-9 gap-1"
                           onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
                         >
-                          <DollarSign className="w-4 h-4" />
-                          <span className="text-xs hidden xs:inline">Anticipos</span>
+                          <span className="text-xs">Registrar</span>
                           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </Button>
                       </div>
