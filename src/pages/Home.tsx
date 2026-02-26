@@ -30,7 +30,7 @@ export default function Home() {
   const { totalRevenue, totalCosts, profit } = useMemo(() => {
     let revenue = 0;
     let costs = 0;
-    quotes.forEach(quote => {
+    quotes.forEach((quote) => {
       const c = calculateCosts(quote);
       revenue += c.finalPrice;
       costs += c.totalCost;
@@ -41,18 +41,18 @@ export default function Home() {
   // Get upcoming events from quotes with event_date
   const upcomingEvents = useMemo(() => {
     const now = new Date();
-    return quotes
-      .filter(q => q.eventDate && new Date(q.eventDate) >= now)
-      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-      .slice(0, 4);
+    return quotes.
+    filter((q) => q.eventDate && new Date(q.eventDate) >= now).
+    sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()).
+    slice(0, 4);
   }, [quotes]);
 
   const pendingQuotes = useMemo(() => {
-    return quotes.filter(q => q.status === 'pending');
+    return quotes.filter((q) => q.status === 'pending');
   }, [quotes]);
 
   const formatMoney = (n: number) =>
-    `${currencySymbol}${n.toLocaleString('es-LA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  `${currencySymbol}${n.toLocaleString('es-LA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   if (loading) {
     return (
@@ -61,8 +61,8 @@ export default function Home() {
           <div className="text-4xl mb-4 animate-bounce">🎈</div>
           <p className="text-muted-foreground">Cargando...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!user) return null;
@@ -84,9 +84,9 @@ export default function Home() {
         <p className="text-muted-foreground mt-1">
           Tu centro de control para tu negocio de decoración
         </p>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Hoy es {today} · {quotes.length} cotizaciones totales
-        </p>
+        
+
+
       </div>
 
       {/* Main grid */}
@@ -128,15 +128,15 @@ export default function Home() {
                 </div>
               </div>
               {/* Pagos pendientes */}
-              {pendingQuotes.length > 0 && (
-                <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3 border border-border">
+              {pendingQuotes.length > 0 &&
+              <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3 border border-border">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-profit-medium" />
                     <span className="text-sm font-medium">Pagos pendientes</span>
                   </div>
                   <span className="text-sm font-bold">{pendingQuotes.length} cotizaciones</span>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
 
@@ -147,19 +147,19 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {pendingQuotes.length > 0 && (
-                  <div className="flex items-center justify-between">
+                {pendingQuotes.length > 0 &&
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-7 h-7 rounded-full bg-profit-medium/15 flex items-center justify-center text-sm">⚠️</span>
                       <span className="text-sm">{pendingQuotes.length} cotizaciones pendientes</span>
                     </div>
                     <Link to="/history" className="text-xs text-primary font-medium hover:underline">Ver →</Link>
                   </div>
-                )}
+                }
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full bg-accent/40 flex items-center justify-center text-sm">📊</span>
-                    <span className="text-sm">Margen promedio: {totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0}%</span>
+                    <span className="text-sm">Margen promedio: {totalRevenue > 0 ? Math.round(profit / totalRevenue * 100) : 0}%</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -168,9 +168,9 @@ export default function Home() {
                     <span className="text-sm">Ingresos proyectados: {formatMoney(totalRevenue)}</span>
                   </div>
                 </div>
-                {quotes.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic">Crea tu primera cotización para ver alertas aquí.</p>
-                )}
+                {quotes.length === 0 &&
+                <p className="text-sm text-muted-foreground italic">Crea tu primera cotización para ver alertas aquí.</p>
+                }
               </div>
             </CardContent>
           </Card>
@@ -185,12 +185,12 @@ export default function Home() {
               <CardTitle className="text-lg">Próximos Eventos</CardTitle>
             </CardHeader>
             <CardContent>
-              {upcomingEvents.length > 0 ? (
-                <div className="space-y-3">
+              {upcomingEvents.length > 0 ?
+              <div className="space-y-3">
                   {upcomingEvents.map((event) => {
-                    const costs = calculateCosts(event);
-                    return (
-                      <div key={event.id} className="flex items-start justify-between gap-2 border-b border-border pb-3 last:border-0 last:pb-0">
+                  const costs = calculateCosts(event);
+                  return (
+                    <div key={event.id} className="flex items-start justify-between gap-2 border-b border-border pb-3 last:border-0 last:pb-0">
                         <div className="flex items-start gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-accent/40 flex items-center justify-center text-xs font-bold flex-shrink-0">
                             {format(new Date(event.eventDate), 'dd')}
@@ -203,22 +203,22 @@ export default function Home() {
                         <div className="text-right">
                           <p className="text-sm font-bold">{formatMoney(costs.finalPrice)}</p>
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                            event.status === 'approved' ? 'bg-profit-high/15 text-profit-high' : 'bg-profit-medium/15 text-profit-medium'
-                          }`}>
+                        event.status === 'approved' ? 'bg-profit-high/15 text-profit-high' : 'bg-profit-medium/15 text-profit-medium'}`
+                        }>
                             {event.status === 'approved' ? '✔ Confirmado' : 'Pendiente'}
                           </span>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">No hay eventos próximos.</p>
-              )}
+                      </div>);
+
+                })}
+                </div> :
+
+              <p className="text-sm text-muted-foreground italic">No hay eventos próximos.</p>
+              }
               <Link
                 to="/orders"
-                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+
                 Ver Agenda →
               </Link>
             </CardContent>
@@ -232,22 +232,22 @@ export default function Home() {
             <CardContent>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
-                  { to: '/orders', icon: Calendar, label: 'Ver Agenda', color: 'bg-accent/40 text-accent-foreground' },
-                  { to: '/finances', icon: Wallet, label: 'Ver Finanzas', color: 'bg-profit-high/15 text-profit-high' },
-                  { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' },
-                ].map(({ to, icon: Icon, label, color }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
-                  >
+                { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
+                { to: '/orders', icon: Calendar, label: 'Ver Agenda', color: 'bg-accent/40 text-accent-foreground' },
+                { to: '/finances', icon: Wallet, label: 'Ver Finanzas', color: 'bg-profit-high/15 text-profit-high' },
+                { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' }].
+                map(({ to, icon: Icon, label, color }) =>
+                <Link
+                  key={to}
+                  to={to}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card">
+
                     <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-medium text-center leading-tight">{label}</span>
                   </Link>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -256,6 +256,6 @@ export default function Home() {
 
       <InstallPrompt />
       <FirstLoginInstallPrompt />
-    </div>
-  );
+    </div>);
+
 }
