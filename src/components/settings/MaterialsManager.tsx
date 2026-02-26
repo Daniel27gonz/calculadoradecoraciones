@@ -591,6 +591,8 @@ export function MaterialsManager() {
                       <th className="text-left p-3 font-medium text-xs text-muted-foreground w-12">#</th>
                       <th className="text-left p-3 font-medium text-xs text-muted-foreground">Descripción</th>
                       <th className="text-left p-3 font-medium text-xs text-muted-foreground">Unidad</th>
+                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Entrada</th>
+                      <th className="text-right p-3 font-medium text-xs text-muted-foreground">Salida</th>
                       <th className="text-right p-3 font-medium text-xs text-muted-foreground">Existencia</th>
                       <th className="text-center p-3 font-medium text-xs text-muted-foreground">Estado</th>
                     </tr>
@@ -607,6 +609,8 @@ export function MaterialsManager() {
                           <td className="p-3 text-muted-foreground">{index + 1}</td>
                           <td className="p-3 font-medium">{m.name}</td>
                           <td className="p-3 text-muted-foreground">{unitLabel}</td>
+                          <td className="p-3 text-right text-green-600 font-semibold">{m.total_purchased}</td>
+                          <td className="p-3 text-right text-orange-600 font-semibold">{totalDeducted}</td>
                           <td className={`p-3 text-right font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
                             {stockReal}
                           </td>
