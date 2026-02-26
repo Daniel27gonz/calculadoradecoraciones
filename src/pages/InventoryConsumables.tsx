@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Package, Trash2, Pencil, ShoppingCart, AlertTriangle, Search, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -52,22 +52,13 @@ const InventoryConsumables = () => {
   const [materials, setMaterials] = useState<InventoryMaterial[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('inventory');
 
-  // Create material form
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  // Edit material
   const [editingMaterial, setEditingMaterial] = useState<InventoryMaterial | null>(null);
-  const [newMaterial, setNewMaterial] = useState({
-    name: '',
-    category: '',
-    purchase_unit: '',
-    presentation_price: null as number | null,
-    quantity_per_presentation: null as number | null,
-    stock_minimum: 0,
-  });
 
-  // Purchase form
+  // Unified purchase dialog (creates material if new)
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [purchaseMode, setPurchaseMode] = useState<'existing' | 'new'>('existing');
   const [purchase, setPurchase] = useState({
     material_id: '',
     purchase_date: new Date().toISOString().split('T')[0],
@@ -75,6 +66,14 @@ const InventoryConsumables = () => {
     quantity_presentations: 1,
     total_paid: 0,
     notes: '',
+  });
+  const [newMaterial, setNewMaterial] = useState({
+    name: '',
+    category: '',
+    purchase_unit: '',
+    presentation_price: null as number | null,
+    quantity_per_presentation: null as number | null,
+    stock_minimum: 0,
   });
 
   const currentCurrency = getCurrencyByCode(profile?.currency || 'USD');
@@ -93,9 +92,7 @@ const InventoryConsumables = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('name', { ascending: true });
-
       if (error) throw error;
-
       setMaterials(
         (data || []).map((m: any) => ({
           id: m.id,
@@ -130,33 +127,6 @@ const InventoryConsumables = () => {
   };
 
   const formatCurrency = (v: number | null) => (v === null ? '-' : `${sym}${v.toFixed(2)}`);
-
-  // ── Create Material ──
-  const handleCreateMaterial = async () => {
-    if (!user || !newMaterial.name.trim()) {
-      toast({ title: 'Error', description: 'El nombre es requerido', variant: 'destructive' });
-      return;
-    }
-    try {
-      const { error } = await supabase.from('user_materials').insert({
-        user_id: user.id,
-        name: newMaterial.name.trim(),
-        category: newMaterial.category || 'otros',
-        purchase_unit: newMaterial.purchase_unit || null,
-        presentation_price: newMaterial.presentation_price,
-        quantity_per_presentation: newMaterial.quantity_per_presentation,
-        stock_minimum: newMaterial.stock_minimum,
-      });
-      if (error) throw error;
-      toast({ title: 'Material creado', description: 'Se ha registrado correctamente' });
-      setNewMaterial({ name: '', category: '', purchase_unit: '', presentation_price: null, quantity_per_presentation: null, stock_minimum: 0 });
-      setShowCreateDialog(false);
-      loadMaterials();
-    } catch (error) {
-      console.error(error);
-      toast({ title: 'Error', description: 'No se pudo crear el material', variant: 'destructive' });
-    }
-  };
 
   // ── Edit Material ──
   const handleUpdateMaterial = async () => {
@@ -195,24 +165,58 @@ const InventoryConsumables = () => {
     }
   };
 
-  // ── Register Purchase ──
+  // ── Register Purchase (creates material if new) ──
   const handleRegisterPurchase = async () => {
-    if (!user || !purchase.material_id) {
-      toast({ title: 'Error', description: 'Selecciona un material', variant: 'destructive' });
-      return;
+    if (!user) return;
+
+    let materialId = purchase.material_id;
+    let materialQtyPerPres = 1;
+    let materialName = '';
+    let materialStockCurrent = 0;
+
+    if (purchaseMode === 'new') {
+      if (!newMaterial.name.trim()) {
+        toast({ title: 'Error', description: 'El nombre del material es requerido', variant: 'destructive' });
+        return;
+      }
+      // Create material first
+      const { data: created, error: createErr } = await supabase.from('user_materials').insert({
+        user_id: user.id,
+        name: newMaterial.name.trim(),
+        category: newMaterial.category || 'otros',
+        purchase_unit: newMaterial.purchase_unit || null,
+        presentation_price: newMaterial.presentation_price,
+        quantity_per_presentation: newMaterial.quantity_per_presentation,
+        stock_minimum: newMaterial.stock_minimum,
+      }).select('id, quantity_per_presentation, name, stock_current').single();
+      if (createErr || !created) {
+        toast({ title: 'Error', description: 'No se pudo crear el material', variant: 'destructive' });
+        return;
+      }
+      materialId = created.id;
+      materialQtyPerPres = created.quantity_per_presentation || 1;
+      materialName = created.name;
+      materialStockCurrent = created.stock_current ?? 0;
+    } else {
+      if (!materialId) {
+        toast({ title: 'Error', description: 'Selecciona un material', variant: 'destructive' });
+        return;
+      }
+      const mat = materials.find(m => m.id === materialId);
+      if (!mat) return;
+      materialQtyPerPres = mat.quantity_per_presentation || 1;
+      materialName = mat.name;
+      materialStockCurrent = mat.stock_current;
     }
 
-    const material = materials.find(m => m.id === purchase.material_id);
-    if (!material) return;
-
-    const unitsAdded = purchase.quantity_presentations * (material.quantity_per_presentation || 1);
-    const newStock = material.stock_current + unitsAdded;
+    const unitsAdded = purchase.quantity_presentations * materialQtyPerPres;
+    const newStock = materialStockCurrent + unitsAdded;
 
     try {
       // 1. Insert purchase record
       const { error: purchaseError } = await supabase.from('material_purchases').insert({
         user_id: user.id,
-        material_id: purchase.material_id,
+        material_id: materialId,
         purchase_date: purchase.purchase_date,
         provider: purchase.provider || null,
         quantity_presentations: purchase.quantity_presentations,
@@ -222,11 +226,11 @@ const InventoryConsumables = () => {
       });
       if (purchaseError) throw purchaseError;
 
-      // 2. Update stock on material
+      // 2. Update stock
       const { error: stockError } = await supabase
         .from('user_materials')
         .update({ stock_current: newStock })
-        .eq('id', purchase.material_id);
+        .eq('id', materialId);
       if (stockError) throw stockError;
 
       // 3. Register expense in finances
@@ -234,7 +238,7 @@ const InventoryConsumables = () => {
         user_id: user.id,
         type: 'expense',
         amount: purchase.total_paid,
-        description: `Compra de material: ${material.name}${purchase.provider ? ` - ${purchase.provider}` : ''}`,
+        description: `Compra de material: ${materialName}${purchase.provider ? ` - ${purchase.provider}` : ''}`,
         category: 'Compras de material',
         transaction_date: purchase.purchase_date,
       });
@@ -242,10 +246,13 @@ const InventoryConsumables = () => {
 
       toast({
         title: 'Compra registrada',
-        description: `Se agregaron ${unitsAdded} unidades de ${material.name} y se registró el gasto de ${formatCurrency(purchase.total_paid)}`,
+        description: `Se agregaron ${unitsAdded} unidades de ${materialName} y se registró el gasto de ${formatCurrency(purchase.total_paid)}`,
       });
 
+      // Reset
       setPurchase({ material_id: '', purchase_date: new Date().toISOString().split('T')[0], provider: '', quantity_presentations: 1, total_paid: 0, notes: '' });
+      setNewMaterial({ name: '', category: '', purchase_unit: '', presentation_price: null, quantity_per_presentation: null, stock_minimum: 0 });
+      setPurchaseMode('existing');
       setShowPurchaseDialog(false);
       loadMaterials();
     } catch (error) {
@@ -254,10 +261,17 @@ const InventoryConsumables = () => {
     }
   };
 
+  const openPurchaseDialog = () => {
+    setPurchaseMode(materials.length === 0 ? 'new' : 'existing');
+    setShowPurchaseDialog(true);
+  };
+
   const selectedPurchaseMaterial = materials.find(m => m.id === purchase.material_id);
-  const purchaseUnitsPreview = selectedPurchaseMaterial
+  const purchaseUnitsPreview = purchaseMode === 'existing' && selectedPurchaseMaterial
     ? purchase.quantity_presentations * (selectedPurchaseMaterial.quantity_per_presentation || 1)
-    : 0;
+    : purchaseMode === 'new' && newMaterial.quantity_per_presentation
+    ? purchase.quantity_presentations * newMaterial.quantity_per_presentation
+    : purchase.quantity_presentations;
 
   const lowStockCount = materials.filter(m => m.stock_minimum > 0 && m.stock_current < m.stock_minimum).length;
 
@@ -271,16 +285,10 @@ const InventoryConsumables = () => {
           <h1 className="text-2xl font-display font-bold text-foreground">Inventario de Consumo</h1>
           <p className="text-muted-foreground text-sm">Materiales no reutilizables</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPurchaseDialog(true)} className="gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            Registrar Compra
-          </Button>
-          <Button variant="gradient" onClick={() => setShowCreateDialog(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Crear Material
-          </Button>
-        </div>
+        <Button variant="gradient" onClick={openPurchaseDialog} className="gap-2">
+          <ShoppingCart className="w-4 h-4" />
+          Registrar Compra
+        </Button>
       </div>
 
       {/* Low stock alert */}
@@ -317,8 +325,8 @@ const InventoryConsumables = () => {
               {searchTerm ? 'No se encontraron materiales' : 'No hay materiales registrados'}
             </p>
             {!searchTerm && (
-              <Button variant="gradient" className="mt-4" onClick={() => setShowCreateDialog(true)}>
-                <Plus className="w-4 h-4 mr-2" /> Crear primer material
+              <Button variant="gradient" className="mt-4" onClick={openPurchaseDialog}>
+                <ShoppingCart className="w-4 h-4 mr-2" /> Registrar primera compra
               </Button>
             )}
           </CardContent>
@@ -384,65 +392,6 @@ const InventoryConsumables = () => {
         </Card>
       )}
 
-      {/* ── Create Material Dialog ── */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="bg-background max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Crear Material</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nombre del material</Label>
-                <Input value={newMaterial.name} onChange={e => setNewMaterial(p => ({ ...p, name: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select value={newMaterial.category} onValueChange={v => setNewMaterial(p => ({ ...p, category: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Unidad de compra</Label>
-                <Select value={newMaterial.purchase_unit} onValueChange={v => setNewMaterial(p => ({ ...p, purchase_unit: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {PURCHASE_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Precio presentación</Label>
-                <Input type="number" min="0" step="0.01" value={newMaterial.presentation_price ?? ''} onChange={e => setNewMaterial(p => ({ ...p, presentation_price: e.target.value === '' ? null : Number(e.target.value) }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Cantidad presentación</Label>
-                <Input type="number" min="0" step="1" value={newMaterial.quantity_per_presentation ?? ''} onChange={e => setNewMaterial(p => ({ ...p, quantity_per_presentation: e.target.value === '' ? null : Number(e.target.value) }))} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Stock mínimo (para alertas)</Label>
-              <Input type="number" min="0" value={newMaterial.stock_minimum} onChange={e => setNewMaterial(p => ({ ...p, stock_minimum: Number(e.target.value) || 0 }))} />
-            </div>
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-              <span className="text-sm font-medium">Costo por unidad:</span>
-              <span className="text-lg font-bold text-primary">
-                {formatCurrency(costPerUnit(newMaterial.presentation_price, newMaterial.quantity_per_presentation))}
-              </span>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancelar</Button>
-            <Button variant="gradient" onClick={handleCreateMaterial}>Crear Material</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* ── Edit Material Dialog ── */}
       <Dialog open={!!editingMaterial} onOpenChange={open => !open && setEditingMaterial(null)}>
         <DialogContent className="bg-background max-w-lg">
@@ -507,57 +456,126 @@ const InventoryConsumables = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Purchase Dialog ── */}
+      {/* ── Unified Purchase Dialog ── */}
       <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-        <DialogContent className="bg-background max-w-lg">
+        <DialogContent className="bg-background max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Registrar Compra</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Fecha</Label>
-                <Input type="date" value={purchase.purchase_date} onChange={e => setPurchase(p => ({ ...p, purchase_date: e.target.value }))} />
+            {/* Toggle: existing vs new material */}
+            <Tabs value={purchaseMode} onValueChange={v => setPurchaseMode(v as 'existing' | 'new')}>
+              <TabsList className="w-full">
+                <TabsTrigger value="existing" className="flex-1" disabled={materials.length === 0}>Material existente</TabsTrigger>
+                <TabsTrigger value="new" className="flex-1">
+                  <Plus className="w-3 h-3 mr-1" /> Nuevo material
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="existing" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Material</Label>
+                  <Select value={purchase.material_id} onValueChange={v => setPurchase(p => ({ ...p, material_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar material" /></SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {materials.map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="new" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nombre del material</Label>
+                    <Input value={newMaterial.name} onChange={e => setNewMaterial(p => ({ ...p, name: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Categoría</Label>
+                    <Select value={newMaterial.category} onValueChange={v => setNewMaterial(p => ({ ...p, category: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Unidad de compra</Label>
+                    <Select value={newMaterial.purchase_unit} onValueChange={v => setNewMaterial(p => ({ ...p, purchase_unit: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        {PURCHASE_UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Precio presentación</Label>
+                    <Input type="number" min="0" step="0.01" value={newMaterial.presentation_price ?? ''} onChange={e => setNewMaterial(p => ({ ...p, presentation_price: e.target.value === '' ? null : Number(e.target.value) }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cantidad presentación</Label>
+                    <Input type="number" min="0" step="1" value={newMaterial.quantity_per_presentation ?? ''} onChange={e => setNewMaterial(p => ({ ...p, quantity_per_presentation: e.target.value === '' ? null : Number(e.target.value) }))} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Stock mínimo (para alertas)</Label>
+                  <Input type="number" min="0" value={newMaterial.stock_minimum} onChange={e => setNewMaterial(p => ({ ...p, stock_minimum: Number(e.target.value) || 0 }))} />
+                </div>
+                {newMaterial.presentation_price && newMaterial.quantity_per_presentation ? (
+                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                    <span className="text-sm font-medium">Costo por unidad:</span>
+                    <span className="text-lg font-bold text-primary">
+                      {formatCurrency(costPerUnit(newMaterial.presentation_price, newMaterial.quantity_per_presentation))}
+                    </span>
+                  </div>
+                ) : null}
+              </TabsContent>
+            </Tabs>
+
+            {/* Common purchase fields */}
+            <div className="border-t pt-4 space-y-4">
+              <p className="text-sm font-medium text-muted-foreground">Datos de la compra</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Fecha</Label>
+                  <Input type="date" value={purchase.purchase_date} onChange={e => setPurchase(p => ({ ...p, purchase_date: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Proveedor</Label>
+                  <Input value={purchase.provider} onChange={e => setPurchase(p => ({ ...p, provider: e.target.value }))} placeholder="Ej: Amazon, Mercado Libre..." />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Proveedor</Label>
-                <Input value={purchase.provider} onChange={e => setPurchase(p => ({ ...p, provider: e.target.value }))} placeholder="Ej: Amazon, Mercado Libre..." />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Cantidad (presentaciones)</Label>
+                  <Input type="number" min="1" value={purchase.quantity_presentations} onChange={e => setPurchase(p => ({ ...p, quantity_presentations: Number(e.target.value) || 1 }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Total pagado</Label>
+                  <Input type="number" min="0" step="0.01" value={purchase.total_paid || ''} onChange={e => setPurchase(p => ({ ...p, total_paid: Number(e.target.value) || 0 }))} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Material</Label>
-              <Select value={purchase.material_id} onValueChange={v => setPurchase(p => ({ ...p, material_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar material" /></SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  {materials.map(m => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Cantidad comprada (presentaciones)</Label>
-                <Input type="number" min="1" value={purchase.quantity_presentations} onChange={e => setPurchase(p => ({ ...p, quantity_presentations: Number(e.target.value) || 1 }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Total pagado</Label>
-                <Input type="number" min="0" step="0.01" value={purchase.total_paid || ''} onChange={e => setPurchase(p => ({ ...p, total_paid: Number(e.target.value) || 0 }))} />
-              </div>
-            </div>
-            {selectedPurchaseMaterial && (
+
+              {/* Preview */}
               <div className="p-3 bg-primary/10 rounded-lg space-y-1">
                 <p className="text-sm">
                   Unidades reales a agregar: <strong>{purchaseUnitsPreview}</strong>
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Stock actual: {selectedPurchaseMaterial.stock_current} → Nuevo: {selectedPurchaseMaterial.stock_current + purchaseUnitsPreview}
-                </p>
+                {purchaseMode === 'existing' && selectedPurchaseMaterial && (
+                  <p className="text-sm text-muted-foreground">
+                    Stock actual: {selectedPurchaseMaterial.stock_current} → Nuevo: {selectedPurchaseMaterial.stock_current + purchaseUnitsPreview}
+                  </p>
+                )}
               </div>
-            )}
-            <div className="space-y-2">
-              <Label>Nota (opcional)</Label>
-              <Textarea value={purchase.notes} onChange={e => setPurchase(p => ({ ...p, notes: e.target.value }))} rows={2} />
+
+              <div className="space-y-2">
+                <Label>Nota (opcional)</Label>
+                <Textarea value={purchase.notes} onChange={e => setPurchase(p => ({ ...p, notes: e.target.value }))} rows={2} />
+              </div>
             </div>
           </div>
           <DialogFooter>
