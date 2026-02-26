@@ -557,11 +557,22 @@ export default function Orders() {
 
                         {/* Entregado button */}
                         <Button
-                          variant="outline"
+                          variant={quote.status === 'delivered' ? 'outline' : 'outline'}
                           size="sm"
-                          className="w-full"
+                          className={`w-full ${quote.status === 'delivered' ? 'border-blue-600 text-blue-600' : ''}`}
+                          onClick={async () => {
+                            const newStatus = quote.status === 'delivered' ? 'approved' : 'delivered';
+                            const updatedQuote = { ...quote, status: newStatus as Quote['status'] };
+                            await saveQuote(updatedQuote);
+                            toast({
+                              title: newStatus === 'delivered' ? "Pedido entregado" : "Pedido revertido",
+                              description: newStatus === 'delivered'
+                                ? `"${quote.clientName}" marcado como entregado`
+                                : `"${quote.clientName}" revertido a aprobado`,
+                            });
+                          }}
                         >
-                          Entregado
+                          {quote.status === 'delivered' ? '✓ Entregado' : 'Entregado'}
                         </Button>
                       </div>
                     )}
