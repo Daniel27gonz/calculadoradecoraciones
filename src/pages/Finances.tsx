@@ -257,6 +257,9 @@ export default function Finances() {
           </Card>
         </div>
 
+        {/* Monthly Charts */}
+        <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
+
         {/* Transactions List */}
         <Card>
           <CardHeader>
@@ -336,9 +339,6 @@ export default function Finances() {
             )}
           </CardContent>
         </Card>
-
-        {/* Monthly Charts */}
-        <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
 
         {/* Transaction Form Dialog */}
         <TransactionFormDialog
