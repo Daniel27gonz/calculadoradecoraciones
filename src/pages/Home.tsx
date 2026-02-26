@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users } from 'lucide-react';
+import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -234,8 +234,6 @@ export default function Home() {
                 {[
                   { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
                   { to: '/orders', icon: Calendar, label: 'Ver Agenda', color: 'bg-accent/40 text-accent-foreground' },
-                  { to: '/finances', icon: Wallet, label: 'Ver Finanzas', color: 'bg-profit-high/15 text-profit-high' },
-                  { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' },
                 ].map(({ to, icon: Icon, label, color }) => (
                   <Link
                     key={to}
@@ -248,6 +246,52 @@ export default function Home() {
                     <span className="text-xs font-medium text-center leading-tight">{label}</span>
                   </Link>
                 ))}
+
+                {/* Comunidad Privada */}
+                <a
+                  href="https://chat.whatsapp.com/YOUR_GROUP_LINK"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-profit-high/15 text-profit-high flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">Comunidad Privada</span>
+                </a>
+
+                {/* Ver Finanzas */}
+                <Link
+                  to="/finances"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-profit-high/15 text-profit-high flex items-center justify-center">
+                    <Wallet className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">Ver Finanzas</span>
+                </Link>
+
+                {/* Inventario */}
+                <Link
+                  to="/packages"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-secondary text-secondary-foreground flex items-center justify-center">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">Inventario</span>
+                </Link>
+
+                {/* Actualizar */}
+                <button
+                  onClick={() => window.location.reload()}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">Actualizar</span>
+                </button>
               </div>
             </CardContent>
           </Card>
