@@ -199,7 +199,7 @@ export default function Orders() {
     .filter(q => {
       const matchesSearch = q.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch && q.status === 'approved';
+      return matchesSearch && (q.status === 'approved' || q.status === 'delivered');
     })
     .sort((a, b) => {
       if (a.eventDate && b.eventDate) {
@@ -374,10 +374,12 @@ export default function Orders() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-display text-lg font-semibold">{quote.clientName}</h3>
                           <Badge
-                            variant={quote.status === 'approved' ? 'default' : 'secondary'}
-                            className={`text-xs ${quote.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-500/20 text-yellow-700'}`}
+                            variant={quote.status === 'approved' || quote.status === 'delivered' ? 'default' : 'secondary'}
+                            className={`text-xs ${quote.status === 'delivered' ? 'bg-blue-600 text-white' : quote.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-500/20 text-yellow-700'}`}
                           >
-                            {quote.status === 'approved' ? (
+                            {quote.status === 'delivered' ? (
+                              <><CheckCircle2 className="w-3 h-3 mr-1" /> Entregado</>
+                            ) : quote.status === 'approved' ? (
                               <><CheckCircle2 className="w-3 h-3 mr-1" /> Aprobada</>
                             ) : (
                               <><Clock className="w-3 h-3 mr-1" /> Pendiente</>
@@ -557,11 +559,19 @@ export default function Orders() {
 
                         {/* Entregado button */}
                         <Button
-                          variant="outline"
+                          variant={quote.status === 'delivered' ? 'outline' : 'default'}
                           size="sm"
-                          className="w-full"
+                          className={`w-full ${quote.status === 'delivered' ? 'border-blue-600 text-blue-600' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                          onClick={async () => {
+                            if (quote.status !== 'delivered') {
+                              const updatedQuote = { ...quote, status: 'delivered' as const };
+                              await saveQuote(updatedQuote);
+                              toast({ title: "Pedido entregado", description: `"${quote.clientName}" marcado como entregado` });
+                            }
+                          }}
+                          disabled={quote.status === 'delivered'}
                         >
-                          Entregado
+                          {quote.status === 'delivered' ? '✓ Entregado' : 'Entregado'}
                         </Button>
                       </div>
                     )}
