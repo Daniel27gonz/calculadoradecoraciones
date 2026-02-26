@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -98,6 +99,90 @@ export default function History() {
     const newStatus = quote.status === 'approved' ? 'pending' : 'approved';
     const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
     await saveQuote(updatedQuote);
+
+    // When approving, deduct stock for materials used
+    if (newStatus === 'approved' && user) {
+      try {
+        // Get user's inventory materials to match by name
+        const { data: inventoryMaterials } = await supabase
+          .from('user_materials')
+          .select('id, name, stock_current')
+          .eq('user_id', user.id);
+
+        if (inventoryMaterials && inventoryMaterials.length > 0) {
+          for (const qMaterial of quote.materials) {
+            // Match by name (case-insensitive)
+            const match = inventoryMaterials.find(
+              im => im.name.toLowerCase() === qMaterial.name.toLowerCase()
+            );
+            if (match && qMaterial.quantity > 0) {
+              // Check if already deducted for this quote
+              const { data: existing } = await supabase
+                .from('stock_deductions')
+                .select('id')
+                .eq('quote_id', quote.id)
+                .eq('material_id', match.id)
+                .maybeSingle();
+
+              if (!existing) {
+                const newStock = Math.max(0, match.stock_current - qMaterial.quantity);
+                
+                await supabase
+                  .from('user_materials')
+                  .update({ stock_current: newStock })
+                  .eq('id', match.id);
+
+                await supabase.from('stock_deductions').insert({
+                  user_id: user.id,
+                  quote_id: quote.id,
+                  material_id: match.id,
+                  quantity_deducted: qMaterial.quantity,
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error deducting stock:', error);
+      }
+    }
+
+    // When reverting to pending, restore stock
+    if (newStatus === 'pending' && user) {
+      try {
+        const { data: deductions } = await supabase
+          .from('stock_deductions')
+          .select('*')
+          .eq('quote_id', quote.id)
+          .eq('user_id', user.id);
+
+        if (deductions && deductions.length > 0) {
+          for (const d of deductions) {
+            const { data: mat } = await supabase
+              .from('user_materials')
+              .select('stock_current')
+              .eq('id', d.material_id)
+              .maybeSingle();
+
+            if (mat) {
+              await supabase
+                .from('user_materials')
+                .update({ stock_current: (mat as any).stock_current + (d as any).quantity_deducted })
+                .eq('id', d.material_id);
+            }
+          }
+
+          await supabase
+            .from('stock_deductions')
+            .delete()
+            .eq('quote_id', quote.id)
+            .eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.error('Error restoring stock:', error);
+      }
+    }
+
     toast({
       title: newStatus === 'approved' ? "Cotización aprobada" : "Cotización pendiente",
       description: `"${quote.clientName}" marcada como ${newStatus === 'approved' ? 'aprobada' : 'pendiente'}`,

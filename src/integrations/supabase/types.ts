@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      material_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          notes: string | null
+          provider: string | null
+          purchase_date: string
+          quantity_presentations: number
+          total_paid: number
+          units_added: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          notes?: string | null
+          provider?: string | null
+          purchase_date?: string
+          quantity_presentations?: number
+          total_paid?: number
+          units_added?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          notes?: string | null
+          provider?: string | null
+          purchase_date?: string
+          quantity_presentations?: number
+          total_paid?: number
+          units_added?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_purchases_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "user_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           created_at: string
@@ -259,6 +306,48 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_deductions: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          quantity_deducted: number
+          quote_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          quantity_deducted?: number
+          quote_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          quantity_deducted?: number
+          quote_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_deductions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "user_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_deductions_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -332,6 +421,8 @@ export type Database = {
           price: number | null
           purchase_unit: string | null
           quantity_per_presentation: number | null
+          stock_current: number
+          stock_minimum: number
           updated_at: string
           user_id: string
         }
@@ -347,6 +438,8 @@ export type Database = {
           price?: number | null
           purchase_unit?: string | null
           quantity_per_presentation?: number | null
+          stock_current?: number
+          stock_minimum?: number
           updated_at?: string
           user_id: string
         }
@@ -362,6 +455,8 @@ export type Database = {
           price?: number | null
           purchase_unit?: string | null
           quantity_per_presentation?: number | null
+          stock_current?: number
+          stock_minimum?: number
           updated_at?: string
           user_id?: string
         }
