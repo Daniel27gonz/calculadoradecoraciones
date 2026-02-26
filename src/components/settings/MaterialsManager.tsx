@@ -240,7 +240,18 @@ export function MaterialsManager() {
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
       }
 
-      toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty})` });
+      // Register expense in finances
+      const matName = mat?.name || materialMap[newPurchase.material_id] || 'Material';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${matName}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+      });
+
+      toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
       setPurchaseDialogOpen(false);
       setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
       loadAll();
@@ -261,7 +272,15 @@ export function MaterialsManager() {
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
       }
 
-      toast({ title: 'Compra eliminada' });
+      // Delete corresponding expense from finances
+      const matName = mat?.name || materialMap[purchase.material_id] || 'Material';
+      await supabase.from('transactions').delete()
+        .eq('user_id', user!.id)
+        .eq('description', `Compra material: ${matName}`)
+        .eq('amount', purchase.total_paid)
+        .eq('transaction_date', purchase.purchase_date);
+
+      toast({ title: 'Compra eliminada', description: 'Gasto eliminado de finanzas' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -301,7 +320,26 @@ export function MaterialsManager() {
         provider: newPurchase.provider.trim() || null,
       }).eq('id', editingPurchase.id);
       if (error) throw error;
-      toast({ title: 'Compra actualizada' });
+
+      // Update corresponding expense: delete old, insert new
+      const oldMatName = materialMap[editingPurchase.material_id] || 'Material';
+      await supabase.from('transactions').delete()
+        .eq('user_id', user.id)
+        .eq('description', `Compra material: ${oldMatName}`)
+        .eq('amount', editingPurchase.total_paid)
+        .eq('transaction_date', editingPurchase.purchase_date);
+
+      const newMatName = materialMap[newPurchase.material_id] || 'Material';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${newMatName}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+      });
+
+      toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
       setPurchaseDialogOpen(false);
       setEditingPurchase(null);
       setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
