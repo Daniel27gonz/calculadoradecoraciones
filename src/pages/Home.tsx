@@ -71,7 +71,7 @@ export default function Home() {
       {/* Welcome header */}
       <div className="text-center">
         <h1 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Bienvenida a Deco Control
+          Bienvenida a DecoControl
         </h1>
         <p className="text-muted-foreground mt-2 text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
           Tu centro de control para tu negocio de decoración
