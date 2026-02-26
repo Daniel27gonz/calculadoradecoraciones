@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import decocontrolLogo from '@/assets/decocontrol-logo.png';
 import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -70,8 +69,13 @@ export default function Home() {
   return (
     <div className="p-4 md:p-8 space-y-6 pb-8">
       {/* Welcome header */}
-      <div className="text-center flex justify-center">
-        <img src={decocontrolLogo} alt="DecoControl" className="h-16 md:h-20 object-contain" />
+      <div className="text-center">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+          Bienvenida a DecoControl
+        </h1>
+        <p className="text-muted-foreground mt-2 text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+          Tu centro de control para tu negocio de decoración
+        </p>
       </div>
 
       {/* Acciones Rápidas - horizontal */}
