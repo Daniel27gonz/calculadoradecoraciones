@@ -97,14 +97,16 @@ export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
                       key={q.id}
                       onClick={() => onSelectQuote(q)}
                       className={`w-full text-left truncate rounded px-1 py-0.5 text-[10px] leading-tight font-medium transition-colors
-                        ${q.status === 'approved'
-                          ? 'bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30'
-                          : 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30'
+                        ${q.status === 'delivered'
+                          ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/30'
+                          : q.status === 'approved'
+                            ? 'bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30'
+                            : 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30'
                         }
                       `}
-                      title={`${q.clientName} - ${q.eventType || 'Evento'}`}
+                      title={`${q.clientName} - ${q.eventType || 'Evento'}${q.setupTime ? ` - ${q.setupTime}` : ''}`}
                     >
-                      {q.clientName}
+                      {q.setupTime ? `${q.setupTime} ` : ''}{q.clientName}
                     </button>
                   ))}
                   {dayQuotes.length > 2 && (

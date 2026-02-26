@@ -307,26 +307,11 @@ export default function Orders() {
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
 
-        {/* Calendar Toggle */}
-        <div className="flex justify-end">
-          <Button
-            variant={showCalendar ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="gap-2"
-          >
-            <CalendarDays className="w-4 h-4" />
-            Agenda
-          </Button>
-        </div>
-
-        {/* Calendar */}
-        {showCalendar && (
-          <OrdersCalendar
-            quotes={quotes.filter(q => q.status === 'approved')}
-            onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
-          />
-        )}
+        {/* Calendar - always visible */}
+        <OrdersCalendar
+          quotes={filteredQuotes}
+          onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
+        />
 
         {/* Filters */}
         <div className="space-y-3">
