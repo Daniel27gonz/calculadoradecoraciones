@@ -66,6 +66,7 @@ export default function Calculator() {
     saveQuote, 
     calculateCosts, 
     defaultHourlyRate,
+    setDefaultHourlyRate,
     packages 
   } = useQuote();
 
@@ -290,6 +291,39 @@ export default function Calculator() {
           onChange={(reusableMaterialsUsed) => updateQuote({ reusableMaterialsUsed })}
           currencySymbol={currencySymbol}
         />
+
+        {/* Hourly Rate */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">💰</span>
+              Tarifa por hora
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <span className="text-2xl text-muted-foreground">{currencySymbol}</span>
+              <Input
+                type="number"
+                min="0"
+                value={defaultHourlyRate ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value === '' ? 0 : Number(e.target.value);
+                  setDefaultHourlyRate(value);
+                  if (profile) {
+                    updateProfile({ default_hourly_rate: value });
+                  }
+                }}
+                placeholder="0"
+                className="text-2xl font-bold h-14 w-32"
+              />
+              <span className="text-muted-foreground">por hora</span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Se aplicará como tarifa predeterminada en las fases de tiempo.
+            </p>
+          </CardContent>
+        </Card>
 
         <LaborSection
           workers={quote.workers}
