@@ -107,7 +107,20 @@ export default function Orders() {
 
       if (error) throw error;
 
-      toast({ title: "Anticipo registrado", description: `${currencySymbol}${amount.toFixed(2)} registrado` });
+      // Register anticipo in finances
+      const relatedQuote = quotes.find(q => q.id === paymentQuoteId);
+      const clientName = relatedQuote?.clientName || 'Cliente';
+      const folioLabel = relatedQuote?.folio ? `#${String(relatedQuote.folio).padStart(4, '0')}` : '';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'income',
+        amount,
+        description: `Anticipo: ${clientName}${folioLabel ? ` - Folio ${folioLabel}` : ''}`,
+        category: 'Anticipos',
+        transaction_date: newPaymentDate,
+      });
+
+      toast({ title: "Anticipo registrado", description: `${currencySymbol}${amount.toFixed(2)} registrado en Finanzas` });
       setShowPaymentDialog(false);
       setNewPaymentAmount('');
       setNewPaymentNotes('');
