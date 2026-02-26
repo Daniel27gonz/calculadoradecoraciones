@@ -28,7 +28,7 @@ export default function IndirectExpenses() {
               <ArrowLeft className="w-4 h-4" />
               Volver
             </Button>
-            <h1 className="font-display text-xl font-semibold">Gastos Indirectos</h1>
+            <h1 className="font-display text-xl font-semibold">Gastos del Mes</h1>
             <div className="w-20" />
           </div>
         </div>
