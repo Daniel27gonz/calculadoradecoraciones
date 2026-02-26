@@ -234,9 +234,9 @@ export default function AdminDatabase() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 pt-16 md:pt-20">
-      <main className="container max-w-4xl mx-auto px-4 py-6">
-      <Card className="border-primary/20">
+    <div className="min-h-screen pb-24 md:pb-8 pt-16 md:pt-20 w-full overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-6 w-full">
+      <Card className="border-primary/20 w-full overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -293,7 +293,6 @@ export default function AdminDatabase() {
                       <TableHead className="font-semibold">Nombre</TableHead>
                       <TableHead className="font-semibold">Estado</TableHead>
                       <TableHead className="font-semibold">Creado</TableHead>
-                      <TableHead className="font-semibold">Actualizado</TableHead>
                       <TableHead className="font-semibold text-center">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -309,44 +308,41 @@ export default function AdminDatabase() {
                         <TableCell>
                           {getStatusBadge(userItem.status)}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {formatDate(userItem.created_at)}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(userItem.status_updated_at)}
-                        </TableCell>
                         <TableCell>
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1.5">
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
-                              className="text-green-600 border-green-600 hover:bg-green-50 text-xs px-2"
+                              className="h-8 w-8 text-green-600 border-green-600 hover:bg-green-50"
                               onClick={() => updateUserStatus(userItem.user_id, 'approved')}
                               disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
+                              title="Aprobar"
                             >
-                              <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                              Aprobar
+                              <CheckCircle className="w-4 h-4" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
-                              className="text-red-600 border-red-600 hover:bg-red-50 text-xs px-2"
+                              className="h-8 w-8 text-red-600 border-red-600 hover:bg-red-50"
                               onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
                               disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
+                              title="Rechazar"
                             >
-                              <XCircle className="w-3.5 h-3.5 mr-1" />
-                              Rechazar
+                              <XCircle className="w-4 h-4" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
-                                  size="sm"
+                                  size="icon"
                                   variant="outline"
-                                  className="text-destructive border-destructive hover:bg-destructive/10 text-xs px-2"
+                                  className="h-8 w-8 text-destructive border-destructive hover:bg-destructive/10"
                                   disabled={updatingUser === userItem.user_id}
+                                  title="Eliminar"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 mr-1" />
-                                  Eliminar
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -378,7 +374,7 @@ export default function AdminDatabase() {
               {/* Mobile cards */}
               <div className="md:hidden divide-y">
                 {filteredUsers.map((userItem) => (
-                  <div key={userItem.id} className="px-3 py-4 space-y-3">
+                  <div key={userItem.id} className="px-2 py-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm truncate">{userItem.email}</p>
@@ -391,25 +387,25 @@ export default function AdminDatabase() {
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Creado: {formatDate(userItem.created_at)}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-3 gap-1.5">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-green-600 border-green-600 hover:bg-green-50 text-xs"
+                        className="text-green-600 border-green-600 hover:bg-green-50 text-[11px] px-1.5 h-8"
                         onClick={() => updateUserStatus(userItem.user_id, 'approved')}
                         disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
                       >
-                        <CheckCircle className="w-4 h-4 mr-1 shrink-0" />
+                        <CheckCircle className="w-3.5 h-3.5 mr-0.5 shrink-0" />
                         Aprobar
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-red-600 border-red-600 hover:bg-red-50 text-xs"
+                        className="text-red-600 border-red-600 hover:bg-red-50 text-[11px] px-1.5 h-8"
                         onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
                         disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
                       >
-                        <XCircle className="w-4 h-4 mr-1 shrink-0" />
+                        <XCircle className="w-3.5 h-3.5 mr-0.5 shrink-0" />
                         Rechazar
                       </Button>
                       <AlertDialog>
@@ -417,10 +413,10 @@ export default function AdminDatabase() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 text-destructive border-destructive hover:bg-destructive/10 text-xs"
+                            className="text-destructive border-destructive hover:bg-destructive/10 text-[11px] px-1.5 h-8"
                             disabled={updatingUser === userItem.user_id}
                           >
-                            <Trash2 className="w-4 h-4 mr-1 shrink-0" />
+                            <Trash2 className="w-3.5 h-3.5 mr-0.5 shrink-0" />
                             Eliminar
                           </Button>
                         </AlertDialogTrigger>
