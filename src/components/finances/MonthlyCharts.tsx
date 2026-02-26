@@ -227,10 +227,9 @@ export function MonthlyCharts({ transactions, currencySymbol }: MonthlyChartsPro
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="bar" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="bar">Barras</TabsTrigger>
             <TabsTrigger value="pie-total">Totales</TabsTrigger>
-            <TabsTrigger value="pie-category">Categorías</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bar" className="mt-0">
@@ -299,35 +298,6 @@ export function MonthlyCharts({ transactions, currencySymbol }: MonthlyChartsPro
             </p>
           </TabsContent>
 
-          <TabsContent value="pie-category" className="mt-0">
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => percent > 0.05 ? `${name.substring(0, 10)}${name.length > 10 ? '...' : ''} ${(percent * 100).toFixed(0)}%` : ''}
-                    labelLine={false}
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend 
-                    formatter={(value) => <span className="text-xs">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              {rangeLabel} — Por categoría
-            </p>
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
