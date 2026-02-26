@@ -106,7 +106,7 @@ export default function Home() {
                 <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign className="w-4 h-4 text-profit-high" />
-                    <span className="text-xs font-medium text-muted-foreground">Ventas del mes</span>
+                    <span className="text-xs font-medium text-muted-foreground">Ingresos del mes</span>
                   </div>
                   <p className="text-xl font-bold text-profit-high">{formatMoney(totalRevenue)}</p>
                 </div>
