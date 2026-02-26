@@ -33,7 +33,7 @@ const sidebarItems: SidebarItem[] = [
 
 },
 { path: '/history', icon: History, label: 'Historial' },
-{ path: '/design', icon: Palette, label: 'Diseño' },
+{ path: '/design', icon: Palette, label: 'Cotización (PDF)' },
 { path: '/finances', icon: Wallet, label: 'Finanzas' },
 { path: '/orders', icon: Calendar, label: 'Agenda' }];
 
