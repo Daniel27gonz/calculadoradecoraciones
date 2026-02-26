@@ -255,7 +255,7 @@ export default function Finances() {
                 </div>
                 <div>
                   <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    Balance
+                    {balance >= 0 ? 'Ganancia' : 'Pérdida'}
                   </p>
                   <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
