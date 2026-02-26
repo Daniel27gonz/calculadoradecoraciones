@@ -93,7 +93,7 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       {/* Type Filter */}
       <Select value={filters.type || undefined} onValueChange={(v) => handleChange('type', v)}>
         <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
-          <SelectValue placeholder="Tipo" />
+          <SelectValue placeholder=" " />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
           <SelectItem value="income">Ingresos</SelectItem>
@@ -104,7 +104,7 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       {/* Category Filter */}
       <Select value={filters.category || undefined} onValueChange={(v) => handleChange('category', v)}>
         <SelectTrigger className="h-9 w-auto min-w-[120px] rounded-full border-border bg-background text-sm">
-          <SelectValue placeholder="Categoría" />
+          <SelectValue placeholder=" " />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
           {categories.map((cat) => (
@@ -118,7 +118,7 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       {/* Month Filter */}
       <Select value={filters.month || undefined} onValueChange={(v) => handleChange('month', v)}>
         <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
-          <SelectValue placeholder="Mes" />
+          <SelectValue placeholder=" " />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
           {MONTHS.map((month) => (
@@ -132,7 +132,7 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
       {/* Year Filter */}
       <Select value={filters.year || undefined} onValueChange={(v) => handleChange('year', v)}>
         <SelectTrigger className="h-9 w-auto min-w-[80px] rounded-full border-border bg-background text-sm">
-          <SelectValue placeholder="Año" />
+          <SelectValue placeholder=" " />
         </SelectTrigger>
         <SelectContent className="bg-background z-50">
           {years.map((year) => (
