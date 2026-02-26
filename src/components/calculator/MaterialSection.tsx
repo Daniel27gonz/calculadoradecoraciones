@@ -17,6 +17,7 @@ interface SavedMaterial {
   name: string;
   cost_per_unit: number | null;
   quantity_per_presentation: number | null;
+  latest_presentation_price?: number | null;
 }
 
 interface MaterialSectionProps {
@@ -41,7 +42,29 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
         .order('name');
 
       if (!error && data) {
-        setSavedMaterials(data);
+        // Fetch latest purchase price for each material
+        const { data: purchases } = await supabase
+          .from('material_purchases')
+          .select('material_id, total_paid, quantity_presentations, purchase_date')
+          .eq('user_id', user.id)
+          .order('purchase_date', { ascending: false });
+
+        const latestPriceMap = new Map<string, number>();
+        if (purchases) {
+          for (const p of purchases) {
+            if (!latestPriceMap.has(p.material_id)) {
+              const pricePerPresentation = p.quantity_presentations > 0 
+                ? p.total_paid / p.quantity_presentations 
+                : p.total_paid;
+              latestPriceMap.set(p.material_id, pricePerPresentation);
+            }
+          }
+        }
+
+        setSavedMaterials(data.map(m => ({
+          ...m,
+          latest_presentation_price: latestPriceMap.get(m.id) ?? null,
+        })));
       }
     };
 
@@ -64,9 +87,12 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
   };
 
   const selectSavedMaterial = (materialId: string, saved: SavedMaterial) => {
+    const price = saved.latest_presentation_price != null 
+      ? Math.round(saved.latest_presentation_price * 100) / 100
+      : Math.round((saved.cost_per_unit || 0) * 100) / 100;
     updateMaterial(materialId, {
       name: saved.name,
-      costPerUnit: Math.round((saved.cost_per_unit || 0) * 100) / 100,
+      costPerUnit: price,
     });
     setOpenDropdowns(prev => ({ ...prev, [materialId]: false }));
   };
@@ -151,7 +177,10 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                           >
                             <div className="font-medium text-sm truncate">{saved.name}</div>
                             <div className="text-xs text-muted-foreground">
-                              {currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades
+                              {saved.latest_presentation_price != null 
+                                ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-green-600">(última compra)</span></>
+                                : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
+                              }
                             </div>
                           </button>
                         ))}
