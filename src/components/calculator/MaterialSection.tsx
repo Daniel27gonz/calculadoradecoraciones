@@ -17,6 +17,7 @@ interface SavedMaterial {
   name: string;
   cost_per_unit: number | null;
   quantity_per_presentation: number | null;
+  latest_purchase_unit_cost: number | null;
 }
 
 interface MaterialSectionProps {
@@ -41,7 +42,26 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
         .order('name');
 
       if (!error && data) {
-        setSavedMaterials(data);
+        // Fetch latest purchase for each material to get most recent unit cost
+        const { data: purchases } = await supabase
+          .from('material_purchases')
+          .select('material_id, total_paid, units_added, purchase_date')
+          .eq('user_id', user.id)
+          .order('purchase_date', { ascending: false });
+
+        const latestPurchaseMap: Record<string, number> = {};
+        if (purchases) {
+          for (const p of purchases) {
+            if (!latestPurchaseMap[p.material_id] && p.units_added > 0) {
+              latestPurchaseMap[p.material_id] = p.total_paid / p.units_added;
+            }
+          }
+        }
+
+        setSavedMaterials(data.map(m => ({
+          ...m,
+          latest_purchase_unit_cost: latestPurchaseMap[m.id] ?? null,
+        })));
       }
     };
 
@@ -64,9 +84,10 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
   };
 
   const selectSavedMaterial = (materialId: string, saved: SavedMaterial) => {
+    const unitCost = saved.latest_purchase_unit_cost ?? saved.cost_per_unit ?? 0;
     updateMaterial(materialId, {
       name: saved.name,
-      costPerUnit: Math.round((saved.cost_per_unit || 0) * 100) / 100,
+      costPerUnit: Math.round(unitCost * 100) / 100,
     });
     setOpenDropdowns(prev => ({ ...prev, [materialId]: false }));
   };
@@ -151,7 +172,8 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                           >
                             <div className="font-medium text-sm truncate">{saved.name}</div>
                             <div className="text-xs text-muted-foreground">
-                              {currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades
+                              {currencySymbol}{(saved.latest_purchase_unit_cost ?? saved.cost_per_unit ?? 0).toFixed(2)}/ud
+                              {saved.latest_purchase_unit_cost != null && <span className="ml-1 text-green-600">(última compra)</span>}
                             </div>
                           </button>
                         ))}
