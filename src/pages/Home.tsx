@@ -93,10 +93,10 @@ export default function Home() {
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
         {[
           { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
-          { to: '/orders', icon: Calendar, label: 'Agenda', color: 'bg-accent/40 text-accent-foreground' },
-          { to: '/finances', icon: Wallet, label: 'Finanzas', color: 'bg-profit-high/15 text-profit-high' },
+          { to: '/orders', icon: Calendar, label: 'Agenda y Pedidos', color: 'bg-accent/40 text-accent-foreground' },
+          { to: '/finances', icon: Wallet, label: 'Mi Dinero', color: 'bg-profit-high/15 text-profit-high' },
           
-          { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' },
+          { to: '/packages', icon: Package, label: 'Materiales', color: 'bg-secondary text-secondary-foreground' },
         ].map(({ to, icon: Icon, label, color }) => (
           <Link
             key={to}
