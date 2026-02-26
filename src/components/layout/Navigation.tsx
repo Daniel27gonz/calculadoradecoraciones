@@ -1,175 +1,151 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Calculator, Package, History, Settings, User, Palette, Database, ClipboardList } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
-// Mobile bottom nav items (5 items for mobile)
-const mobileNavItems = [
+const sidebarItems = [
   { path: '/', icon: Home, label: 'Inicio' },
   { path: '/calculator', icon: Calculator, label: 'Cotizar' },
-  { path: '/packages', icon: Package, label: 'Paquetes' },
+  { path: '/packages', icon: Package, label: 'Inventario' },
   { path: '/history', icon: History, label: 'Historial' },
-  { path: '/settings', icon: Settings, label: 'Ajustes' },
+  { path: '/finances', icon: Wallet, label: 'Finanzas' },
+  { path: '/orders', icon: Calendar, label: 'Agenda' },
 ];
 
-// Desktop bottom nav items (same as mobile, 5 items)
-const desktopNavItems = [
-  { path: '/', icon: Home, label: 'Inicio' },
-  { path: '/calculator', icon: Calculator, label: 'Cotizar' },
-  { path: '/packages', icon: Package, label: 'Paquetes' },
-  { path: '/history', icon: History, label: 'Historial' },
+const bottomItems = [
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
 export function Navigation() {
   const location = useLocation();
-  const { user, profile, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Hide navigation on auth page
   if (location.pathname === '/auth') {
     return null;
   }
 
-  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
-  return (
-    <>
-      {/* Top Bar - Title + Finanzas button */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border shadow-sm">
-        <div className="container flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-              <Calculator className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg font-semibold text-foreground">
-              {location.pathname === '/' && 'Inicio'}
-              {location.pathname === '/calculator' && 'Cotizar'}
-              {location.pathname === '/packages' && 'Paquetes'}
-              {location.pathname === '/finances' && 'Finanzas'}
-              {location.pathname === '/history' && 'Historial'}
-              {location.pathname === '/orders' && 'Pedidos'}
-              {location.pathname === '/settings' && 'Ajustes'}
-              {location.pathname === '/admin/database' && 'Database'}
-            </span>
+  const NavContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="p-5 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shadow-soft">
+            <span className="text-lg">🎈</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/orders"
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
-                location.pathname === '/orders'
-                  ? "text-primary bg-rose-light"
-                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-              )}
-            >
-              <ClipboardList className="w-5 h-5" />
-              <span className="text-sm font-medium">Pedidos</span>
-            </Link>
-            <Link
-              to="/design"
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
-                location.pathname === '/design'
-                  ? "text-primary bg-rose-light"
-                  : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-              )}
-            >
-              <Palette className="w-5 h-5" />
-              <span className="text-sm font-medium">Diseño</span>
-            </Link>
-            {/* Admin Database Link - Only visible for admins */}
-            {isAdmin && (
-              <Link
-                to="/admin/database"
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300",
-                  location.pathname === '/admin/database'
-                    ? "text-primary bg-rose-light"
-                    : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-                )}
-              >
-                <Database className="w-5 h-5" />
-                <span className="text-sm font-medium">Database</span>
-              </Link>
-            )}
-            {/* User indicator - visible on desktop */}
-            {!isMobile && (
-              <>
-                {user ? (
-                  <Link 
-                    to="/settings"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-light hover:bg-rose-light/80 transition-colors"
-                  >
-                    <User className="w-4 h-4 text-rose-dark" />
-                    <span className="text-xs font-medium text-rose-dark max-w-[120px] truncate">
-                      {profile?.name || user.email?.split('@')[0]}
-                    </span>
-                  </Link>
-                ) : (
-                  <Link 
-                    to="/auth"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="text-xs font-medium">Entrar</span>
-                  </Link>
-                )}
-              </>
-            )}
-          </div>
+          <span className="font-display text-lg font-bold text-foreground">Deco Control</span>
         </div>
       </div>
 
-      {/* Bottom Navigation - Both Mobile and Desktop */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border shadow-elevated">
-        <div className="container flex items-center justify-center h-16 md:h-18">
-          {/* Nav items - Mobile */}
-          <div className="flex md:hidden items-center justify-around w-full">
-            {mobileNavItems.map(({ path, icon: Icon, label }) => {
-              const isActive = location.pathname === path;
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300",
-                    isActive
-                      ? "text-primary bg-rose-light"
-                      : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs font-medium">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Nav items - Desktop (bottom, like mobile) */}
-          <div className="hidden md:flex items-center justify-center gap-8">
-            {desktopNavItems.map(({ path, icon: Icon, label }) => {
-              const isActive = location.pathname === path;
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  className={cn(
-                    "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300",
-                    isActive
-                      ? "text-primary bg-rose-light"
-                      : "text-muted-foreground hover:text-primary hover:bg-rose-light/50"
-                  )}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span className="text-sm font-medium">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+      {/* Main nav */}
+      <nav className="flex-1 px-3 space-y-1">
+        {sidebarItems.map(({ path, icon: Icon, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-rose-light text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              <Icon className="w-5 h-5 flex-shrink-0" />
+              <span>{label}</span>
+              {isActive && <ChevronRight className="w-4 h-4 ml-auto opacity-50" />}
+            </Link>
+          );
+        })}
       </nav>
-    </>
+
+      {/* Bottom section */}
+      <div className="px-3 pb-4 space-y-1 border-t border-border pt-3 mt-2">
+        {bottomItems.map(({ path, icon: Icon, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-rose-light text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              <Icon className="w-5 h-5 flex-shrink-0" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => { handleSignOut(); setMobileOpen(false); }}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Mobile: hamburger + drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile top bar */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border h-14 flex items-center px-4 gap-3">
+          <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+            <Menu className="w-6 h-6 text-foreground" />
+          </button>
+          <span className="font-display text-lg font-semibold text-foreground flex-1">Deco Control</span>
+          {user && (
+            <Link to="/settings" className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-rose-light">
+              <User className="w-4 h-4 text-rose-dark" />
+              <span className="text-xs font-medium text-rose-dark max-w-[100px] truncate">
+                {profile?.name || user.email?.split('@')[0]}
+              </span>
+            </Link>
+          )}
+        </div>
+
+        {/* Drawer overlay */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[60] flex">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+            <div className="relative w-64 bg-card border-r border-border shadow-elevated animate-slide-in-left z-10">
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <NavContent />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Desktop: fixed sidebar
+  return (
+    <aside className="fixed left-0 top-0 bottom-0 w-60 bg-card border-r border-border z-40 shadow-sm">
+      <NavContent />
+    </aside>
   );
 }
