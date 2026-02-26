@@ -7,21 +7,37 @@ import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
 import { PendingApproval } from '@/components/PendingApproval';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 
 export default function Home() {
   const navigate = useNavigate();
   const { quotes, calculateCosts } = useQuote();
   const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
+  const [transactions, setTransactions] = useState<{ id: string; type: 'income' | 'expense'; amount: number; description: string; category: string | null; transaction_date: string; created_at: string }[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('transaction_date', { ascending: false })
+        .then(({ data }) => {
+          if (data) setTransactions(data.map(t => ({ ...t, type: t.type as 'income' | 'expense', category: t.category ?? null })));
+        });
+    }
+  }, [user]);
 
   const currencySymbol = useMemo(() => {
     const currency = getCurrencyByCode(profile?.currency || 'USD');
@@ -178,6 +194,8 @@ export default function Home() {
               <span className="text-sm font-bold">{pendingQuotes.length} cotizaciones</span>
             </div>
           )}
+          {/* Monthly Charts */}
+          <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
         </CardContent>
       </Card>
 
