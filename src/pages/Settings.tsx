@@ -6,9 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
-import { MaterialsManager } from '@/components/settings/MaterialsManager';
 import { IndirectExpensesManager } from '@/components/settings/IndirectExpensesManager';
-import { ReusableMaterialsManager } from '@/components/settings/ReusableMaterialsManager';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -111,13 +109,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Materials Manager */}
-        <MaterialsManager />
 
-        {/* Reusable Materials Manager */}
-        {user && (
-          <ReusableMaterialsManager currencySymbol={currentCurrency?.symbol || '$'} />
-        )}
+        {/* Events Per Month */}
 
         {/* Events Per Month */}
         {user && (
