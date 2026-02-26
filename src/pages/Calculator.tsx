@@ -36,6 +36,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   clientName: '',
   clientPhone: '',
   eventDate: '',
+  setupTime: '',
   eventType: '',
   decorationDescription: '',
   createdAt: new Date().toISOString(),
@@ -239,13 +240,21 @@ export default function Calculator() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Fecha del evento</label>
                 <Input
                   type="date"
                   value={quote.eventDate}
                   onChange={(e) => updateQuote({ eventDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Hora del montaje</label>
+                <Input
+                  type="time"
+                  value={quote.setupTime}
+                  onChange={(e) => updateQuote({ setupTime: e.target.value })}
                 />
               </div>
               <div className="space-y-2">

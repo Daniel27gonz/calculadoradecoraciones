@@ -215,6 +215,7 @@ export type Database = {
           materials: Json | null
           notes: string | null
           reusable_materials_used: Json | null
+          setup_time: string | null
           status: string
           time_phases: Json | null
           tool_wear_percentage: number | null
@@ -240,6 +241,7 @@ export type Database = {
           materials?: Json | null
           notes?: string | null
           reusable_materials_used?: Json | null
+          setup_time?: string | null
           status?: string
           time_phases?: Json | null
           tool_wear_percentage?: number | null
@@ -265,6 +267,7 @@ export type Database = {
           materials?: Json | null
           notes?: string | null
           reusable_materials_used?: Json | null
+          setup_time?: string | null
           status?: string
           time_phases?: Json | null
           tool_wear_percentage?: number | null

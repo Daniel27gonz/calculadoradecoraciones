@@ -89,6 +89,7 @@ export interface Quote {
   marginPercentage: number;
   toolWearPercentage: number;
   wastagePercentage: number;
+  setupTime: string;
   notes: string;
   status: 'pending' | 'approved' | 'delivered';
   // Legacy field for backwards compatibility
