@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw, Palette } from 'lucide-react';
+import { Calculator, Wallet, Calendar, Package, TrendingUp, AlertCircle, DollarSign, CreditCard, Users, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -84,7 +84,7 @@ export default function Home() {
           { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
           { to: '/orders', icon: Calendar, label: 'Agenda', color: 'bg-accent/40 text-accent-foreground' },
           { to: '/finances', icon: Wallet, label: 'Finanzas', color: 'bg-profit-high/15 text-profit-high' },
-          { to: '/design', icon: Palette, label: 'Diseño', color: 'bg-primary/15 text-primary' },
+          
           { to: '/packages', icon: Package, label: 'Inventario', color: 'bg-secondary text-secondary-foreground' },
         ].map(({ to, icon: Icon, label, color }) => (
           <Link
