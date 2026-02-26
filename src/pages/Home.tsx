@@ -111,7 +111,7 @@ export default function Home() {
           Bienvenida a DecoControl
         </h1>
         <p className="text-muted-foreground mt-2 text-sm sm:text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Tu centro de control para tu negocio de decoración
+          Controla lo que ganas en cada decoración
         </p>
       </div>
 
