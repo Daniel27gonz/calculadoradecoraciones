@@ -221,6 +221,9 @@ export function MaterialsManager() {
       return;
     }
     try {
+      const mat = materials.find(m => m.id === newPurchase.material_id);
+      const matName = mat?.name || 'Material';
+
       // Insert purchase
       const { error: pErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
@@ -233,14 +236,23 @@ export function MaterialsManager() {
       });
       if (pErr) throw pErr;
 
+      // Register expense in Finances
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra de ${matName} (x${qty})${newPurchase.provider.trim() ? ` - ${newPurchase.provider.trim()}` : ''}`,
+        category: 'Compras de material',
+        transaction_date: newPurchase.purchase_date,
+      });
+
       // Update stock_current on user_materials (increment)
-      const mat = materials.find(m => m.id === newPurchase.material_id);
       if (mat) {
         const newStock = mat.total_purchased + qty;
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
       }
 
-      toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty})` });
+      toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado en Finanzas` });
       setPurchaseDialogOpen(false);
       setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
       loadAll();
@@ -254,14 +266,24 @@ export function MaterialsManager() {
       const { error } = await supabase.from('material_purchases').delete().eq('id', purchase.id);
       if (error) throw error;
 
-      // Decrement stock
+      // Remove associated expense from Finances
       const mat = materials.find(m => m.id === purchase.material_id);
+      const matName = mat?.name || 'Material';
+      await supabase.from('transactions').delete()
+        .eq('user_id', user!.id)
+        .eq('type', 'expense')
+        .eq('category', 'Compras de material')
+        .eq('amount', purchase.total_paid)
+        .eq('transaction_date', purchase.purchase_date)
+        .like('description', `%${matName}%`);
+
+      // Decrement stock
       if (mat) {
         const newStock = Math.max(0, mat.total_purchased - purchase.quantity_presentations);
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
       }
 
-      toast({ title: 'Compra eliminada' });
+      toast({ title: 'Compra eliminada', description: 'Gasto removido de Finanzas' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -292,6 +314,11 @@ export function MaterialsManager() {
       return;
     }
     try {
+      const mat = materials.find(m => m.id === newPurchase.material_id);
+      const matName = mat?.name || 'Material';
+      const oldMat = materials.find(m => m.id === editingPurchase.material_id);
+      const oldMatName = oldMat?.name || 'Material';
+
       const { error } = await supabase.from('material_purchases').update({
         material_id: newPurchase.material_id,
         purchase_date: newPurchase.purchase_date,
@@ -301,7 +328,26 @@ export function MaterialsManager() {
         provider: newPurchase.provider.trim() || null,
       }).eq('id', editingPurchase.id);
       if (error) throw error;
-      toast({ title: 'Compra actualizada' });
+
+      // Update associated expense: delete old and insert new
+      await supabase.from('transactions').delete()
+        .eq('user_id', user.id)
+        .eq('type', 'expense')
+        .eq('category', 'Compras de material')
+        .eq('amount', editingPurchase.total_paid)
+        .eq('transaction_date', editingPurchase.purchase_date)
+        .like('description', `%${oldMatName}%`);
+
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra de ${matName} (x${qty})${newPurchase.provider.trim() ? ` - ${newPurchase.provider.trim()}` : ''}`,
+        category: 'Compras de material',
+        transaction_date: newPurchase.purchase_date,
+      });
+
+      toast({ title: 'Compra actualizada', description: 'Gasto actualizado en Finanzas' });
       setPurchaseDialogOpen(false);
       setEditingPurchase(null);
       setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
