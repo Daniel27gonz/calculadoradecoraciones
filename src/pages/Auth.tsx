@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
+import balloonBg from '@/assets/balloon-bg.jpg';
 import { Eye, EyeOff, Mail, Lock, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,7 +85,18 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-hero px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center relative px-4 py-12">
+      {/* Balloon background */}
+      <div
+        className="fixed inset-0 -z-10 opacity-[0.15] blur-[2px]"
+        style={{
+          backgroundImage: `url(${balloonBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      <div className="fixed inset-0 -z-10 bg-background/80" />
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center space-y-4">
@@ -233,13 +245,6 @@ export default function Auth() {
         </p>
       </div>
 
-      {/* Decorative Elements */}
-      <div className="fixed top-20 right-10 text-6xl opacity-20 animate-float pointer-events-none hidden md:block">
-        🎈
-      </div>
-      <div className="fixed bottom-32 left-10 text-4xl opacity-15 animate-float pointer-events-none hidden md:block" style={{ animationDelay: '1s' }}>
-        🎀
-      </div>
     </div>
   );
 }
