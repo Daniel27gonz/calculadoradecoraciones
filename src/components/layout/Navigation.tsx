@@ -61,12 +61,12 @@ export function Navigation() {
   <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-5 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center shadow-soft">
-            <span className="text-lg">🎈</span>
-          </div>
-          
-        </div>
+        
+
+
+
+
+
       </div>
 
       {/* Main nav */}
