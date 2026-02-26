@@ -378,15 +378,22 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
       if (stored) {
         const expenses = JSON.parse(stored) as { monthlyAmount: number; paymentDate?: string }[];
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth() + 1;
-        const currentMonthExpenses = expenses.filter(e => {
-          if (!e.paymentDate) return false;
-          const [y, m] = e.paymentDate.split('-');
-          return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+        // Find the latest month with registered expenses
+        const withDates = expenses.filter(e => e.paymentDate);
+        let latestY = 0, latestM = 0;
+        withDates.forEach(e => {
+          const [y, m] = e.paymentDate!.split('-');
+          const yr = parseInt(y), mo = parseInt(m);
+          if (yr > latestY || (yr === latestY && mo > latestM)) {
+            latestY = yr;
+            latestM = mo;
+          }
         });
-        const totalMonthly = currentMonthExpenses.reduce((sum: number, e) => sum + (e.monthlyAmount || 0), 0);
+        const latestMonthExpenses = withDates.filter(e => {
+          const [y, m] = e.paymentDate!.split('-');
+          return parseInt(y) === latestY && parseInt(m) === latestM;
+        });
+        const totalMonthly = latestMonthExpenses.reduce((sum: number, e) => sum + (e.monthlyAmount || 0), 0);
         const eventsPerMonth = profile?.events_per_month || 4;
         indirectExpenses = eventsPerMonth > 0 ? totalMonthly / eventsPerMonth : 0;
       }

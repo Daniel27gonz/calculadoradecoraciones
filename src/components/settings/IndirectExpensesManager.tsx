@@ -136,17 +136,29 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     setExpenses(expenses.filter(e => e.id !== id));
   };
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  // Find the latest month that has registered expenses
+  const latestMonthExpenses = (() => {
+    const withDates = expenses.filter(e => e.paymentDate);
+    if (withDates.length === 0) return [];
+    
+    // Find the latest year-month
+    let latestY = 0, latestM = 0;
+    withDates.forEach(e => {
+      const [y, m] = e.paymentDate!.split('-');
+      const yr = parseInt(y), mo = parseInt(m);
+      if (yr > latestY || (yr === latestY && mo > latestM)) {
+        latestY = yr;
+        latestM = mo;
+      }
+    });
+    
+    return withDates.filter(e => {
+      const [y, m] = e.paymentDate!.split('-');
+      return parseInt(y) === latestY && parseInt(m) === latestM;
+    });
+  })();
 
-  const currentMonthExpenses = expenses.filter(e => {
-    if (!e.paymentDate) return false;
-    const [y, m] = e.paymentDate.split('-');
-    return parseInt(y) === currentYear && parseInt(m) === currentMonth;
-  });
-
-  const total = currentMonthExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  const total = latestMonthExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
