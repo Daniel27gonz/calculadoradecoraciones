@@ -199,8 +199,7 @@ export default function Orders() {
     .filter(q => {
       const matchesSearch = q.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      return matchesSearch && q.status === 'approved';
     })
     .sort((a, b) => {
       if (a.eventDate && b.eventDate) {
