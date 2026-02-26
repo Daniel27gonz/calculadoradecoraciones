@@ -299,7 +299,7 @@ export default function Orders() {
               <ArrowLeft className="w-4 h-4" />
               Volver
             </Button>
-            <h1 className="font-display text-xl font-semibold">Pedidos</h1>
+            <h1 className="font-display text-xl font-semibold">Agenda</h1>
             <div className="w-20" />
           </div>
         </div>
@@ -312,6 +312,9 @@ export default function Orders() {
           quotes={filteredQuotes}
           onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
         />
+
+        {/* Pedidos heading */}
+        <h2 className="font-display text-lg font-semibold">Pedidos</h2>
 
         {/* Filters */}
         <div className="space-y-3">
