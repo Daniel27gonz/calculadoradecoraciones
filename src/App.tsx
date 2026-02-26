@@ -22,6 +22,7 @@ import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 import InventoryConsumables from "./pages/InventoryConsumables";
 import InventoryReusables from "./pages/InventoryReusables";
+import IndirectExpenses from "./pages/IndirectExpenses";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function AppLayout() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/inventory/consumables" element={<InventoryConsumables />} />
           <Route path="/inventory/reusables" element={<InventoryReusables />} />
+          <Route path="/indirect-expenses" element={<IndirectExpenses />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
