@@ -311,13 +311,15 @@ export default function AdminDatabase() {
               {/* Mobile cards */}
               <div className="md:hidden divide-y">
                 {filteredUsers.map((userItem) => (
-                  <div key={userItem.id} className="p-4 space-y-3">
+                  <div key={userItem.id} className="px-3 py-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm truncate">{userItem.email}</p>
                         <p className="text-xs text-muted-foreground">{userItem.name || 'Sin nombre'}</p>
                       </div>
-                      {getStatusBadge(userItem.status)}
+                      <div className="shrink-0">
+                        {getStatusBadge(userItem.status)}
+                      </div>
                     </div>
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Creado: {formatDate(userItem.created_at)}</span>
@@ -326,22 +328,22 @@ export default function AdminDatabase() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-green-600 border-green-600 hover:bg-green-50"
+                        className="flex-1 min-w-0 text-green-600 border-green-600 hover:bg-green-50"
                         onClick={() => updateUserStatus(userItem.user_id, 'approved')}
                         disabled={userItem.status === 'approved' || updatingUser === userItem.user_id}
                       >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Aprobar
+                        <CheckCircle className="w-4 h-4 mr-1 shrink-0" />
+                        <span className="truncate">Aprobar</span>
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
+                        className="flex-1 min-w-0 text-red-600 border-red-600 hover:bg-red-50"
                         onClick={() => updateUserStatus(userItem.user_id, 'rejected')}
                         disabled={userItem.status === 'rejected' || updatingUser === userItem.user_id}
                       >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Rechazar
+                        <XCircle className="w-4 h-4 mr-1 shrink-0" />
+                        <span className="truncate">Rechazar</span>
                       </Button>
                     </div>
                   </div>

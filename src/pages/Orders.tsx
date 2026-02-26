@@ -415,8 +415,8 @@ export default function Orders() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                      <div className="text-right shrink-0 ml-2">
+                        <p className="text-lg sm:text-xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
                         {totalPaid > 0 && (
                           <p className={`text-xs font-medium ${balance <= 0 ? 'text-green-600' : 'text-yellow-600'}`}>
                             {balance <= 0 ? '✓ Pagado' : `Saldo: ${currencySymbol}${balance.toFixed(2)}`}
@@ -426,8 +426,8 @@ export default function Orders() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <div className="flex gap-1">
+                    <div className="flex items-center justify-between gap-1 pt-2 border-t border-border overflow-hidden">
+                      <div className="flex gap-1 shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -456,7 +456,7 @@ export default function Orders() {
                           onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
                         >
                           <DollarSign className="w-4 h-4" />
-                          <span className="text-xs">Anticipos</span>
+                          <span className="text-xs hidden xs:inline">Anticipos</span>
                           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </Button>
                       </div>
@@ -464,10 +464,10 @@ export default function Orders() {
                         variant={quote.status === 'approved' ? 'outline' : 'default'}
                         size="sm"
                         onClick={() => handleToggleStatus(quote)}
-                        className={quote.status === 'approved' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}
+                        className={`shrink-0 ${quote.status === 'approved' ? '' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                       >
                         {quote.status === 'approved' ? (
-                          <><Clock className="w-4 h-4 mr-1" /> Marcar pendiente</>
+                          <><Clock className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Marcar </span>pendiente</>
                         ) : (
                           <><CheckCircle2 className="w-4 h-4 mr-1" /> Aprobar</>
                         )}
