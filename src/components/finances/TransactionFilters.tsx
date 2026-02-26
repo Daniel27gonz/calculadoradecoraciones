@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -91,98 +89,73 @@ export function TransactionFilters({ transactions, filters, onFiltersChange }: T
   const hasActiveFilters = Object.values(filters).some(v => v !== '');
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {/* Day Filter */}
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-day" className="text-xs">Día</Label>
-          <Input
-            id="filter-day"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="Día"
-            value={filters.day}
-            onChange={(e) => handleChange('day', e.target.value)}
-            className="h-9"
-          />
-        </div>
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Type Filter */}
+      <Select value={filters.type || 'all_types'} onValueChange={(v) => handleChange('type', v === 'all_types' ? '' : v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[130px] rounded-full border-border bg-background text-sm">
+          <SelectValue placeholder="Todos los tipos" />
+        </SelectTrigger>
+        <SelectContent className="bg-background z-50">
+          <SelectItem value="all_types">Todos los tipos</SelectItem>
+          <SelectItem value="income">Ingresos</SelectItem>
+          <SelectItem value="expense">Gastos</SelectItem>
+        </SelectContent>
+      </Select>
 
-        {/* Month Filter */}
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-month" className="text-xs">Mes</Label>
-          <Select value={filters.month} onValueChange={(v) => handleChange('month', v)}>
-            <SelectTrigger id="filter-month" className="h-9">
-              <SelectValue placeholder="Mes" />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              {MONTHS.map((month) => (
-                <SelectItem key={month.value} value={month.value}>
-                  {month.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Category Filter */}
+      <Select value={filters.category || 'all_categories'} onValueChange={(v) => handleChange('category', v === 'all_categories' ? '' : v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-full border-border bg-background text-sm">
+          <SelectValue placeholder="Categoría" />
+        </SelectTrigger>
+        <SelectContent className="bg-background z-50">
+          <SelectItem value="all_categories">Todas las categorías</SelectItem>
+          {categories.map((cat) => (
+            <SelectItem key={cat} value={cat}>
+              {cat}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {/* Year Filter */}
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-year" className="text-xs">Año</Label>
-          <Select value={filters.year} onValueChange={(v) => handleChange('year', v)}>
-            <SelectTrigger id="filter-year" className="h-9">
-              <SelectValue placeholder="Año" />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              {years.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Month Filter */}
+      <Select value={filters.month || 'all_months'} onValueChange={(v) => handleChange('month', v === 'all_months' ? '' : v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[130px] rounded-full border-border bg-background text-sm">
+          <SelectValue placeholder="Mes" />
+        </SelectTrigger>
+        <SelectContent className="bg-background z-50">
+          <SelectItem value="all_months">Todos los meses</SelectItem>
+          {MONTHS.map((month) => (
+            <SelectItem key={month.value} value={month.value}>
+              {month.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {/* Category Filter */}
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-category" className="text-xs">Categoría</Label>
-          <Select value={filters.category} onValueChange={(v) => handleChange('category', v)}>
-            <SelectTrigger id="filter-category" className="h-9">
-              <SelectValue placeholder="Categoría" />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Type Filter */}
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-type" className="text-xs">Tipo</Label>
-          <Select value={filters.type} onValueChange={(v) => handleChange('type', v)}>
-            <SelectTrigger id="filter-type" className="h-9">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              <SelectItem value="income">Ingresos</SelectItem>
-              <SelectItem value="expense">Gastos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* Year Filter */}
+      <Select value={filters.year || 'all_years'} onValueChange={(v) => handleChange('year', v === 'all_years' ? '' : v)}>
+        <SelectTrigger className="h-9 w-auto min-w-[100px] rounded-full border-border bg-background text-sm">
+          <SelectValue placeholder="Año" />
+        </SelectTrigger>
+        <SelectContent className="bg-background z-50">
+          <SelectItem value="all_years">Todos los años</SelectItem>
+          {years.map((year) => (
+            <SelectItem key={year} value={year}>
+              {year}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {hasActiveFilters && (
         <Button
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="text-muted-foreground hover:text-foreground gap-1"
+          className="h-9 rounded-full text-muted-foreground hover:text-foreground gap-1 px-3"
         >
           <X className="w-3 h-3" />
-          Limpiar filtros
+          Limpiar
         </Button>
       )}
     </div>

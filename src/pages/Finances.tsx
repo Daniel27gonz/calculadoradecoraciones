@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, Filter } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -23,11 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 interface Transaction {
   id: string;
@@ -55,7 +50,7 @@ export default function Finances() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  
   const [filters, setFilters] = useState<Filters>({
     day: '',
     month: '',
@@ -264,32 +259,15 @@ export default function Finances() {
 
         {/* Transactions List */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
-              <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Filter className="w-4 h-4" />
-                    Filtros
-                    {hasActiveFilters && (
-                      <span className="w-2 h-2 bg-primary rounded-full" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </Collapsible>
-            </div>
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
+            <TransactionFilters
+              transactions={transactions}
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
           </CardHeader>
           <CardContent>
-            <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-              <CollapsibleContent className="pb-4">
-                <TransactionFilters
-                  transactions={transactions}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                />
-              </CollapsibleContent>
-            </Collapsible>
             
             {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
