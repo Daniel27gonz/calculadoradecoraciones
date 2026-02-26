@@ -23,7 +23,7 @@ const sidebarItems: SidebarItem[] = [
       { path: '/packages', icon: PackageOpen, label: 'Paquete' },
     ],
   },
-  { path: '/packages', icon: Package, label: 'Inventario' },
+  
   { path: '/history', icon: History, label: 'Historial' },
   { path: '/finances', icon: Wallet, label: 'Finanzas' },
   { path: '/orders', icon: Calendar, label: 'Agenda' },
