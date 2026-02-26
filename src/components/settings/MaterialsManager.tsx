@@ -654,6 +654,21 @@ export function MaterialsManager() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {!purchaseMaterialSearch.trim() && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                        onClick={() => {
+                          setIsCreatingNewMaterial(true);
+                          setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' });
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Agregar material nuevo
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
