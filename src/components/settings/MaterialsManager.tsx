@@ -539,7 +539,7 @@ export function MaterialsManager() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Cantidad de presentaciones</Label>
+                  <Label className="text-xs">Cantidad de la presentación</Label>
                   <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
