@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import checklistImg from '@/assets/checklist-materiales.jpeg';
 import respuestasImg from '@/assets/respuestas-rapidas.jpeg';
+import guiaErroresImg from '@/assets/guia-errores-comunes.jpeg';
 
 export default function EarnMore() {
   const navigate = useNavigate();
@@ -78,6 +79,27 @@ export default function EarnMore() {
               </h2>
               <p className="text-sm text-muted-foreground leading-snug">
                 Responde con confianza cuando un cliente cuestione tus precios.
+              </p>
+              <Button size="sm" className="mt-2">
+                Ver detalles
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 flex items-center gap-4">
+            <img
+              src={guiaErroresImg}
+              alt="Guía para evitar errores comunes en decoraciones con globos"
+              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0 space-y-1">
+              <h2 className="font-display font-semibold text-base leading-tight">
+                Guía para evitar errores comunes
+              </h2>
+              <p className="text-sm text-muted-foreground leading-snug">
+                Evita los errores más frecuentes que te hacen perder dinero en tus decoraciones.
               </p>
               <Button size="sm" className="mt-2">
                 Ver detalles
