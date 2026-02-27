@@ -274,15 +274,7 @@ export default function History() {
                       </div>
 
                       {/* Stats */}
-                      <div className="grid grid-cols-4 gap-2">
-                        <div className="text-center p-2 rounded-lg bg-rose-light/30">
-                          <p className="text-sm font-semibold">{quote.balloons.reduce((s, b) => s + (b.quantity || 0), 0)}</p>
-                          <p className="text-xs text-muted-foreground">Globos</p>
-                        </div>
-                        <div className="text-center p-2 rounded-lg bg-lavender-light/30">
-                          <p className="text-sm font-semibold">{quote.materials.length}</p>
-                          <p className="text-xs text-muted-foreground">Materiales</p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-2">
                         <div className="text-center p-2 rounded-lg bg-secondary/50">
                           <p className="text-sm font-semibold">
                             {quote.timePhases.reduce((s, t) => s + (t.hours || 0), 0)}h
