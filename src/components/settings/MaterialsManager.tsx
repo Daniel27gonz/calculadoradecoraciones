@@ -676,12 +676,12 @@ export function MaterialsManager() {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">¿Cuántas piezas trae?</Label>
-                  <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
                   <Label className="text-xs">¿Cuánto te costó c/u?</Label>
                   <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.presentation_price} onChange={(e) => setNewPurchase(p => ({ ...p, presentation_price: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cuántas piezas trae?</Label>
+                  <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Total Pagado</Label>
