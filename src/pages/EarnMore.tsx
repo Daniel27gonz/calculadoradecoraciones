@@ -49,6 +49,27 @@ export default function EarnMore() {
         <Card className="overflow-hidden">
           <CardContent className="p-4 flex items-center gap-4">
             <img
+              src={contratoImg}
+              alt="Modelo de contrato para decoradoras de eventos"
+              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0 space-y-1">
+              <h2 className="font-display font-semibold text-base leading-tight">
+                Modelo de contrato para eventos
+              </h2>
+              <p className="text-sm text-muted-foreground leading-snug">
+                Protege tu trabajo y evita malentendidos con un contrato profesional.
+              </p>
+              <Button size="sm" className="mt-2" asChild>
+                <a href="https://pay.hotmart.com/H103942467V?off=mt1ofqmr" target="_blank" rel="noopener noreferrer">Ver detalles</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 flex items-center gap-4">
+            <img
               src={checklistImg}
               alt="Checklist de materiales según tipo de decoración"
               className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
@@ -104,27 +125,6 @@ export default function EarnMore() {
               </p>
               <Button size="sm" className="mt-2" asChild>
                 <a href="https://pay.hotmart.com/X103941939U?off=774g73n8" target="_blank" rel="noopener noreferrer">Ver detalles</a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardContent className="p-4 flex items-center gap-4">
-            <img
-              src={contratoImg}
-              alt="Modelo de contrato para decoradoras de eventos"
-              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0 space-y-1">
-              <h2 className="font-display font-semibold text-base leading-tight">
-                Modelo de contrato para eventos
-              </h2>
-              <p className="text-sm text-muted-foreground leading-snug">
-                Protege tu trabajo y evita malentendidos con un contrato profesional.
-              </p>
-              <Button size="sm" className="mt-2" asChild>
-                <a href="https://pay.hotmart.com/H103942467V?off=mt1ofqmr" target="_blank" rel="noopener noreferrer">Ver detalles</a>
               </Button>
             </div>
           </CardContent>
