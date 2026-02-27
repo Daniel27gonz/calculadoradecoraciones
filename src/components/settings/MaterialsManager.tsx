@@ -775,13 +775,21 @@ export function MaterialsManager() {
                           <p className="font-medium text-sm">{index + 1}. {m.name}</p>
                           <p className="text-xs text-muted-foreground">{unitLabel}</p>
                         </div>
-                        <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
-                          {isLow ? (
-                            <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
-                          ) : (
-                            <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
-                          )}
-                        </Badge>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                            {isLow ? (
+                              <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
+                            ) : (
+                              <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
+                            )}
+                          </Badge>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingMaterial(m); setEditDialogOpen(true); }}>
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteMaterial(m.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex gap-4 mt-1.5 text-xs">
                         <span className="text-green-600 font-semibold">Entrada: {m.total_purchased}</span>
