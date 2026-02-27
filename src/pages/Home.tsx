@@ -116,18 +116,32 @@ export default function Home() {
       </div>
 
       {/* Acciones Rápidas - horizontal */}
+      {/* Nueva Cotización - prominente en móvil */}
+      <Link
+        to="/calculator"
+        className="flex items-center gap-3 p-4 rounded-xl border border-rose-dark/20 hover:shadow-soft hover:scale-[1.01] transition-all duration-200 bg-rose-light/30 sm:hidden"
+      >
+        <div className="w-12 h-12 rounded-xl bg-rose-light text-rose-dark flex items-center justify-center shrink-0">
+          <Calculator className="w-6 h-6" />
+        </div>
+        <div>
+          <span className="text-sm font-semibold text-rose-dark">Nueva Cotización</span>
+          <p className="text-xs text-muted-foreground">Calcula costos y ganancias</p>
+        </div>
+      </Link>
+
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
         {[
-          { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
+          { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark', mobileHidden: true },
           { to: '/orders', icon: Calendar, label: 'Agenda y Pedidos', color: 'bg-accent/40 text-accent-foreground' },
           { to: '/finances', icon: Wallet, label: 'Mi Dinero', color: 'bg-profit-high/15 text-profit-high' },
           
           { to: '/packages', icon: Package, label: 'Materiales', color: 'bg-secondary text-secondary-foreground' },
-        ].map(({ to, icon: Icon, label, color }) => (
+        ].map(({ to, icon: Icon, label, color, mobileHidden }) => (
           <Link
             key={to}
             to={to}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card"
+            className={`flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:shadow-soft hover:scale-[1.02] transition-all duration-200 bg-card ${mobileHidden ? 'hidden sm:flex' : ''}`}
           >
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
               <Icon className="w-5 h-5" />
