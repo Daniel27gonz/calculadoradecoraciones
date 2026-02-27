@@ -640,14 +640,47 @@ export function MaterialsManager() {
           <DialogContent className="bg-background max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingPurchase ? 'Editar Compra' : 'Registrar Compra'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              {/* Material name input */}
+              {/* Material name input with search */}
               <div className="space-y-1">
                 <Label className="text-xs">Material</Label>
-                <Input
-                  placeholder="Nombre del material"
-                  value={newMatInline.name}
-                  onChange={(e) => setNewMatInline(p => ({ ...p, name: e.target.value }))}
-                />
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar o escribir nombre del material"
+                    value={newMatInline.name}
+                    onChange={(e) => {
+                      setNewMatInline(p => ({ ...p, name: e.target.value }));
+                      setPurchaseMaterialSearch(e.target.value);
+                    }}
+                    className="pl-8"
+                  />
+                </div>
+                {/* Suggestions dropdown */}
+                {newMatInline.name.trim() && filteredPurchaseMaterials.length > 0 && !materials.some(m => m.name.toLowerCase() === newMatInline.name.toLowerCase().trim()) && (
+                  <div className="border rounded-md bg-background max-h-32 overflow-y-auto shadow-sm">
+                    {filteredPurchaseMaterials.slice(0, 5).map(m => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between"
+                        onClick={() => {
+                          setNewMatInline(p => ({ ...p, name: m.name, category: m.category }));
+                          setNewPurchase(p => ({ ...p, material_id: m.id, purchase_unit: m.purchase_unit }));
+                          setPurchaseMaterialSearch('');
+                        }}
+                      >
+                        <span>{m.name}</span>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{CATEGORIES.find(c => c.value === m.category)?.label || m.category}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {newMatInline.name.trim() && materials.some(m => m.name.toLowerCase() === newMatInline.name.toLowerCase().trim()) && (
+                  <p className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Material encontrado, se actualizará su stock</p>
+                )}
+                {newMatInline.name.trim() && !materials.some(m => m.name.toLowerCase().includes(newMatInline.name.toLowerCase().trim())) && (
+                  <p className="text-xs text-muted-foreground">Material nuevo, se creará automáticamente</p>
+                )}
                 <Select value={newMatInline.category} onValueChange={(v) => setNewMatInline(p => ({ ...p, category: v }))}>
                   <SelectTrigger className="bg-background"><SelectValue placeholder="Categoría" /></SelectTrigger>
                   <SelectContent className="bg-background z-50">
