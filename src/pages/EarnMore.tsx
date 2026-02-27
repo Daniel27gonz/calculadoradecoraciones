@@ -58,7 +58,7 @@ export default function EarnMore() {
                 Modelo de contrato para eventos
               </h2>
               <p className="text-sm text-muted-foreground leading-snug">
-                Protege tu trabajo y evita malentendidos con un contrato profesional.
+                Protege tu trabajo y evita malentendidos con un contrato profesional listo para usar.
               </p>
               <Button size="sm" className="mt-2" asChild>
                 <a href="https://pay.hotmart.com/H103942467V?off=mt1ofqmr" target="_blank" rel="noopener noreferrer">Ver detalles</a>
