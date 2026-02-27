@@ -684,7 +684,7 @@ export function MaterialsManager() {
                   <Input type="number" min="1" placeholder="1" value={newPurchase.quantity_bought} onChange={(e) => setNewPurchase(p => ({ ...p, quantity_bought: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Monto total</Label>
+                  <Label className="text-xs">Total Pagado</Label>
                   <div className="h-9 flex items-center px-3 rounded-md border bg-muted text-sm font-semibold">
                     {purchaseTotalPaid !== null ? fmt(purchaseTotalPaid) : '-'}
                   </div>
