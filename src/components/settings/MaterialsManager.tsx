@@ -375,10 +375,11 @@ export function MaterialsManager() {
   }, [newPurchase.quantity_bought, newPurchase.presentation_price]);
 
   const purchaseCostPerUnit = useMemo(() => {
-    const presPrice = Number(newPurchase.presentation_price);
-    if (!presPrice) return null;
-    return presPrice;
-  }, [newPurchase.presentation_price, newPurchase.material_id, materials]);
+    if (purchaseTotalPaid === null) return null;
+    const qty = Number(newPurchase.quantity);
+    if (!qty || qty <= 0) return null;
+    return purchaseTotalPaid / qty;
+  }, [purchaseTotalPaid, newPurchase.quantity]);
 
   // Filtered materials for purchase dialog search
   const filteredPurchaseMaterials = useMemo(() => {
