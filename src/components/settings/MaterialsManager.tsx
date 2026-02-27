@@ -51,6 +51,7 @@ interface Purchase {
   material_name?: string;
   purchase_date: string;
   quantity_presentations: number;
+  units_added: number;
   total_paid: number;
   cost_per_unit: number;
   provider: string | null;
@@ -78,6 +79,7 @@ export function MaterialsManager() {
     purchase_unit: '',
     presentation_price: '',
     quantity: '',
+    quantity_bought: '',
     provider: '',
   });
 
@@ -140,6 +142,7 @@ export function MaterialsManager() {
         material_id: p.material_id,
         purchase_date: p.purchase_date,
         quantity_presentations: p.quantity_presentations,
+        units_added: p.units_added,
         total_paid: p.total_paid,
         cost_per_unit: p.quantity_presentations > 0 ? p.total_paid / p.quantity_presentations : 0,
         provider: p.provider,
@@ -224,8 +227,10 @@ export function MaterialsManager() {
       return;
     }
     const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
     const presPrice = Number(newPurchase.presentation_price);
-    const paid = presPrice * qty;
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
     if (!qty || qty <= 0) {
       toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
       return;
@@ -236,8 +241,8 @@ export function MaterialsManager() {
         user_id: user.id,
         material_id: newPurchase.material_id,
         purchase_date: newPurchase.purchase_date,
-        quantity_presentations: qty,
-        units_added: qty,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
       });
@@ -246,7 +251,7 @@ export function MaterialsManager() {
       // Update stock_current on user_materials (increment)
       const mat = materials.find(m => m.id === newPurchase.material_id);
       if (mat) {
-        const newStock = mat.total_purchased + qty;
+        const newStock = mat.total_purchased + totalUnits;
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
       }
 
@@ -263,7 +268,7 @@ export function MaterialsManager() {
 
       toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
       setPurchaseDialogOpen(false);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -305,7 +310,8 @@ export function MaterialsManager() {
       purchase_date: purchase.purchase_date,
       purchase_unit: mat?.purchase_unit || '',
       presentation_price: String(purchase.quantity_presentations > 0 ? purchase.total_paid / purchase.quantity_presentations : 0),
-      quantity: String(purchase.quantity_presentations),
+      quantity: String(purchase.quantity_presentations > 0 ? purchase.units_added / purchase.quantity_presentations : 0),
+      quantity_bought: String(purchase.quantity_presentations),
       provider: purchase.provider || '',
     });
     setPurchaseDialogOpen(true);
@@ -314,8 +320,10 @@ export function MaterialsManager() {
   const handleUpdatePurchase = async () => {
     if (!user || !editingPurchase) return;
     const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
     const presPrice = Number(newPurchase.presentation_price);
-    const paid = presPrice * qty;
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
     if (!qty || qty <= 0) {
       toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
       return;
@@ -324,8 +332,8 @@ export function MaterialsManager() {
       const { error } = await supabase.from('material_purchases').update({
         material_id: newPurchase.material_id,
         purchase_date: newPurchase.purchase_date,
-        quantity_presentations: qty,
-        units_added: qty,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
       }).eq('id', editingPurchase.id);
@@ -352,7 +360,7 @@ export function MaterialsManager() {
       toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
       setPurchaseDialogOpen(false);
       setEditingPurchase(null);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -360,11 +368,11 @@ export function MaterialsManager() {
   };
 
   const purchaseTotalPaid = useMemo(() => {
-    const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought);
     const presPrice = Number(newPurchase.presentation_price);
-    if (!qty || qty <= 0 || !presPrice) return null;
-    return presPrice * qty;
-  }, [newPurchase.quantity, newPurchase.presentation_price]);
+    if (!qtyBought || qtyBought <= 0 || !presPrice) return null;
+    return presPrice * qtyBought;
+  }, [newPurchase.quantity_bought, newPurchase.presentation_price]);
 
   const purchaseCostPerUnit = useMemo(() => {
     const presPrice = Number(newPurchase.presentation_price);
@@ -445,8 +453,10 @@ export function MaterialsManager() {
       return;
     }
     const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
     const presPrice = Number(newPurchase.presentation_price);
-    const paid = presPrice * qty;
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
     if (!qty || qty <= 0) {
       toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
       return;
@@ -460,7 +470,7 @@ export function MaterialsManager() {
       if (existing) {
         materialId = existing.id;
         // Update stock
-        const newStock = existing.total_purchased + qty;
+        const newStock = existing.total_purchased + totalUnits;
         await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', materialId);
       } else {
         // Create material
@@ -470,7 +480,7 @@ export function MaterialsManager() {
           category: newMatInline.category,
           purchase_unit: newPurchase.purchase_unit || newMatInline.purchase_unit,
           stock_minimum: 0,
-          stock_current: qty,
+          stock_current: totalUnits,
         }).select('id').single();
         if (matErr) throw matErr;
         materialId = matData.id;
@@ -482,8 +492,8 @@ export function MaterialsManager() {
         user_id: user.id,
         material_id: materialId,
         purchase_date: newPurchase.purchase_date,
-        quantity_presentations: qty,
-        units_added: qty,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
       });
@@ -498,12 +508,12 @@ export function MaterialsManager() {
         transaction_date: newPurchase.purchase_date,
       });
 
-      toast({ title: isNew ? 'Material creado y compra registrada ✅' : 'Compra registrada ✅', description: `${name} · ${qty} unidades · Gasto registrado` });
+      toast({ title: isNew ? 'Material creado y compra registrada ✅' : 'Compra registrada ✅', description: `${name} · ${totalUnits} unidades · Gasto registrado` });
       setPurchaseDialogOpen(false);
       setIsCreatingNewMaterial(false);
       setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' });
       setPurchaseMaterialSearch('');
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -584,7 +594,7 @@ export function MaterialsManager() {
 
       {/* ===== TAB COMPRAS ===== */}
       <TabsContent value="purchases" className="space-y-4 mt-4">
-        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
+        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
           <Plus className="w-4 h-4 mr-1" /> Registrar Compra
         </Button>
 
@@ -663,10 +673,14 @@ export function MaterialsManager() {
                   <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.presentation_price} onChange={(e) => setNewPurchase(p => ({ ...p, presentation_price: e.target.value }))} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">¿Cuántas piezas trae?</Label>
                   <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cuánto compraste?</Label>
+                  <Input type="number" min="1" placeholder="1" value={newPurchase.quantity_bought} onChange={(e) => setNewPurchase(p => ({ ...p, quantity_bought: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Monto total</Label>
