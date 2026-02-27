@@ -94,8 +94,8 @@ export function LaborSection({
                 </div>
                 
                 {/* Inputs row */}
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="flex-1 min-w-[70px] max-w-[90px]">
+                <div className="flex items-center gap-2 flex-1 flex-wrap">
+                  <div className="flex-1 min-w-[60px] max-w-[90px]">
                     <NumericField
                       min={0}
                       step={0.5}
@@ -107,7 +107,7 @@ export function LaborSection({
                     />
                   </div>
                   <span className="text-muted-foreground text-sm">×</span>
-                  <div className="flex-1 min-w-[70px] max-w-[90px]">
+                  <div className="flex-1 min-w-[60px] max-w-[90px]">
                     <NumericField
                       min={0}
                       prefix={currencySymbol}
@@ -170,7 +170,7 @@ export function LaborSection({
               </div>
 
               {/* Worker fields */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <NumericField
                   label="$/hora"
                   prefix={currencySymbol}
@@ -187,7 +187,7 @@ export function LaborSection({
                   onChange={(e) => updateWorker(worker.id, { hours: e.target.value === '' ? 0 : Number(e.target.value) })}
                   placeholder="0"
                 />
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
                   <label className="text-xs font-medium text-muted-foreground leading-none">Total</label>
                   <div className="h-11 flex items-center justify-end px-3 rounded-lg bg-primary/5 border border-primary/10">
                     <span className="font-bold text-primary tabular-nums">

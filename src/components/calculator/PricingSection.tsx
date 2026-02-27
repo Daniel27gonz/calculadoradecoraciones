@@ -111,16 +111,16 @@ export function PricingSection({
     sublabel?: React.ReactNode;
     amount: number;
     highlighted?: boolean;
-  }) => <div className={cn("flex items-center justify-between gap-4 px-4 py-3 transition-colors", highlighted ? "bg-muted/40" : "hover:bg-muted/30")}>
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <span className="text-lg sm:text-xl flex-shrink-0">{icon}</span>
+  }) => <div className={cn("flex items-start justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-3 transition-colors", highlighted ? "bg-muted/40" : "hover:bg-muted/30")}>
+      <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+        <span className="text-base sm:text-xl flex-shrink-0 mt-0.5">{icon}</span>
         <div className="min-w-0">
-          <span className="text-sm sm:text-base font-medium block truncate">{label}</span>
+          <span className="text-xs sm:text-base font-medium block break-words leading-tight">{label}</span>
           {sublabel}
         </div>
       </div>
       <div className="text-right flex-shrink-0">
-        <span className="font-bold text-sm sm:text-base tabular-nums whitespace-nowrap">
+        <span className="font-bold text-xs sm:text-base tabular-nums whitespace-nowrap">
           {formatCurrency(amount)}
         </span>
       </div>
@@ -158,12 +158,12 @@ export function PricingSection({
           </div>
 
           {/* Total General */}
-          <div className="p-4 sm:p-5 bg-gradient-to-r from-primary via-primary to-primary/90">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-primary-foreground font-bold text-base sm:text-lg">
+          <div className="p-3 sm:p-5 bg-gradient-to-r from-primary via-primary to-primary/90">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
                 Total General
               </span>
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums">
+              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
                 {formatCurrency(summary.totalCost)}
               </span>
             </div>
@@ -181,14 +181,14 @@ export function PricingSection({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Margin buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
             {marginOptions.map(({
             value,
             label,
             description
-          }) => <Button key={value} variant={marginPercentage === value ? 'default' : 'outline'} className={cn("flex flex-col h-auto py-3 px-2", marginPercentage === value && "shadow-card ring-2 ring-primary/20")} onClick={() => onMarginChange(value)}>
-                <span className="font-bold text-base sm:text-lg">{label}</span>
-                <span className="text-[10px] sm:text-xs opacity-70 mt-0.5">{description}</span>
+          }) => <Button key={value} variant={marginPercentage === value ? 'default' : 'outline'} className={cn("flex flex-col h-auto py-2 sm:py-3 px-1 sm:px-2", marginPercentage === value && "shadow-card ring-2 ring-primary/20")} onClick={() => onMarginChange(value)}>
+                <span className="font-bold text-sm sm:text-lg">{label}</span>
+                <span className="text-[9px] sm:text-xs opacity-70 mt-0.5">{description}</span>
               </Button>)}
           </div>
 
@@ -201,12 +201,12 @@ export function PricingSection({
           <div className="h-px bg-border" />
 
           {/* Final price */}
-          <div className="p-4 sm:p-5 rounded-xl gradient-primary">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-primary-foreground font-bold text-base sm:text-lg">
+          <div className="p-3 sm:p-5 rounded-xl gradient-primary">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
                 Precio Final
               </span>
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums">
+              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
                 {formatCurrency(summary.finalPrice)}
               </span>
             </div>
@@ -229,22 +229,22 @@ export function PricingSection({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Stats grid */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
-              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Ganancia Neta</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
+            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
+              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Ganancia Neta</p>
+              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
                 {currencySymbol}{summary.netProfit.toFixed(0)}
               </p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
-              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Porcentaje</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
+              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Porcentaje</p>
+              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
                 {summary.profitPercentage.toFixed(0)}%
               </p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border/50">
-              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Por Hora</p>
-              <p className={cn("text-lg sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
+              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Por Hora</p>
+              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
                 {currencySymbol}{summary.profitPerHour.toFixed(0)}
               </p>
             </div>
