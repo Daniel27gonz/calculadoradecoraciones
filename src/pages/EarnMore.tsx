@@ -102,8 +102,8 @@ export default function EarnMore() {
               <p className="text-sm text-muted-foreground leading-snug">
                 Evita los errores más frecuentes que te hacen perder dinero en tus decoraciones.
               </p>
-              <Button size="sm" className="mt-2">
-                Ver detalles
+              <Button size="sm" className="mt-2" asChild>
+                <a href="https://pay.hotmart.com/X103941939U?off=774g73n8" target="_blank" rel="noopener noreferrer">Ver detalles</a>
               </Button>
             </div>
           </CardContent>
