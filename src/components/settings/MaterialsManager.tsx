@@ -368,9 +368,9 @@ export function MaterialsManager() {
   };
 
   const purchaseTotalPaid = useMemo(() => {
-    const qtyBought = Number(newPurchase.quantity_bought);
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
     const presPrice = Number(newPurchase.presentation_price);
-    if (!qtyBought || qtyBought <= 0 || !presPrice) return null;
+    if (!presPrice || presPrice <= 0) return null;
     return presPrice * qtyBought;
   }, [newPurchase.quantity_bought, newPurchase.presentation_price]);
 
