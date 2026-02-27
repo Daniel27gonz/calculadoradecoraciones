@@ -180,23 +180,23 @@ export default function Calculator() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border md:relative md:bg-transparent md:border-0">
         <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+        <div className="flex items-center justify-between gap-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 px-2 sm:px-3">
               <ArrowLeft className="w-4 h-4" />
-              Volver
+              <span className="hidden sm:inline">Volver</span>
             </Button>
-            <h1 className="font-display text-xl font-semibold">
+            <h1 className="font-display text-base sm:text-xl font-semibold truncate text-center">
               {editId ? 'Editar Cotización' : 'Nueva Cotización'}
             </h1>
-            <Button variant="default" size="sm" onClick={handleSave}>
+            <Button variant="default" size="sm" onClick={handleSave} className="shrink-0 px-2 sm:px-3">
               <Save className="w-4 h-4" />
-              Guardar
+              <span className="hidden sm:inline">Guardar</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main className="container max-w-4xl mx-auto px-3 sm:px-4 py-6 space-y-6 overflow-x-hidden">
         {/* Logo Upload */}
         <LogoUploadSection />
 
