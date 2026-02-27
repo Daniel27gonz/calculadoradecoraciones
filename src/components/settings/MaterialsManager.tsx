@@ -681,6 +681,7 @@ export function MaterialsManager() {
                 {newMatInline.name.trim() && !materials.some(m => m.name.toLowerCase().includes(newMatInline.name.toLowerCase().trim())) && (
                   <p className="text-xs text-muted-foreground">Material nuevo, se creará automáticamente</p>
                 )}
+                <Label className="text-xs">Categoría</Label>
                 <Select value={newMatInline.category} onValueChange={(v) => setNewMatInline(p => ({ ...p, category: v }))}>
                   <SelectTrigger className="bg-background"><SelectValue placeholder="Categoría" /></SelectTrigger>
                   <SelectContent className="bg-background z-50">
