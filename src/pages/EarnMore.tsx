@@ -60,8 +60,8 @@ export default function EarnMore() {
               <p className="text-sm text-muted-foreground leading-snug">
                 Nunca olvides un material con listas organizadas por tipo de evento.
               </p>
-              <Button size="sm" className="mt-2">
-                Ver detalles
+              <Button size="sm" className="mt-2" asChild>
+                <a href="https://pay.hotmart.com/O103943521Y?off=hbwm6mdw" target="_blank" rel="noopener noreferrer">Ver detalles</a>
               </Button>
             </div>
           </CardContent>
