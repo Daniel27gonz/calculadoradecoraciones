@@ -41,20 +41,22 @@ export default function Settings() {
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main className="container max-w-4xl mx-auto px-3 sm:px-4 py-6 space-y-6 overflow-x-hidden">
         {/* User Profile */}
         {user && (
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
-                  <User className="w-5 h-5 text-rose-dark" />
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5 text-rose-dark" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg">Tu cuenta</CardTitle>
+                    <CardDescription className="truncate">{user.email}</CardDescription>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <CardTitle className="text-lg">Tu cuenta</CardTitle>
-                  <CardDescription>{user.email}</CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="shrink-0 self-start sm:self-center">
                   <LogOut className="w-4 h-4 mr-2" />
                   Cerrar sesión
                 </Button>
@@ -122,8 +124,8 @@ export default function Settings() {
         )}
 
         {/* App Info */}
-        <div className="text-center text-sm text-muted-foreground py-8">
-          <p className="font-display text-lg font-semibold text-foreground mb-1">
+        <div className="text-center text-sm text-muted-foreground py-8 px-2">
+          <p className="font-display text-base sm:text-lg font-semibold text-foreground mb-1">
             Calculadora para Decoradoras
           </p>
           <p>Versión 1.0.0</p>
