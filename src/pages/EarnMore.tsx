@@ -5,6 +5,7 @@ import { TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import checklistImg from '@/assets/checklist-materiales.jpeg';
+import respuestasImg from '@/assets/respuestas-rapidas.jpeg';
 
 export default function EarnMore() {
   const navigate = useNavigate();
@@ -56,6 +57,27 @@ export default function EarnMore() {
               </h2>
               <p className="text-sm text-muted-foreground leading-snug">
                 Nunca olvides un material con listas organizadas por tipo de evento.
+              </p>
+              <Button size="sm" className="mt-2">
+                Ver detalles
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 flex items-center gap-4">
+            <img
+              src={respuestasImg}
+              alt="100 Respuestas Rápidas para cuando te dicen ¡Está caro!"
+              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0 space-y-1">
+              <h2 className="font-display font-semibold text-base leading-tight">
+                100 Respuestas para "¡Está caro!"
+              </h2>
+              <p className="text-sm text-muted-foreground leading-snug">
+                Responde con confianza cuando un cliente cuestione tus precios.
               </p>
               <Button size="sm" className="mt-2">
                 Ver detalles
