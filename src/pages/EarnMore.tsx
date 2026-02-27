@@ -81,8 +81,8 @@ export default function EarnMore() {
               <p className="text-sm text-muted-foreground leading-snug">
                 Responde con confianza cuando un cliente cuestione tus precios.
               </p>
-              <Button size="sm" className="mt-2">
-                Ver detalles
+              <Button size="sm" className="mt-2" asChild>
+                <a href="https://pay.hotmart.com/B104170003H?off=8qdmzx4e" target="_blank" rel="noopener noreferrer">Ver detalles</a>
               </Button>
             </div>
           </CardContent>
