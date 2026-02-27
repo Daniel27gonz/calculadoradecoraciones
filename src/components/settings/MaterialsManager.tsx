@@ -650,7 +650,7 @@ export function MaterialsManager() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Unidad de compra</Label>
+                  <Label className="text-xs">¿Cómo lo compraste?</Label>
                   <Select value={newPurchase.purchase_unit || (isCreatingNewMaterial ? newMatInline.purchase_unit : '')} onValueChange={(v) => { setNewPurchase(p => ({ ...p, purchase_unit: v })); if (isCreatingNewMaterial) setNewMatInline(p => ({ ...p, purchase_unit: v })); }}>
                     <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent className="bg-background z-50">
@@ -659,13 +659,13 @@ export function MaterialsManager() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Precio de la presentación</Label>
+                  <Label className="text-xs">¿Cuánto te costó c/u?</Label>
                   <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.presentation_price} onChange={(e) => setNewPurchase(p => ({ ...p, presentation_price: e.target.value }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Cantidad de la presentación</Label>
+                  <Label className="text-xs">¿Cuántas piezas trae?</Label>
                   <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
