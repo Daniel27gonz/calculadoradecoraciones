@@ -1,18 +1,54 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Globe, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Globe, LogOut, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, profile, updateProfile, signOut } = useAuth();
 
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const handleCurrencyChange = (currencyCode: string) => {
     if (user && profile) {
       updateProfile({ currency: currencyCode });
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error('Completa ambos campos');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Contraseña actualizada correctamente');
+      setNewPassword('');
+      setConfirmPassword('');
     }
   };
 
@@ -65,7 +101,74 @@ export default function Settings() {
           </Card>
         )}
 
-        {/* Currency Selection */}
+        {/* Change Password */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Cambiar contraseña</CardTitle>
+                  <CardDescription>Actualiza tu contraseña de acceso</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Nueva contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNew ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowNew(!showNew)}
+                  >
+                    {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirm ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repite tu nueva contraseña"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                onClick={handleChangePassword}
+                disabled={changingPassword || !newPassword || !confirmPassword}
+                className="w-full"
+              >
+                {changingPassword ? 'Actualizando...' : 'Actualizar contraseña'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
