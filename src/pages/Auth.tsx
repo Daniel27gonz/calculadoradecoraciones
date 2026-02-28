@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import balloonBg from '@/assets/balloon-bg.jpg';
-import { Eye, EyeOff, Mail, Lock, Sparkles, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import logoFull from '@/assets/logo-decocontrol-full.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -100,10 +101,7 @@ export default function Auth() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-soft">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Balloon Profit Calculator</span>
-          </div>
+          <img src={logoFull} alt="DecoControl" className="h-16 mx-auto" />
           <h1 className="font-display text-3xl font-bold">
             {isLogin ? 'Bienvenida de vuelta' : 'Crea tu cuenta'}
           </h1>
