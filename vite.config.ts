@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => ({
       },
       manifest: {
         id: "/",
-        name: "DecoConta",
-        short_name: "DecoConta",
+        name: "DecoControl",
+        short_name: "DecoControl",
         description: "Calcula precios, costos y ganancias de tus eventos de decoración con globos. App para decoradoras emprendedoras.",
         theme_color: "#f9a8d4",
         background_color: "#fdf2f8",
