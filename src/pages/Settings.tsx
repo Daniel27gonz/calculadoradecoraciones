@@ -15,8 +15,10 @@ export default function Settings() {
   const navigate = useNavigate();
   const { user, profile, updateProfile, signOut } = useAuth();
 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -28,8 +30,8 @@ export default function Settings() {
   };
 
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      toast.error('Completa ambos campos');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Completa todos los campos');
       return;
     }
     if (newPassword.length < 6) {
@@ -41,12 +43,23 @@ export default function Settings() {
       return;
     }
     setChangingPassword(true);
+    // Verify current password by re-signing in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: currentPassword,
+    });
+    if (signInError) {
+      setChangingPassword(false);
+      toast.error('La contraseña actual es incorrecta');
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPassword(false);
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Contraseña actualizada correctamente');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     }
@@ -117,6 +130,27 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="current-password">Contraseña actual</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrent ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Tu contraseña actual"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                  >
+                    {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="new-password">Nueva contraseña</Label>
                 <div className="relative">
                   <Input
@@ -160,7 +194,7 @@ export default function Settings() {
               </div>
               <Button
                 onClick={handleChangePassword}
-                disabled={changingPassword || !newPassword || !confirmPassword}
+                disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
                 className="w-full"
               >
                 {changingPassword ? 'Actualizando...' : 'Actualizar contraseña'}
