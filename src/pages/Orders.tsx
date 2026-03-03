@@ -163,6 +163,7 @@ export default function Orders() {
         const folioLabel = quote.folio ? `#${String(quote.folio).padStart(4, '0')}` : quote.id;
         await supabase.from('transactions').delete()
           .eq('user_id', user!.id)
+          .eq('category', 'Pagos completos')
           .like('description', `%Folio ${folioLabel}%`);
         toast({ title: "Pedido desmarcado", description: "Ingreso removido de Finanzas" });
       }
