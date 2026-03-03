@@ -125,7 +125,7 @@ export function MaterialsManager() {
       // Calculate total purchased per material from purchases
       const purchasesByMaterial: Record<string, number> = {};
       (purRes.data || []).forEach(p => {
-        purchasesByMaterial[p.material_id] = (purchasesByMaterial[p.material_id] || 0) + p.quantity_presentations;
+        purchasesByMaterial[p.material_id] = (purchasesByMaterial[p.material_id] || 0) + p.units_added;
       });
 
       setMaterials((matRes.data || []).map(m => ({
@@ -320,12 +320,16 @@ export function MaterialsManager() {
   const handleUpdatePurchase = async () => {
     if (!user || !editingPurchase) return;
     const qty = Number(newPurchase.quantity);
-    const qtyBought = Number(newPurchase.quantity_bought) || 1;
+    const qtyBought = Number(newPurchase.quantity_bought);
     const presPrice = Number(newPurchase.presentation_price);
+    if (!qtyBought || qtyBought <= 0) {
+      toast({ title: 'Error', description: 'El campo "¿Cuánto compraste?" es obligatorio', variant: 'destructive' });
+      return;
+    }
     const paid = presPrice * qtyBought;
     const totalUnits = qty * qtyBought;
     if (!qty || qty <= 0) {
-      toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
+      toast({ title: 'Error', description: 'La cantidad de piezas debe ser mayor a 0', variant: 'destructive' });
       return;
     }
     try {
@@ -454,12 +458,16 @@ export function MaterialsManager() {
       return;
     }
     const qty = Number(newPurchase.quantity);
-    const qtyBought = Number(newPurchase.quantity_bought) || 1;
+    const qtyBought = Number(newPurchase.quantity_bought);
     const presPrice = Number(newPurchase.presentation_price);
+    if (!qtyBought || qtyBought <= 0) {
+      toast({ title: 'Error', description: 'El campo "¿Cuánto compraste?" es obligatorio', variant: 'destructive' });
+      return;
+    }
     const paid = presPrice * qtyBought;
     const totalUnits = qty * qtyBought;
     if (!qty || qty <= 0) {
-      toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
+      toast({ title: 'Error', description: 'La cantidad de piezas debe ser mayor a 0', variant: 'destructive' });
       return;
     }
     try {
@@ -740,9 +748,9 @@ export function MaterialsManager() {
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setPurchaseDialogOpen(false)}>Cancelar</Button>
               {editingPurchase ? (
-                <Button variant="gradient" onClick={handleUpdatePurchase}>Guardar</Button>
+                <Button variant="gradient" onClick={handleUpdatePurchase} disabled={!Number(newPurchase.quantity_bought)}>Guardar</Button>
               ) : (
-                <Button variant="gradient" onClick={handleCreateMaterialAndPurchase}>Registrar</Button>
+                <Button variant="gradient" onClick={handleCreateMaterialAndPurchase} disabled={!newMatInline.name.trim() || !Number(newPurchase.quantity_bought)}>Registrar</Button>
               )}
             </DialogFooter>
           </DialogContent>
@@ -826,10 +834,10 @@ export function MaterialsManager() {
                         </div>
                       </div>
                       <div className="flex gap-4 mt-1.5 text-xs">
-                        <span className="text-green-600 font-semibold">Entrada: {m.total_purchased}</span>
-                        <span className="text-orange-600 font-semibold">Salida: {totalDeducted}</span>
+                        <span className="text-green-600 font-semibold">Entrada: {m.total_purchased} pzas</span>
+                        <span className="text-orange-600 font-semibold">Salida: {totalDeducted} pzas</span>
                         <span className={`font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
-                          Stock: {stockReal}
+                          Stock: {stockReal} pzas
                         </span>
                       </div>
                     </div>
