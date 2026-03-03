@@ -129,6 +129,18 @@ export default function Calculator() {
     return newQuote;
   });
 
+  // When quotes load asynchronously, update the quote if we're editing
+  const hasLoadedEditQuote = useRef(false);
+  useEffect(() => {
+    if (editId && quotes.length > 0 && !hasLoadedEditQuote.current) {
+      const existing = quotes.find(q => q.id === editId);
+      if (existing) {
+        setQuote(existing);
+        hasLoadedEditQuote.current = true;
+      }
+    }
+  }, [editId, quotes]);
+
   const summary = calculateCosts(quote);
 
   const handleSave = async () => {
