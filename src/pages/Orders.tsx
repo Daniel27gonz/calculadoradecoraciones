@@ -643,7 +643,7 @@ export default function Orders() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Monto efectivamente cobrado ({currencySymbol})</Label>
+                <Label>Monto efectivamente cobrado - Anticipo ({currencySymbol})</Label>
                 <Input
                   type="number"
                   min="0"
