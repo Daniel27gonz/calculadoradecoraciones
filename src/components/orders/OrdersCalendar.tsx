@@ -100,7 +100,7 @@ export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
                         ${q.status === 'delivered'
                           ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/30'
                           : q.status === 'approved'
-                            ? 'bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30'
+                            ? 'bg-green-600/40 text-green-900 dark:bg-green-500/30 dark:text-green-300 hover:bg-green-600/50 font-semibold'
                             : 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30'
                         }
                       `}
