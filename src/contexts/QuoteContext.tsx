@@ -320,7 +320,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const newQuote: Quote = {
       ...original,
       id: crypto.randomUUID(),
+      folio: undefined,
       clientName: `${original.clientName} (copia)`,
+      status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

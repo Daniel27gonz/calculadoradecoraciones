@@ -60,6 +60,7 @@ export default function History() {
   const handleDuplicate = async (id: string) => {
     const newQuote = duplicateQuote(id);
     await saveQuote(newQuote);
+    await loadQuotes();
     toast({
       title: "Cotización duplicada",
       description: "Se ha creado una copia de la cotización",
