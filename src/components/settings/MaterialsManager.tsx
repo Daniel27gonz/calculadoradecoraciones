@@ -144,7 +144,7 @@ export function MaterialsManager() {
         quantity_presentations: p.quantity_presentations,
         units_added: p.units_added,
         total_paid: p.total_paid,
-        cost_per_unit: p.quantity_presentations > 0 ? p.total_paid / p.quantity_presentations : 0,
+        cost_per_unit: p.units_added > 0 ? p.total_paid / p.units_added : 0,
         provider: p.provider,
       })));
     } catch (e) {
