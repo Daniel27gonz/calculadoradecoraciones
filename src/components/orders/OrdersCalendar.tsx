@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import {
   startOfMonth,
   endOfMonth,
@@ -22,16 +22,17 @@ import { Quote } from '@/types/quote';
 interface OrdersCalendarProps {
   quotes: Quote[];
   onSelectQuote: (quote: Quote) => void;
+  onDayClick?: (dateKey: string, quotes: Quote[]) => void;
 }
 
-export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
+export function OrdersCalendar({ quotes, onSelectQuote, onDayClick }: OrdersCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, Quote[]>();
     quotes.forEach((q) => {
       if (q.eventDate) {
-        const key = q.eventDate; // ISO date string YYYY-MM-DD
+        const key = q.eventDate;
         if (!map.has(key)) map.set(key, []);
         map.get(key)!.push(q);
       }
@@ -46,6 +47,13 @@ export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  const getStatusColor = (dayQuotes: Quote[]) => {
+    // Priority: delivered > approved > pending
+    if (dayQuotes.some(q => q.status === 'delivered')) return 'bg-blue-600 text-white';
+    if (dayQuotes.some(q => q.status === 'approved')) return 'bg-green-600 text-white';
+    return 'bg-yellow-500 text-white';
+  };
 
   return (
     <Card>
@@ -79,43 +87,29 @@ export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
             const dayQuotes = eventsByDate.get(dateKey) || [];
             const inMonth = isSameMonth(day, currentMonth);
             const today = isToday(day);
+            const hasEvents = dayQuotes.length > 0;
 
             return (
-              <div
+              <button
                 key={dateKey}
-                className={`min-h-[3rem] md:min-h-[4rem] rounded-md p-1 text-xs transition-colors
-                  ${inMonth ? 'bg-muted/30' : 'opacity-30'}
-                  ${today ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
+                type="button"
+                disabled={!hasEvents}
+                onClick={() => {
+                  if (hasEvents && onDayClick) {
+                    onDayClick(dateKey, dayQuotes);
+                  }
+                }}
+                className={`aspect-square rounded-md flex items-center justify-center text-sm font-semibold transition-colors
+                  ${!inMonth ? 'opacity-30' : ''}
+                  ${hasEvents
+                    ? `${getStatusColor(dayQuotes)} shadow-sm cursor-pointer hover:opacity-90`
+                    : 'text-foreground'
+                  }
+                  ${today && !hasEvents ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
                 `}
               >
-                <span className={`block text-center font-medium mb-0.5 ${today ? 'text-primary' : 'text-foreground'}`}>
-                  {format(day, 'd')}
-                </span>
-                <div className="space-y-0.5 overflow-hidden">
-                  {dayQuotes.slice(0, 2).map((q) => (
-                    <button
-                      key={q.id}
-                      onClick={() => onSelectQuote(q)}
-                      className={`w-full text-left truncate rounded px-1 py-0.5 text-[10px] leading-tight font-semibold transition-colors
-                        ${q.status === 'delivered'
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : q.status === 'approved'
-                            ? 'bg-green-600 text-white hover:bg-green-700'
-                            : 'bg-yellow-500 text-white hover:bg-yellow-600'
-                        }
-                      `}
-                      title={`${q.clientName} - ${q.eventType || 'Evento'}${q.setupTime ? ` - ${q.setupTime}` : ''}`}
-                    >
-                      {q.setupTime ? `${q.setupTime} ` : ''}{q.clientName}
-                    </button>
-                  ))}
-                  {dayQuotes.length > 2 && (
-                    <span className="block text-center text-[10px] text-muted-foreground">
-                      +{dayQuotes.length - 2} más
-                    </span>
-                  )}
-                </div>
-              </div>
+                {format(day, 'd')}
+              </button>
             );
           })}
         </div>

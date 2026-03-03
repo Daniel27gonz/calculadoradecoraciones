@@ -314,6 +314,17 @@ export default function Orders() {
         <OrdersCalendar
           quotes={filteredQuotes}
           onSelectQuote={(q) => setExpandedQuoteId(expandedQuoteId === q.id ? null : q.id)}
+          onDayClick={(dateKey, dayQuotes) => {
+            if (dayQuotes.length > 0) {
+              const firstQuote = dayQuotes[0];
+              setExpandedQuoteId(firstQuote.id);
+              // Scroll to the order card
+              setTimeout(() => {
+                const el = document.getElementById(`order-${firstQuote.id}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 100);
+            }
+          }}
         />
 
         {/* Pedidos heading */}
@@ -357,7 +368,7 @@ export default function Orders() {
               const isExpanded = expandedQuoteId === quote.id;
 
               return (
-                <Card key={quote.id} className="overflow-hidden">
+                <Card key={quote.id} id={`order-${quote.id}`} className="overflow-hidden">
                   <CardContent className="p-4 space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between">
