@@ -130,10 +130,12 @@ export function TransportSection({ transportItems, onChange, currencySymbol = '$
           </div>
         ))}
 
-        <Button variant="outline" className="w-full h-12 text-base font-medium" onClick={addDefaultItems}>
-          <Plus className="w-5 h-5 mr-2" />
-          Agregar traslados
-        </Button>
+        {transportItems.length === 0 && (
+          <Button variant="outline" className="w-full h-12 text-base font-medium" onClick={addDefaultItems}>
+            <Plus className="w-5 h-5 mr-2" />
+            Agregar traslados
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
