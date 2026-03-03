@@ -211,6 +211,19 @@ export function PricingSection({
               </span>
             </div>
           </div>
+
+          {/* Net profit box */}
+          <div className="p-3 sm:p-5 rounded-xl bg-emerald-600 dark:bg-emerald-700 mt-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-white font-bold text-sm sm:text-lg shrink-0">
+                Lo que te queda a ti
+              </span>
+              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-white tabular-nums truncate">
+                {formatCurrency(summary.netProfit)}
+              </span>
+            </div>
+            <p className="text-emerald-100 text-xs sm:text-sm mt-1 text-center">Ganancia del evento</p>
+          </div>
         </CardContent>
       </Card>
 
