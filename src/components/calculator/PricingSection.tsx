@@ -161,7 +161,7 @@ export function PricingSection({
           <div className="p-3 sm:p-5 bg-gradient-to-r from-primary via-primary to-primary/90">
             <div className="flex items-center justify-between gap-2">
               <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
-                Total General
+                Costo Total del evento
               </span>
               <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
                 {formatCurrency(summary.totalCost)}
