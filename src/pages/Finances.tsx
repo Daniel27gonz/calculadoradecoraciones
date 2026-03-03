@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -56,6 +56,8 @@ export default function Finances() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [quoteStats, setQuoteStats] = useState<QuoteStats>({ totalQuotes: 0, paidQuotes: 0 });
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
@@ -188,25 +190,40 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  // Calculate totals for current month only
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  
-  const currentMonthTransactions = transactions.filter(t => {
+  const selectedMonthTransactions = transactions.filter(t => {
     const [y, m] = t.transaction_date.split('-');
-    return parseInt(y) === currentYear && parseInt(m) === currentMonth + 1;
+    return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
   });
 
-  const totalIncome = currentMonthTransactions
+  const totalIncome = selectedMonthTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
-  const totalExpenses = currentMonthTransactions
+  const totalExpenses = selectedMonthTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
   const balance = totalIncome - totalExpenses;
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
 
   if (authLoading) {
     return (
@@ -239,12 +256,26 @@ export default function Finances() {
               Finanzas del Negocio
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Control de ingresos y gastos del mes actual
+              Control de ingresos y gastos
             </p>
           </div>
           <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
             <Plus className="w-4 h-4" />
             Agregar más
+          </Button>
+        </div>
+
+        {/* Month Selector */}
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePrevMonth}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
+            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+            <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
+          </div>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextMonth}>
+            <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
 
