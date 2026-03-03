@@ -146,7 +146,7 @@ export function PricingSection({
             <CostLine icon="✨" label="Total extras" amount={summary.totalExtras} />
             <CostLine 
               icon="📊" 
-              label="Gastos indirectos" 
+              label="Gastos del negocio" 
               sublabel={
                 <span className="text-xs text-muted-foreground">
                   ({formatCurrency(indirectExpensesTotal)}/mes ÷ {eventsPerMonth} eventos)
