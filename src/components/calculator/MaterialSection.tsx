@@ -45,7 +45,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
         // Fetch latest purchase price for each material
         const { data: purchases } = await supabase
           .from('material_purchases')
-          .select('material_id, total_paid, quantity_presentations, purchase_date')
+          .select('material_id, total_paid, quantity_presentations, units_added, purchase_date')
           .eq('user_id', user.id)
           .order('purchase_date', { ascending: false });
 
@@ -53,10 +53,10 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
         if (purchases) {
           for (const p of purchases) {
             if (!latestPriceMap.has(p.material_id)) {
-              const pricePerPresentation = p.quantity_presentations > 0 
-                ? p.total_paid / p.quantity_presentations 
+              const pricePerUnit = p.units_added > 0 
+                ? p.total_paid / p.units_added 
                 : p.total_paid;
-              latestPriceMap.set(p.material_id, pricePerPresentation);
+              latestPriceMap.set(p.material_id, pricePerUnit);
             }
           }
         }
@@ -178,7 +178,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                             <div className="font-medium text-sm truncate">{saved.name}</div>
                             <div className="text-xs text-muted-foreground">
                               {saved.latest_presentation_price != null 
-                                ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-green-600">(última compra)</span></>
+                                ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-green-600">(última compra x pieza)</span></>
                                 : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
                               }
                             </div>
