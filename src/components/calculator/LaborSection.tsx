@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Plus, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,19 @@ export function LaborSection({
   currencySymbol = '$',
 }: LaborSectionProps) {
   const { defaultHourlyRate } = useQuote();
+  const prevRateRef = useRef(defaultHourlyRate);
+
+  // Auto-fill time phase rates when defaultHourlyRate changes
+  useEffect(() => {
+    if (defaultHourlyRate !== prevRateRef.current && defaultHourlyRate > 0) {
+      const updated = timePhases.map(p => ({
+        ...p,
+        rate: (p.rate === 0 || p.rate === prevRateRef.current) ? defaultHourlyRate : p.rate,
+      }));
+      onTimePhasesChange(updated);
+      prevRateRef.current = defaultHourlyRate;
+    }
+  }, [defaultHourlyRate]);
 
   const addWorker = () => {
     onWorkersChange([
