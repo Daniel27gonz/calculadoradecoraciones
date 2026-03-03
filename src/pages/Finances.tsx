@@ -408,7 +408,7 @@ export default function Finances() {
                       <div>
                         <p className="font-medium">{transaction.description}</p>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(transaction.transaction_date), "d 'de' MMMM, yyyy", { locale: es })}
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}
                           {transaction.category && ` • ${transaction.category}`}
                         </p>
                       </div>
