@@ -109,7 +109,7 @@ export default function Home() {
       {/* Welcome header - hidden on mobile, shown on desktop */}
       <div className="text-center px-2 hidden md:block">
         <h1 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Bienvenida a <span className="text-rose">Deco</span>Control
+          Bienvenida a <span className="text-rose-dark">Deco</span>Control
         </h1>
         <p className="text-muted-foreground mt-2 text-base md:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
           Controla lo que ganas en cada decoración
