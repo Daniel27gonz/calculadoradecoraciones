@@ -540,10 +540,7 @@ export default function Orders() {
                             onClick={() => {
                               setFullPaidQuote(quote);
                               setFullPaidDate(new Date().toISOString().split('T')[0]);
-                              const s = calculateCosts(quote);
-                              const qp = payments[quote.id] || [];
-                              const tp = qp.reduce((sum, p) => sum + p.amount, 0);
-                              setFullPaidAmount(String(Math.max(0, s.finalPrice - tp)));
+                              setFullPaidAmount('');
                               setShowFullPaidDialog(true);
                             }}
                           >
