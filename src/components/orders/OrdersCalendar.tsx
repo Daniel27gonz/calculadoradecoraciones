@@ -96,12 +96,12 @@ export function OrdersCalendar({ quotes, onSelectQuote }: OrdersCalendarProps) {
                     <button
                       key={q.id}
                       onClick={() => onSelectQuote(q)}
-                      className={`w-full text-left truncate rounded px-1 py-0.5 text-[10px] leading-tight font-medium transition-colors
+                      className={`w-full text-left truncate rounded px-1 py-0.5 text-[10px] leading-tight font-semibold transition-colors
                         ${q.status === 'delivered'
-                          ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/30'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : q.status === 'approved'
-                            ? 'bg-green-600/40 text-green-900 dark:bg-green-500/30 dark:text-green-300 hover:bg-green-600/50 font-semibold'
-                            : 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30'
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-yellow-500 text-white hover:bg-yellow-600'
                         }
                       `}
                       title={`${q.clientName} - ${q.eventType || 'Evento'}${q.setupTime ? ` - ${q.setupTime}` : ''}`}
