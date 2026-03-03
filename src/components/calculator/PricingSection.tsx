@@ -176,7 +176,7 @@ export function PricingSection({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <span className="text-xl sm:text-2xl">💰</span>
-            <span>Margen de Ganancia</span>
+            <span>Elige tu Margen de Ganancia</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -204,7 +204,7 @@ export function PricingSection({
           <div className="p-3 sm:p-5 rounded-xl gradient-primary">
             <div className="flex items-center justify-between gap-2">
               <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
-                Precio Final
+                Precio sugerido al cliente
               </span>
               <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
                 {formatCurrency(summary.finalPrice)}
