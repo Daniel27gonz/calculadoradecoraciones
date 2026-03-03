@@ -89,9 +89,14 @@ export default function Finances() {
   useEffect(() => {
     if (user) {
       fetchTransactions();
-      fetchQuoteStats();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchQuoteStats();
+    }
+  }, [user, selectedMonth, selectedYear]);
 
   const fetchTransactions = async () => {
     try {
@@ -121,13 +126,11 @@ export default function Finances() {
 
   const fetchQuoteStats = async () => {
     try {
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-      const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
-      const endDate = currentMonth === 12
-        ? `${currentYear + 1}-01-01`
-        : `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+      const monthNum = selectedMonth + 1;
+      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = monthNum === 12
+        ? `${selectedYear + 1}-01-01`
+        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
       const { data: allQuotes, error: err1 } = await supabase
         .from('quotes')
