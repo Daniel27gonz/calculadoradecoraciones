@@ -52,6 +52,7 @@ export default function Orders() {
   const [showFullPaidDialog, setShowFullPaidDialog] = useState(false);
   const [fullPaidQuote, setFullPaidQuote] = useState<Quote | null>(null);
   const [fullPaidDate, setFullPaidDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fullPaidAmount, setFullPaidAmount] = useState('');
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   useEffect(() => {
@@ -143,20 +144,21 @@ export default function Orders() {
     }
   };
 
-  const handleToggleFullyPaid = async (quote: Quote, isCurrentlyPaid: boolean, paymentDate?: string) => {
+  const handleToggleFullyPaid = async (quote: Quote, isCurrentlyPaid: boolean, paymentDate?: string, actualAmount?: number) => {
     const summary = calculateCosts(quote);
+    const amountToRegister = actualAmount ?? summary.finalPrice;
     try {
       if (!isCurrentlyPaid) {
         const folioLabel = quote.folio ? `#${String(quote.folio).padStart(4, '0')}` : quote.id;
         await supabase.from('transactions').insert({
           user_id: user!.id,
           type: 'income',
-          amount: summary.finalPrice,
+          amount: amountToRegister,
           description: `Pago completo: ${quote.clientName} - Folio ${folioLabel}`,
           category: 'Pagos completos',
           transaction_date: paymentDate || new Date().toISOString().split('T')[0],
         });
-        toast({ title: "Pedido marcado como pagado", description: `${currencySymbol}${summary.finalPrice.toFixed(2)} registrado en Finanzas` });
+        toast({ title: "Pedido marcado como pagado", description: `${currencySymbol}${amountToRegister.toFixed(2)} registrado en Finanzas` });
       } else {
         const folioLabel = quote.folio ? `#${String(quote.folio).padStart(4, '0')}` : quote.id;
         await supabase.from('transactions').delete()
@@ -538,6 +540,10 @@ export default function Orders() {
                             onClick={() => {
                               setFullPaidQuote(quote);
                               setFullPaidDate(new Date().toISOString().split('T')[0]);
+                              const s = calculateCosts(quote);
+                              const qp = payments[quote.id] || [];
+                              const tp = qp.reduce((sum, p) => sum + p.amount, 0);
+                              setFullPaidAmount(String(Math.max(0, s.finalPrice - tp)));
                               setShowFullPaidDialog(true);
                             }}
                           >
@@ -639,6 +645,22 @@ export default function Orders() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label>Monto efectivamente cobrado ({currencySymbol})</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={fullPaidAmount}
+                  onChange={(e) => setFullPaidAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+                {fullPaidQuote && (
+                  <p className="text-xs text-muted-foreground">
+                    Total cotización: {currencySymbol}{calculateCosts(fullPaidQuote).finalPrice.toFixed(2)}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label>Fecha de pago</Label>
                 <Input
                   type="date"
@@ -650,7 +672,12 @@ export default function Orders() {
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
                 onClick={async () => {
                   if (fullPaidQuote) {
-                    await handleToggleFullyPaid(fullPaidQuote, false, fullPaidDate);
+                    const amt = parseFloat(fullPaidAmount);
+                    if (isNaN(amt) || amt <= 0) {
+                      toast({ title: "Error", description: "Ingresa un monto válido", variant: "destructive" });
+                      return;
+                    }
+                    await handleToggleFullyPaid(fullPaidQuote, false, fullPaidDate, amt);
                     setFullyPaidQuotes(prev => {
                       const next = new Set(prev);
                       next.add(fullPaidQuote.id);
@@ -658,6 +685,7 @@ export default function Orders() {
                     });
                     setShowFullPaidDialog(false);
                     setFullPaidQuote(null);
+                    setFullPaidAmount('');
                   }
                 }}
               >
