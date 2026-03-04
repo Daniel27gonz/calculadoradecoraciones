@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NumericField } from '@/components/ui/numeric-field';
 import { CostSummary } from '@/types/quote';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIndirectExpenses } from '@/hooks/useIndirectExpenses';
 
 interface PricingSectionProps {
   summary: CostSummary;
@@ -40,36 +40,9 @@ export function PricingSection({
   onMarginChange,
   currencySymbol = '$'
 }: PricingSectionProps) {
-  const { user, profile } = useAuth();
-  const [indirectExpensesTotal, setIndirectExpensesTotal] = useState(0);
-
-  // Load indirect expenses total for display purposes (only current month)
-  useEffect(() => {
-    if (user) {
-      const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
-      if (stored) {
-        const expenses = JSON.parse(stored) as { monthlyAmount: number; paymentDate?: string }[];
-        // Find the latest month with registered expenses
-        const withDates = expenses.filter(e => e.paymentDate);
-        let latestY = 0, latestM = 0;
-        withDates.forEach(e => {
-          const [y, m] = e.paymentDate!.split('-');
-          const yr = parseInt(y), mo = parseInt(m);
-          if (yr > latestY || (yr === latestY && mo > latestM)) {
-            latestY = yr;
-            latestM = mo;
-          }
-        });
-        const total = withDates
-          .filter(e => {
-            const [y, m] = e.paymentDate!.split('-');
-            return parseInt(y) === latestY && parseInt(m) === latestM;
-          })
-          .reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
-        setIndirectExpensesTotal(total);
-      }
-    }
-  }, [user]);
+  const { profile } = useAuth();
+  const { getLatestMonthTotal } = useIndirectExpenses();
+  const indirectExpensesTotal = getLatestMonthTotal();
 
   const eventsPerMonth = profile?.events_per_month || 4;
 
