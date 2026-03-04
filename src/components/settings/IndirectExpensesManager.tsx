@@ -33,7 +33,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  
 
   const loadExpenses = useCallback(async () => {
     if (!user) return;
@@ -124,14 +124,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     
     setSaving(true);
     try {
-      // Delete removed expenses
-      if (deletedIds.length > 0) {
-        await supabase
-          .from('indirect_expenses')
-          .delete()
-          .in('id', deletedIds);
-        setDeletedIds([]);
-      }
+      // Process expenses
 
       let registeredCount = 0;
 
@@ -211,12 +204,25 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     setExpenses(expenses.map(e => (e.id === id ? { ...e, ...updates, isDirty: true } : e)));
   };
 
-  const removeExpense = (id: string) => {
+  const removeExpense = async (id: string) => {
     const expense = expenses.find(e => e.id === id);
-    if (expense && !expense.isNew) {
-      setDeletedIds(prev => [...prev, id]);
-    }
     setExpenses(expenses.filter(e => e.id !== id));
+    
+    if (expense && !expense.isNew && user) {
+      try {
+        const { error } = await supabase
+          .from('indirect_expenses')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
+        if (error) throw error;
+        toast({ title: "Eliminado", description: "Gasto eliminado correctamente" });
+      } catch (error) {
+        console.error('Error deleting expense:', error);
+        toast({ title: "Error", description: "No se pudo eliminar el gasto", variant: "destructive" });
+        loadExpenses(); // Reload on error
+      }
+    }
   };
 
   // Find the latest month that has registered expenses
