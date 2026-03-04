@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, FurnitureItem, CostSummary, TransportItem, IndirectExpense, ReusableMaterialUsed } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -129,8 +129,47 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [packages, setPackages] = useState<Package[]>(defaultPackages);
   const [defaultHourlyRate, setDefaultHourlyRate] = useState<number>(25);
+  const [indirectExpensesMonthlyTotal, setIndirectExpensesMonthlyTotal] = useState<number>(0);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+
+  // Load indirect expenses from database
+  const loadIndirectExpenses = useCallback(async () => {
+    if (!user) {
+      setIndirectExpensesMonthlyTotal(0);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('indirect_expenses')
+        .select('monthly_amount, payment_date')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      const withDates = (data || []).filter(e => e.payment_date);
+      if (withDates.length === 0) {
+        setIndirectExpensesMonthlyTotal(0);
+        return;
+      }
+      let latestY = 0, latestM = 0;
+      withDates.forEach(e => {
+        const [y, m] = e.payment_date!.split('-');
+        const yr = parseInt(y), mo = parseInt(m);
+        if (yr > latestY || (yr === latestY && mo > latestM)) {
+          latestY = yr;
+          latestM = mo;
+        }
+      });
+      const total = withDates
+        .filter(e => {
+          const [y, m] = e.payment_date!.split('-');
+          return parseInt(y) === latestY && parseInt(m) === latestM;
+        })
+        .reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
+      setIndirectExpensesMonthlyTotal(total);
+    } catch (err) {
+      console.error('Error loading indirect expenses:', err);
+    }
+  }, [user]);
 
   // Load quotes from Supabase when user logs in
   const loadQuotes = async () => {
@@ -186,8 +225,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       loadQuotes();
+      loadIndirectExpenses();
     }
-  }, [user]);
+  }, [user, loadIndirectExpenses]);
 
   // Use profile's hourly rate if available
   useEffect(() => {
@@ -374,32 +414,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Desgaste de herramientas: deshabilitado (ya no se usa)
     const toolWear = 0;
     
-    // Gastos indirectos: cargar desde localStorage y dividir entre eventos por mes
-    let indirectExpenses = 0;
-    if (user) {
-      const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
-      if (stored) {
-        const expenses = JSON.parse(stored) as { monthlyAmount: number; paymentDate?: string }[];
-        // Find the latest month with registered expenses
-        const withDates = expenses.filter(e => e.paymentDate);
-        let latestY = 0, latestM = 0;
-        withDates.forEach(e => {
-          const [y, m] = e.paymentDate!.split('-');
-          const yr = parseInt(y), mo = parseInt(m);
-          if (yr > latestY || (yr === latestY && mo > latestM)) {
-            latestY = yr;
-            latestM = mo;
-          }
-        });
-        const latestMonthExpenses = withDates.filter(e => {
-          const [y, m] = e.paymentDate!.split('-');
-          return parseInt(y) === latestY && parseInt(m) === latestM;
-        });
-        const totalMonthly = latestMonthExpenses.reduce((sum: number, e) => sum + (e.monthlyAmount || 0), 0);
-        const eventsPerMonth = profile?.events_per_month || 4;
-        indirectExpenses = eventsPerMonth > 0 ? totalMonthly / eventsPerMonth : 0;
-      }
-    }
+    // Gastos indirectos: cargar desde base de datos y dividir entre eventos por mes
+    const eventsPerMonth = profile?.events_per_month || 4;
+    const indirectExpenses = eventsPerMonth > 0 ? indirectExpensesMonthlyTotal / eventsPerMonth : 0;
     
     // Total = suma de todos los conceptos que se muestran en la hoja de cotización
     // (Materiales no reutilizables + Materiales reutilizables + Merma + Mano de obra + Transporte + Extras + Gastos indirectos)
