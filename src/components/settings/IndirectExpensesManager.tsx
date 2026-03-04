@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Save, CalendarIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,8 +17,10 @@ interface IndirectExpense {
   id: string;
   description: string;
   monthlyAmount: number;
-  paymentDate?: string; // ISO date string
+  paymentDate?: string;
   registeredInFinances?: boolean;
+  isNew?: boolean;
+  isDirty?: boolean;
 }
 
 interface IndirectExpensesManagerProps {
@@ -31,33 +33,70 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      loadExpenses();
-    }
-  }, [user]);
-
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     if (!user) return;
     
     try {
-      await supabase
-        .from('profiles')
-        .select('id')
+      const { data, error } = await supabase
+        .from('indirect_expenses')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: true });
 
-      const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
-      if (stored) {
-        setExpenses(JSON.parse(stored));
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setExpenses(data.map(e => ({
+          id: e.id,
+          description: e.description,
+          monthlyAmount: Number(e.monthly_amount),
+          paymentDate: e.payment_date || undefined,
+          registeredInFinances: e.registered_in_finances,
+        })));
+      } else {
+        // Migrate from localStorage if exists
+        const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
+        if (stored) {
+          const localExpenses: IndirectExpense[] = JSON.parse(stored);
+          if (localExpenses.length > 0) {
+            const rows = localExpenses.map(e => ({
+              user_id: user.id,
+              description: e.description || '',
+              monthly_amount: e.monthlyAmount || 0,
+              payment_date: e.paymentDate || null,
+              registered_in_finances: e.registeredInFinances || false,
+            }));
+            const { data: inserted, error: insertErr } = await supabase
+              .from('indirect_expenses')
+              .insert(rows)
+              .select();
+            if (!insertErr && inserted) {
+              setExpenses(inserted.map(e => ({
+                id: e.id,
+                description: e.description,
+                monthlyAmount: Number(e.monthly_amount),
+                paymentDate: e.payment_date || undefined,
+                registeredInFinances: e.registered_in_finances,
+              })));
+              localStorage.removeItem(`indirect_expenses_${user.id}`);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading expenses:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadExpenses();
+    }
+  }, [user, loadExpenses]);
 
   const registerExpenseInFinances = async (expense: IndirectExpense) => {
     if (!user || !expense.paymentDate || !expense.description || !expense.monthlyAmount) return false;
@@ -85,23 +124,63 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     
     setSaving(true);
     try {
+      // Delete removed expenses
+      if (deletedIds.length > 0) {
+        await supabase
+          .from('indirect_expenses')
+          .delete()
+          .in('id', deletedIds);
+        setDeletedIds([]);
+      }
+
       let registeredCount = 0;
 
       const updatedExpenses = await Promise.all(
         expenses.map(async (expense) => {
+          // Register in finances if needed
+          let registered = expense.registeredInFinances || false;
           if (expense.paymentDate && !expense.registeredInFinances && expense.monthlyAmount > 0 && expense.description) {
             const success = await registerExpenseInFinances(expense);
             if (success) {
               registeredCount++;
-              return { ...expense, registeredInFinances: true };
+              registered = true;
             }
           }
-          return expense;
+
+          const row = {
+            user_id: user.id,
+            description: expense.description || '',
+            monthly_amount: expense.monthlyAmount || 0,
+            payment_date: expense.paymentDate || null,
+            registered_in_finances: registered,
+          };
+
+          if (expense.isNew) {
+            const { data, error } = await supabase
+              .from('indirect_expenses')
+              .insert(row)
+              .select()
+              .single();
+            if (error) throw error;
+            return {
+              id: data.id,
+              description: data.description,
+              monthlyAmount: Number(data.monthly_amount),
+              paymentDate: data.payment_date || undefined,
+              registeredInFinances: data.registered_in_finances,
+            };
+          } else {
+            const { error } = await supabase
+              .from('indirect_expenses')
+              .update(row)
+              .eq('id', expense.id);
+            if (error) throw error;
+            return { ...expense, registeredInFinances: registered, isNew: undefined, isDirty: undefined };
+          }
         })
       );
 
       setExpenses(updatedExpenses);
-      localStorage.setItem(`indirect_expenses_${user.id}`, JSON.stringify(updatedExpenses));
       
       toast({
         title: "¡Guardado!",
@@ -124,15 +203,19 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const addExpense = () => {
     setExpenses([
       ...expenses,
-      { id: crypto.randomUUID(), description: '', monthlyAmount: 0 },
+      { id: crypto.randomUUID(), description: '', monthlyAmount: 0, isNew: true },
     ]);
   };
 
   const updateExpense = (id: string, updates: Partial<IndirectExpense>) => {
-    setExpenses(expenses.map(e => (e.id === id ? { ...e, ...updates } : e)));
+    setExpenses(expenses.map(e => (e.id === id ? { ...e, ...updates, isDirty: true } : e)));
   };
 
   const removeExpense = (id: string) => {
+    const expense = expenses.find(e => e.id === id);
+    if (expense && !expense.isNew) {
+      setDeletedIds(prev => [...prev, id]);
+    }
     setExpenses(expenses.filter(e => e.id !== id));
   };
 
@@ -141,7 +224,6 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     const withDates = expenses.filter(e => e.paymentDate);
     if (withDates.length === 0) return [];
     
-    // Find the latest year-month
     let latestY = 0, latestM = 0;
     withDates.forEach(e => {
       const [y, m] = e.paymentDate!.split('-');

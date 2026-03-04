@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      indirect_expenses: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          monthly_amount: number
+          payment_date: string | null
+          registered_in_finances: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          monthly_amount?: number
+          payment_date?: string | null
+          registered_in_finances?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          monthly_amount?: number
+          payment_date?: string | null
+          registered_in_finances?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       material_purchases: {
         Row: {
           created_at: string
