@@ -119,23 +119,44 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     setDialogOpen(true);
   };
 
-  const registerExpenseInFinances = async (description: string, amount: number, paymentDate: string) => {
-    if (!user) return false;
-    try {
-      const { error } = await supabase.from('transactions').insert({
-        user_id: user.id,
-        type: 'expense',
-        description: `Gasto del mes: ${description}`,
-        amount,
-        category: 'Gastos del mes',
-        transaction_date: paymentDate,
-      });
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error registering expense in finances:', error);
-      return false;
+  const syncTransactionForExpense = async (expenseId: string, description: string, amount: number, paymentDate: string | null) => {
+    if (!user) return;
+    const refId = `indirect_expense_${expenseId}`;
+
+    if (!paymentDate || amount <= 0) {
+      // Remove transaction if no date or zero amount
+      await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
+      return;
     }
+
+    // Check if transaction already exists
+    const { data: existing } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('reference_id', refId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const txData = {
+      user_id: user.id,
+      type: 'expense' as const,
+      description: `Gasto del mes: ${description}`,
+      amount,
+      category: 'Gastos del mes',
+      transaction_date: paymentDate,
+      reference_id: refId,
+    };
+
+    if (existing) {
+      await supabase.from('transactions').update(txData).eq('id', existing.id);
+    } else {
+      await supabase.from('transactions').insert(txData);
+    }
+  };
+
+  const deleteTransactionForExpense = async (expenseId: string) => {
+    if (!user) return;
+    await supabase.from('transactions').delete().eq('reference_id', `indirect_expense_${expenseId}`).eq('user_id', user.id);
   };
 
   const handleSave = async () => {
@@ -150,35 +171,32 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
 
     setSaving(true);
     try {
-      // Check if we need to register in finances
-      let registeredInFinances = editingExpense?.registeredInFinances || false;
-      if (formPaymentDate && !registeredInFinances && formAmount > 0) {
-        const success = await registerExpenseInFinances(formDescription, formAmount, formPaymentDate);
-        if (success) registeredInFinances = true;
-      }
-
       const row = {
         user_id: user.id,
         description: formDescription.trim(),
         monthly_amount: formAmount,
         payment_date: formPaymentDate || null,
-        registered_in_finances: registeredInFinances,
+        registered_in_finances: !!formPaymentDate,
       };
 
       if (editingExpense) {
-        // Update
         const { error } = await supabase
           .from('indirect_expenses')
           .update(row)
           .eq('id', editingExpense.id);
         if (error) throw error;
+        await syncTransactionForExpense(editingExpense.id, formDescription.trim(), formAmount, formPaymentDate || null);
         toast({ title: '¡Actualizado!', description: 'Gasto actualizado correctamente' });
       } else {
-        // Insert
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('indirect_expenses')
-          .insert(row);
+          .insert(row)
+          .select('id')
+          .single();
         if (error) throw error;
+        if (inserted) {
+          await syncTransactionForExpense(inserted.id, formDescription.trim(), formAmount, formPaymentDate || null);
+        }
         toast({ title: '¡Registrado!', description: 'Gasto registrado correctamente' });
       }
 
@@ -203,7 +221,8 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
         .eq('id', id)
         .eq('user_id', user.id);
       if (error) throw error;
-      toast({ title: 'Eliminado', description: 'Gasto eliminado correctamente' });
+      await deleteTransactionForExpense(id);
+      toast({ title: 'Eliminado', description: 'Gasto eliminado de gastos y finanzas' });
     } catch (error) {
       console.error('Error deleting expense:', error);
       toast({ title: 'Error', description: 'No se pudo eliminar el gasto', variant: 'destructive' });
