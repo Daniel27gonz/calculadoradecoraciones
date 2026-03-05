@@ -262,10 +262,6 @@ export default function Finances() {
               Control de ingresos y gastos
             </p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Agregar más
-          </Button>
         </div>
 
         {/* Month Selector */}
