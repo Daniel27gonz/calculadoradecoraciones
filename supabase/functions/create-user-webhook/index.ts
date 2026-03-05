@@ -20,8 +20,25 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json()
 
-    // Extract email and document (CPF/CNPJ) from webhook payload
-    // These field names will be adjusted once the exact format is provided
+    // Log the full payload for debugging
+    console.log('Webhook payload received:', JSON.stringify(body, null, 2))
+
+    // Validate webhook token
+    const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
+    const token = body.token || body.api_token || body.secret || body.webhook_token
+    const tokenFromHeader = req.headers.get('x-webhook-token') || req.headers.get('authorization')
+
+    const receivedToken = token || tokenFromHeader
+    console.log('Token validation:', { receivedToken: receivedToken ? 'present' : 'missing', matches: receivedToken === webhookSecret })
+
+    if (!webhookSecret || receivedToken !== webhookSecret) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: invalid or missing token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Extract email and phone from webhook payload
     const email = body.email || body.customer?.email
     const phone = body.phone || body.telephone || body.cel || body.customer?.phone || body.customer?.telephone || body.customer?.cel
 
@@ -51,6 +68,7 @@ Deno.serve(async (req) => {
     const userExists = existingUsers?.users?.find(u => u.email === email)
 
     if (userExists) {
+      console.log('User already exists:', userExists.id)
       return new Response(
         JSON.stringify({ success: true, message: 'User already exists', user_id: userExists.id }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,6 +95,8 @@ Deno.serve(async (req) => {
       .from('user_approval_status')
       .update({ status: 'approved' })
       .eq('user_id', newUser.user.id)
+
+    console.log('User created and approved:', newUser.user.id)
 
     return new Response(
       JSON.stringify({ success: true, message: 'User created successfully', user_id: newUser.user.id }),
