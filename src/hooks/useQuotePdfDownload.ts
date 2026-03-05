@@ -55,75 +55,88 @@ export function useQuotePdfDownload() {
     }
 
 
-    // Balloons
+    // Balloons (solo si tienen cantidad > 0)
     quote.balloons.forEach((balloon) => {
-      items.push({
-        id: balloon.id,
-        description: balloon.description,
-        quantity: balloon.quantity,
-        price: balloon.pricePerUnit * balloon.quantity,
-      });
+      if (balloon.quantity > 0 && balloon.pricePerUnit > 0) {
+        items.push({
+          id: balloon.id,
+          description: balloon.description,
+          quantity: balloon.quantity,
+          price: balloon.pricePerUnit * balloon.quantity,
+        });
+      }
     });
 
-    // Furniture
+    // Furniture (solo si tienen cantidad > 0)
     quote.furnitureItems.forEach((item) => {
-      items.push({
-        id: item.id,
-        description: item.name,
-        quantity: item.quantity,
-        price: item.pricePerUnit * item.quantity,
-      });
+      if (item.quantity > 0 && item.pricePerUnit > 0) {
+        items.push({
+          id: item.id,
+          description: item.name,
+          quantity: item.quantity,
+          price: item.pricePerUnit * item.quantity,
+        });
+      }
     });
 
-    // Reusable materials used
+    // Reusable materials used (solo si tienen cantidad > 0)
     quote.reusableMaterialsUsed.forEach((item) => {
-      items.push({
-        id: item.id,
-        description: item.name,
-        quantity: item.quantity,
-        price: item.costPerUse * item.quantity,
-      });
+      if (item.quantity > 0) {
+        items.push({
+          id: item.id,
+          description: item.name,
+          quantity: item.quantity,
+          price: item.costPerUse * item.quantity,
+        });
+      }
     });
 
-    // Ayudante (agrupado, sin nombre)
+    // Ayudante (solo si hay trabajadores con horas > 0)
     if (quote.workers.length > 0) {
-      const totalWorkerPrice = quote.workers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
-      items.push({
-        id: 'ayudante',
-        description: 'Ayudante',
-        quantity: quote.workers.length,
-        price: totalWorkerPrice,
-      });
+      const activeWorkers = quote.workers.filter(w => w.hours > 0 && w.hourlyRate > 0);
+      if (activeWorkers.length > 0) {
+        const totalWorkerPrice = activeWorkers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
+        items.push({
+          id: 'ayudante',
+          description: 'Ayudante',
+          quantity: activeWorkers.length,
+          price: totalWorkerPrice,
+        });
+      }
     }
 
-    // Adicionales del cliente
+    // Adicionales del cliente (solo si tienen cantidad > 0)
     quote.extras.forEach((extra) => {
-      items.push({
-        id: extra.id,
-        description: extra.name,
-        quantity: extra.quantity,
-        price: extra.pricePerUnit * extra.quantity,
-      });
+      if (extra.quantity > 0 && extra.pricePerUnit > 0) {
+        items.push({
+          id: extra.id,
+          description: extra.name,
+          quantity: extra.quantity,
+          price: extra.pricePerUnit * extra.quantity,
+        });
+      }
     });
 
-    // Transporte (una sola fila sin detalle)
+    // Transporte (solo si el total es > 0)
     if (quote.transportItems.length > 0) {
       const totalTransportPrice = quote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
-      items.push({
-        id: 'transporte',
-        description: 'Transporte',
-        quantity: '—',
-        price: totalTransportPrice,
-      });
+      if (totalTransportPrice > 0) {
+        items.push({
+          id: 'transporte',
+          description: 'Transporte',
+          quantity: '—',
+          price: totalTransportPrice,
+        });
+      }
     }
 
-    // Montaje y Desmontaje
+    // Montaje y Desmontaje (solo si horas > 0 y tarifa > 0)
     const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
     const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
-    if (setupPhase && setupPhase.hours > 0) {
+    if (setupPhase && setupPhase.hours > 0 && setupPhase.rate > 0) {
       items.push({ id: 'montaje', description: 'Montaje', quantity: '—', price: setupPhase.hours * setupPhase.rate });
     }
-    if (teardownPhase && teardownPhase.hours > 0) {
+    if (teardownPhase && teardownPhase.hours > 0 && teardownPhase.rate > 0) {
       items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—', price: teardownPhase.hours * teardownPhase.rate });
     }
 
