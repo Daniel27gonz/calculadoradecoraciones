@@ -21,62 +21,80 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
         className="bg-white rounded-lg shadow-lg overflow-hidden"
         style={{ width: '800px', fontFamily: 'system-ui, sans-serif' }}
       >
-        {/* Header con borde elegante */}
+        {/* Header con fondo rosa */}
         <div 
           className="relative p-6"
-          style={{ 
-            background: 'linear-gradient(135deg, #fdf8f5, #fdf2f8, #fdf8f5)',
-            borderBottom: '2px solid #d4a574'
-          }}
+          style={{ background: 'linear-gradient(to right, #fce7f3, #fdf2f8)' }}
         >
-          {/* Borde decorativo interior */}
-          <div style={{ 
-            position: 'absolute', 
-            top: '8px', left: '8px', right: '8px', bottom: '8px',
-            border: '1px solid #e8c9a8',
-            pointerEvents: 'none'
-          }} />
+          <div className="absolute top-2 right-4 flex gap-1">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="w-1 h-1 rounded-full"
+                style={{ backgroundColor: '#f9a8d4', opacity: 0.5 + Math.random() * 0.5 }}
+              />
+            ))}
+          </div>
 
-          <div className="flex items-start justify-between relative" style={{ zIndex: 1 }}>
-            {/* Logo y nombre del negocio - centrado */}
-            <div className="flex flex-col items-center" style={{ flex: '1 1 50%' }}>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
               {data.logoUrl ? (
-                <img src={data.logoUrl} alt="Logo" className="object-contain mb-2" style={{ width: '120px', height: '120px' }} crossOrigin="anonymous" />
+                <img src={data.logoUrl} alt="Logo" className="w-16 h-16 rounded-full object-contain" crossOrigin="anonymous" />
               ) : (
-                <div className="flex items-center justify-center mb-2" style={{ width: '120px', height: '120px', background: 'linear-gradient(to bottom right, #fbcfe8, #fce7f3)', borderRadius: '50%' }}>
-                  <span className="text-4xl">🎈</span>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, #fbcfe8, #fce7f3)' }}>
+                  <span className="text-2xl">🎈</span>
                 </div>
               )}
-              <span className="text-lg font-semibold italic" style={{ color: '#8b6f5e', fontFamily: 'Georgia, serif' }}>{data.businessName}</span>
+              <span className="text-xl font-bold" style={{ color: '#db2777' }}>{data.businessName}</span>
             </div>
-
-            {/* Datos del cliente al costado derecho */}
-            <div className="text-right space-y-1" style={{ flex: '1 1 50%', paddingTop: '12px' }}>
-              <p className="text-base font-bold" style={{ color: '#4a3728' }}>{data.clientName}</p>
-              {data.eventLocation && (
-                <p className="text-sm" style={{ color: '#6b5c4f' }}>{data.eventLocation}</p>
-              )}
-              <p className="text-sm" style={{ color: '#6b5c4f' }}>Fecha: {data.quoteDate}</p>
-              {data.eventDate && (
-                <p className="text-sm" style={{ color: '#6b5c4f' }}>
-                  Fecha del evento: <strong style={{ color: '#4a3728' }}>{data.eventDate.toUpperCase()}</strong>
-                </p>
-              )}
+            <div className="text-right">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">COTIZACIÓN DE</h1>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">DECORACIÓN CON GLOBOS</h2>
               {data.folio && (
-                <p className="text-sm font-semibold" style={{ color: '#a0785c' }}>
+                <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
                   Folio: #{String(data.folio).padStart(4, '0')}
                 </p>
               )}
             </div>
           </div>
-
-          {/* Título COTIZACIÓN centrado */}
-          <div className="text-center mt-4 relative" style={{ zIndex: 1 }}>
-            <h1 className="text-3xl font-bold tracking-widest" style={{ color: '#4a3728', fontFamily: 'Georgia, serif' }}>COTIZACIÓN</h1>
-          </div>
+          <div className="text-right mt-4 text-gray-600">Fecha: {data.quoteDate}</div>
         </div>
 
+        {/* Datos del cliente */}
         <div className="p-6 space-y-4 bg-white">
+          <div className="border-b pb-4" style={{ borderColor: '#fce7f3' }}>
+            <h3 className="text-lg font-semibold mb-3" style={{ color: '#ec4899' }}>DATOS DEL CLIENTE:</h3>
+            <div className="space-y-2 text-sm">
+              {data.eventDate && (
+                <div className="flex flex-wrap gap-x-2">
+                  <span className="text-gray-600">Fecha del evento:</span>
+                  <span style={{ color: '#ec4899' }}>{data.eventDate}{data.eventLocation && `, ${data.eventLocation}`}</span>
+                </div>
+              )}
+              {data.decorationType && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Tema o tipo de decoración:</span>
+                    <Heart className="w-4 h-4" style={{ color: '#f9a8d4' }} />
+                  </div>
+                  <div className="ml-4" style={{ color: '#ec4899' }}>{data.decorationType}</div>
+                </>
+              )}
+              <div className="flex flex-wrap gap-x-8">
+                <div>
+                  <span className="text-gray-600">Nombre:</span>
+                  <span className="ml-1" style={{ color: '#ec4899' }}>{data.clientName}</span>
+                </div>
+                {data.clientPhone && (
+                  <div>
+                    <span className="text-gray-600">Teléfono:</span>
+                    <span className="ml-1" style={{ color: '#ec4899' }}>{data.clientPhone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
 
 
           {/* Tabla de servicios cotizados */}

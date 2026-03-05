@@ -89,71 +89,66 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       </div>
 
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
-        {/* Header con borde elegante */}
-        <div className="relative p-6" style={{ 
-          background: 'linear-gradient(135deg, #fdf8f5, #fdf2f8, #fdf8f5)',
-          borderBottom: '2px solid #d4a574'
-        }}>
-          {/* Borde decorativo interior */}
-          <div style={{ 
-            position: 'absolute', 
-            top: '8px', left: '8px', right: '8px', bottom: '8px',
-            border: '1px solid #e8c9a8',
-            pointerEvents: 'none'
-          }} />
-
-          <div className="flex items-start justify-between relative" style={{ zIndex: 1 }}>
-            {/* Logo y nombre del negocio - centrado */}
-            <div className="flex flex-col items-center" style={{ flex: '1 1 50%' }}>
-              <div className="w-28 h-28 rounded-full flex items-center justify-center overflow-hidden mb-2" style={{ background: data.businessLogo ? 'transparent' : 'linear-gradient(to bottom right, #fbcfe8, #fce7f3)' }}>
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-pink-100 to-pink-50 p-6">
+          <div className="absolute top-2 right-4 flex gap-1">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="w-1 h-1 rounded-full bg-pink-300" style={{ opacity: Math.random() * 0.5 + 0.3 }} />
+            ))}
+          </div>
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-200 to-pink-100 flex items-center justify-center overflow-hidden">
                 {data.businessLogo ? (
-                  <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-contain" />
+                  <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-4xl">🎈</span>
+                  <span className="text-2xl">🎈</span>
                 )}
               </div>
-              <span className="text-lg font-semibold italic" style={{ color: '#8b6f5e', fontFamily: 'Georgia, serif' }}>{data.businessName}</span>
+              <span className="text-lg font-bold text-pink-600 text-center">{data.businessName}</span>
             </div>
-
-            {/* Datos del cliente al costado derecho */}
-            <div className="text-right space-y-1" style={{ flex: '1 1 50%', paddingTop: '12px' }}>
-              <p className="text-base font-bold" style={{ color: '#4a3728' }}>{data.clientName || '___'}</p>
-              {data.eventLocation && (
-                <p className="text-sm" style={{ color: '#6b5c4f' }}>{data.eventLocation}</p>
-              )}
-              <p className="text-sm" style={{ color: '#6b5c4f' }}>Fecha: {data.quoteDate}</p>
-              {data.validUntil && (
-                <p className="text-sm" style={{ color: '#6b5c4f' }}>
-                  Válido hasta: {(() => {
-                    try {
-                      return format(new Date(data.validUntil + 'T12:00:00'), "dd/MM/yyyy", { locale: es });
-                    } catch {
-                      return data.validUntil;
-                    }
-                  })()}
-                </p>
-              )}
-              {data.eventDate && (
-                <p className="text-sm" style={{ color: '#6b5c4f' }}>
-                  Fecha del evento: <strong style={{ color: '#4a3728' }}>{data.eventDate.toUpperCase()}</strong>
-                </p>
-              )}
+            <div className="text-right">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">COTIZACIÓN DE</h1>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">DECORACIÓN CON GLOBOS</h2>
               {data.folio && (
-                <p className="text-sm font-semibold" style={{ color: '#a0785c' }}>
+                <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
                   Folio: #{String(data.folio).padStart(4, '0')}
                 </p>
               )}
             </div>
           </div>
-
-          {/* Título COTIZACIÓN centrado */}
-          <div className="text-center mt-4 relative" style={{ zIndex: 1 }}>
-            <h1 className="text-3xl font-bold tracking-widest" style={{ color: '#4a3728', fontFamily: 'Georgia, serif' }}>COTIZACIÓN</h1>
-          </div>
+          <div className="text-right mt-4 text-gray-600">Fecha: {data.quoteDate}</div>
         </div>
 
-        {/* Contenido */}
+        {/* Client data */}
         <div className="p-6 space-y-4 bg-white">
+          <div className="border-b border-pink-100 pb-4">
+            <h3 className="text-lg font-semibold text-pink-500 mb-3">DATOS DEL CLIENTE:</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex flex-wrap gap-x-2">
+                <span className="text-gray-600">Fecha y lugar del evento:</span>
+                <span className="text-pink-500 underline decoration-pink-300">
+                  {data.eventDate || "___"}, {data.eventLocation || "___"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">Tema o tipo de decoración:</span>
+                <Heart className="w-4 h-4 text-pink-300" />
+              </div>
+              <div className="text-pink-500 ml-4">{data.decorationType || "___"}</div>
+              <div className="flex flex-wrap gap-x-8">
+                <div>
+                  <span className="text-gray-600">Nombre:</span>
+                  <span className="text-pink-500 underline decoration-pink-300 ml-1">{data.clientName || "___"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Teléfono:</span>
+                  <span className="text-pink-500 underline decoration-pink-300 ml-1">{data.clientPhone || "___"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Tabla de servicios cotizados */}
           {data.items && data.items.length > 0 && (
             <div className="border-b border-pink-100 pb-4">
@@ -198,7 +193,20 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             {data.depositMessage.replace("{percentage}", data.depositPercentage.toString())}
           </div>
 
-
+          {/* Valid until */}
+          {data.validUntil && (
+            <div className="text-center text-sm text-gray-500 -mt-2 pb-2">
+              Cotización válida hasta: <span className="font-semibold text-pink-600">
+                {(() => {
+                  try {
+                    return format(new Date(data.validUntil + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es });
+                  } catch {
+                    return data.validUntil;
+                  }
+                })()}
+              </span>
+            </div>
+          )}
 
           {/* Custom note */}
           {data.customNote && (
