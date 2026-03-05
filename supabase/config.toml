@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.create-user-webhook]
 verify_jwt = false
+
+[functions.cancel-user-webhook]
+verify_jwt = false

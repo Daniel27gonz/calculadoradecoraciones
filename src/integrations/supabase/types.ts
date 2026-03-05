@@ -425,6 +425,7 @@ export type Database = {
       }
       user_approval_status: {
         Row: {
+          cancelled_at: string | null
           created_at: string
           id: string
           status: Database["public"]["Enums"]["approval_status"]
@@ -432,6 +433,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancelled_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["approval_status"]
@@ -439,6 +441,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancelled_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["approval_status"]
