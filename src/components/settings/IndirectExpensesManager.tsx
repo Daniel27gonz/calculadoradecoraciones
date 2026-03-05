@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Save, CalendarIcon, Check } from 'lucide-react';
+import { Plus, Trash2, Pencil, CalendarIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -19,8 +20,6 @@ interface IndirectExpense {
   monthlyAmount: number;
   paymentDate?: string;
   registeredInFinances?: boolean;
-  isNew?: boolean;
-  isDirty?: boolean;
 }
 
 interface IndirectExpensesManagerProps {
@@ -32,12 +31,18 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<IndirectExpense | null>(null);
+  const [formDescription, setFormDescription] = useState('');
+  const [formAmount, setFormAmount] = useState<number>(0);
+  const [formPaymentDate, setFormPaymentDate] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  
 
   const loadExpenses = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('indirect_expenses')
@@ -98,19 +103,33 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
   }, [user, loadExpenses]);
 
-  const registerExpenseInFinances = async (expense: IndirectExpense) => {
-    if (!user || !expense.paymentDate || !expense.description || !expense.monthlyAmount) return false;
+  const openAddDialog = () => {
+    setEditingExpense(null);
+    setFormDescription('');
+    setFormAmount(0);
+    setFormPaymentDate('');
+    setDialogOpen(true);
+  };
 
+  const openEditDialog = (expense: IndirectExpense) => {
+    setEditingExpense(expense);
+    setFormDescription(expense.description);
+    setFormAmount(expense.monthlyAmount);
+    setFormPaymentDate(expense.paymentDate || '');
+    setDialogOpen(true);
+  };
+
+  const registerExpenseInFinances = async (description: string, amount: number, paymentDate: string) => {
+    if (!user) return false;
     try {
       const { error } = await supabase.from('transactions').insert({
         user_id: user.id,
         type: 'expense',
-        description: `Gasto del mes: ${expense.description}`,
-        amount: expense.monthlyAmount,
+        description: `Gasto del mes: ${description}`,
+        amount,
         category: 'Gastos del mes',
-        transaction_date: expense.paymentDate,
+        transaction_date: paymentDate,
       });
-
       if (error) throw error;
       return true;
     } catch (error) {
@@ -119,134 +138,80 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
   };
 
-  const saveExpenses = async () => {
-    if (!user) return;
-    
+  const handleSave = async () => {
+    if (!user || !formDescription.trim()) {
+      toast({ title: 'Error', description: 'Agrega una descripción', variant: 'destructive' });
+      return;
+    }
+    if (formAmount <= 0) {
+      toast({ title: 'Error', description: 'El monto debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
     try {
-      // Process expenses
+      // Check if we need to register in finances
+      let registeredInFinances = editingExpense?.registeredInFinances || false;
+      if (formPaymentDate && !registeredInFinances && formAmount > 0) {
+        const success = await registerExpenseInFinances(formDescription, formAmount, formPaymentDate);
+        if (success) registeredInFinances = true;
+      }
 
-      let registeredCount = 0;
+      const row = {
+        user_id: user.id,
+        description: formDescription.trim(),
+        monthly_amount: formAmount,
+        payment_date: formPaymentDate || null,
+        registered_in_finances: registeredInFinances,
+      };
 
-      const updatedExpenses = await Promise.all(
-        expenses.map(async (expense) => {
-          // Register in finances if needed
-          let registered = expense.registeredInFinances || false;
-          if (expense.paymentDate && !expense.registeredInFinances && expense.monthlyAmount > 0 && expense.description) {
-            const success = await registerExpenseInFinances(expense);
-            if (success) {
-              registeredCount++;
-              registered = true;
-            }
-          }
+      if (editingExpense) {
+        // Update
+        const { error } = await supabase
+          .from('indirect_expenses')
+          .update(row)
+          .eq('id', editingExpense.id);
+        if (error) throw error;
+        toast({ title: '¡Actualizado!', description: 'Gasto actualizado correctamente' });
+      } else {
+        // Insert
+        const { error } = await supabase
+          .from('indirect_expenses')
+          .insert(row);
+        if (error) throw error;
+        toast({ title: '¡Registrado!', description: 'Gasto registrado correctamente' });
+      }
 
-          const row = {
-            user_id: user.id,
-            description: expense.description || '',
-            monthly_amount: expense.monthlyAmount || 0,
-            payment_date: expense.paymentDate || null,
-            registered_in_finances: registered,
-          };
-
-          if (expense.isNew) {
-            const { data, error } = await supabase
-              .from('indirect_expenses')
-              .insert(row)
-              .select()
-              .single();
-            if (error) throw error;
-            return {
-              id: data.id,
-              description: data.description,
-              monthlyAmount: Number(data.monthly_amount),
-              paymentDate: data.payment_date || undefined,
-              registeredInFinances: data.registered_in_finances,
-            };
-          } else {
-            const { error } = await supabase
-              .from('indirect_expenses')
-              .update(row)
-              .eq('id', expense.id);
-            if (error) throw error;
-            return { ...expense, registeredInFinances: registered, isNew: undefined, isDirty: undefined };
-          }
-        })
-      );
-
-      setExpenses(updatedExpenses);
-      
-      toast({
-        title: "¡Guardado!",
-        description: registeredCount > 0
-          ? `Gastos guardados. ${registeredCount} gasto(s) registrado(s) en Finanzas.`
-          : "Tus gastos del mes han sido guardados",
-      });
+      setDialogOpen(false);
+      loadExpenses();
     } catch (error) {
-      console.error('Error saving expenses:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron guardar los gastos",
-        variant: "destructive",
-      });
+      console.error('Error saving expense:', error);
+      toast({ title: 'Error', description: 'No se pudo guardar el gasto', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
-  const addExpense = () => {
-    setExpenses([
-      ...expenses,
-      { id: crypto.randomUUID(), description: '', monthlyAmount: 0, isNew: true },
-    ]);
-  };
-
-  const updateExpense = (id: string, updates: Partial<IndirectExpense>) => {
-    setExpenses(expenses.map(e => (e.id === id ? { ...e, ...updates, isDirty: true } : e)));
-  };
-
   const removeExpense = async (id: string) => {
-    const expense = expenses.find(e => e.id === id);
+    if (!user) return;
     setExpenses(expenses.filter(e => e.id !== id));
-    
-    if (expense && !expense.isNew && user) {
-      try {
-        const { error } = await supabase
-          .from('indirect_expenses')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
-        if (error) throw error;
-        toast({ title: "Eliminado", description: "Gasto eliminado correctamente" });
-      } catch (error) {
-        console.error('Error deleting expense:', error);
-        toast({ title: "Error", description: "No se pudo eliminar el gasto", variant: "destructive" });
-        loadExpenses(); // Reload on error
-      }
+
+    try {
+      const { error } = await supabase
+        .from('indirect_expenses')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      toast({ title: 'Eliminado', description: 'Gasto eliminado correctamente' });
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({ title: 'Error', description: 'No se pudo eliminar el gasto', variant: 'destructive' });
+      loadExpenses();
     }
   };
 
-  // Find the latest month that has registered expenses
-  const latestMonthExpenses = (() => {
-    const withDates = expenses.filter(e => e.paymentDate);
-    if (withDates.length === 0) return [];
-    
-    let latestY = 0, latestM = 0;
-    withDates.forEach(e => {
-      const [y, m] = e.paymentDate!.split('-');
-      const yr = parseInt(y), mo = parseInt(m);
-      if (yr > latestY || (yr === latestY && mo > latestM)) {
-        latestY = yr;
-        latestM = mo;
-      }
-    });
-    
-    return withDates.filter(e => {
-      const [y, m] = e.paymentDate!.split('-');
-      return parseInt(y) === latestY && parseInt(m) === latestM;
-    });
-  })();
-
-  const total = latestMonthExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  const total = expenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -263,133 +228,163 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   }
 
   return (
-    <Card className="shadow-card">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-            <span className="text-xl">📊</span>
+    <>
+      <Card className="shadow-card">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+              <span className="text-xl">📊</span>
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-lg">Gastos del mes</CardTitle>
+              <CardDescription>
+                Tus gastos fijos mensuales (renta, luz, internet, etc.)
+              </CardDescription>
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-beige border border-border">
+              <span className="text-sm font-bold text-foreground tabular-nums">
+                {currencySymbol}{formatCurrency(total)}/mes
+              </span>
+            </div>
           </div>
-          <div className="flex-1">
-            <CardTitle className="text-lg">Gastos del mes</CardTitle>
-            <CardDescription>
-              Agrega tus gastos fijos mensuales (renta, luz, internet, etc.)
-            </CardDescription>
-          </div>
-          <div className="px-3 py-1.5 rounded-full bg-beige border border-border">
-            <span className="text-sm font-bold text-foreground tabular-nums">
-              {currencySymbol}{formatCurrency(total)}/mes
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {expenses.length === 0 && (
-          <div className="text-center py-6 text-muted-foreground text-sm">
-            No hay gastos del mes agregados
-          </div>
-        )}
-
-        {expenses.map((expense) => (
-          <div
-            key={expense.id}
-            className="p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in space-y-3"
+          <Button
+            variant="default"
+            className="w-full h-12 text-base font-medium mt-4"
+            onClick={openAddDialog}
           >
-            <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Descripción
-                </label>
-                <Input
-                  value={expense.description}
-                  onChange={(e) => updateExpense(expense.id, { description: e.target.value })}
-                  placeholder="Ej: Renta del local, Luz, Internet"
-                  className="h-11 text-base bg-background/50"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeExpense(expense.id)}
-                className="h-11 w-11 text-destructive hover:bg-destructive/10 shrink-0 mt-6"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+            <Plus className="w-5 h-5 mr-2" />
+            Registrar gasto
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {expenses.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              No hay gastos del mes registrados
             </div>
+          )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 sm:w-48">
-                <NumericField
-                  label="Monto mensual"
-                  prefix={currencySymbol}
-                  min={0}
-                  step={0.01}
-                  value={expense.monthlyAmount || ''}
-                  onChange={(e) => updateExpense(expense.id, { monthlyAmount: Number(e.target.value) || 0 })}
-                />
-              </div>
-
-              <div className="flex-1">
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Fecha de pago
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-11 justify-start text-left font-normal bg-background/50",
-                        !expense.paymentDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {expense.paymentDate
-                        ? format(new Date(expense.paymentDate + 'T12:00:00'), "dd MMM yyyy", { locale: es })
-                        : "Seleccionar fecha"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={expense.paymentDate ? new Date(expense.paymentDate + 'T12:00:00') : undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          const iso = format(date, 'yyyy-MM-dd');
-                          updateExpense(expense.id, { paymentDate: iso, registeredInFinances: false });
-                        }
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {expense.registeredInFinances && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Registrado en Finanzas
+          {expenses.map((expense) => (
+            <div
+              key={expense.id}
+              className="p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate">{expense.description}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {currencySymbol}{formatCurrency(expense.monthlyAmount)}/mes
                   </p>
-                )}
+                  {expense.paymentDate && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <CalendarIcon className="w-3 h-3" />
+                      {format(new Date(expense.paymentDate + 'T12:00:00'), "dd MMM yyyy", { locale: es })}
+                      {expense.registeredInFinances && (
+                        <span className="text-green-600 flex items-center gap-0.5 ml-2">
+                          <Check className="w-3 h-3" /> En Finanzas
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => openEditDialog(expense)}
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeExpense(expense.id)}
+                    className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Dialog for adding/editing */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingExpense ? 'Editar gasto' : 'Registrar gasto del mes'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Descripción
+              </label>
+              <Input
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Ej: Renta del local, Luz, Internet"
+                className="h-11"
+              />
+            </div>
+            <div>
+              <NumericField
+                label="Monto mensual"
+                prefix={currencySymbol}
+                min={0}
+                step={0.01}
+                value={formAmount || ''}
+                onChange={(e) => setFormAmount(Number(e.target.value) || 0)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Fecha de pago (opcional)
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-11 justify-start text-left font-normal",
+                      !formPaymentDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formPaymentDate
+                      ? format(new Date(formPaymentDate + 'T12:00:00'), "dd MMM yyyy", { locale: es })
+                      : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formPaymentDate ? new Date(formPaymentDate + 'T12:00:00') : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setFormPaymentDate(format(date, 'yyyy-MM-dd'));
+                      }
+                    }}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
-        ))}
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="secondary" className="flex-1 h-12 text-base font-medium" onClick={addExpense}>
-            <Plus className="w-5 h-5 mr-2" />
-            Agregar gasto
-          </Button>
-          {expenses.length > 0 && (
-            <Button 
-              variant="default" 
-              className="flex-1 h-12 text-base font-medium" 
-              onClick={saveExpenses}
-              disabled={saving}
-            >
-              <Save className="w-5 h-5 mr-2" />
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
             </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Guardando...' : editingExpense ? 'Actualizar' : 'Registrar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -140,6 +140,11 @@ export function useQuotePdfDownload() {
       items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—', price: teardownPhase.hours * teardownPhase.rate });
     }
 
+    // Gastos indirectos (solo si > 0)
+    if (summary.indirectExpenses > 0) {
+      items.push({ id: 'gastos-indirectos', description: 'Gastos indirectos', quantity: '—', price: summary.indirectExpenses });
+    }
+
     const additionalServices: Array<{ id: string; description: string; price: number }> = [];
 
     const currencyCode = profile?.currency || 'USD';

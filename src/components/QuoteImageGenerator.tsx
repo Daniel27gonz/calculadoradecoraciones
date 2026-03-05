@@ -146,6 +146,10 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           if (teardownPhase && teardownPhase.hours > 0 && teardownPhase.rate > 0) {
             serviceItems.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—' });
           }
+          // Gastos indirectos (solo si > 0)
+          if (summary.indirectExpenses > 0) {
+            serviceItems.push({ id: 'gastos-indirectos', description: 'Gastos indirectos', quantity: '—' });
+          }
 
           if (serviceItems.length === 0) return null;
 
