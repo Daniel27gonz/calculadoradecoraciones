@@ -314,6 +314,8 @@ export function MaterialsManager() {
       quantity_bought: String(purchase.quantity_presentations),
       provider: purchase.provider || '',
     });
+    setNewMatInline(p => ({ ...p, name: mat?.name || '', category: mat?.category || 'otros' }));
+    setPurchaseMaterialSearch('');
     setPurchaseDialogOpen(true);
   };
 
