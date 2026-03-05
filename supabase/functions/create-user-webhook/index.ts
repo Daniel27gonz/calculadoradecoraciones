@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     // Extract email and document (CPF/CNPJ) from webhook payload
     // These field names will be adjusted once the exact format is provided
     const email = body.email || body.customer?.email
-    const document = body.document || body.cpf || body.cnpj || body.customer?.document || body.customer?.cpf || body.customer?.cnpj
+    const phone = body.phone || body.telephone || body.cel || body.customer?.phone || body.customer?.telephone || body.customer?.cel
 
     if (!email) {
       return new Response(
@@ -32,15 +32,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!document) {
+    if (!phone) {
       return new Response(
-        JSON.stringify({ error: 'Document (CPF/CNPJ) is required' }),
+        JSON.stringify({ error: 'Phone number is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Clean document: remove dots, dashes, slashes
-    const cleanDocument = document.replace(/[.\-\/]/g, '')
+    // Clean phone: keep only digits
+    const cleanPhone = phone.replace(/\D/g, '')
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -57,10 +57,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create user with email and document as temporary password
+    // Create user with email and phone as temporary password
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: cleanDocument,
+      password: cleanPhone,
       email_confirm: true,
     })
 
