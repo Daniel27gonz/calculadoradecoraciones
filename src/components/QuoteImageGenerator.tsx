@@ -119,26 +119,31 @@ export const QuoteImageGenerator = forwardRef<HTMLDivElement, QuoteImageGenerato
           if (quote.decorationDescription) {
             serviceItems.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—' });
           }
-          quote.balloons.forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
-          quote.furnitureItems.forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
-          quote.reusableMaterialsUsed.forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
-          // Ayudante (una sola fila con la cantidad total)
-          if (quote.workers.length > 0) {
-            serviceItems.push({ id: 'ayudante', description: 'Ayudante', quantity: quote.workers.length });
+          // Solo incluir ítems con cantidad y precio > 0
+          quote.balloons.filter(b => b.quantity > 0 && b.pricePerUnit > 0).forEach(b => serviceItems.push({ id: b.id, description: b.description, quantity: b.quantity }));
+          quote.furnitureItems.filter(f => f.quantity > 0 && f.pricePerUnit > 0).forEach(f => serviceItems.push({ id: f.id, description: f.name, quantity: f.quantity }));
+          quote.reusableMaterialsUsed.filter(r => r.quantity > 0).forEach(r => serviceItems.push({ id: r.id, description: r.name, quantity: r.quantity }));
+          // Ayudante (solo con horas y tarifa > 0)
+          const activeWorkers = quote.workers.filter(w => w.hours > 0 && w.hourlyRate > 0);
+          if (activeWorkers.length > 0) {
+            serviceItems.push({ id: 'ayudante', description: 'Ayudante', quantity: activeWorkers.length });
           }
-          // Adicionales del cliente
-          quote.extras.forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
-          // Transporte (solo si hay items registrados)
+          // Adicionales del cliente (solo con cantidad > 0)
+          quote.extras.filter(e => e.quantity > 0 && e.pricePerUnit > 0).forEach(e => serviceItems.push({ id: e.id, description: e.name, quantity: e.quantity }));
+          // Transporte (solo si el total es > 0)
           if (quote.transportItems.length > 0) {
-            serviceItems.push({ id: 'transporte', description: 'Transporte', quantity: '—' });
+            const totalTransport = quote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
+            if (totalTransport > 0) {
+              serviceItems.push({ id: 'transporte', description: 'Transporte', quantity: '—' });
+            }
           }
-          // Montaje y Desmontaje
+          // Montaje y Desmontaje (solo si horas y tarifa > 0)
           const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
           const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
-          if (setupPhase && setupPhase.hours > 0) {
+          if (setupPhase && setupPhase.hours > 0 && setupPhase.rate > 0) {
             serviceItems.push({ id: 'montaje', description: 'Montaje', quantity: '—' });
           }
-          if (teardownPhase && teardownPhase.hours > 0) {
+          if (teardownPhase && teardownPhase.hours > 0 && teardownPhase.rate > 0) {
             serviceItems.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—' });
           }
 
