@@ -391,6 +391,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          reference_id: string | null
           transaction_date: string
           type: string
           updated_at: string
@@ -402,6 +403,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          reference_id?: string | null
           transaction_date?: string
           type: string
           updated_at?: string
@@ -413,6 +415,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          reference_id?: string | null
           transaction_date?: string
           type?: string
           updated_at?: string
