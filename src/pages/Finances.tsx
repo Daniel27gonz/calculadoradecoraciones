@@ -304,7 +304,7 @@ export default function Finances() {
                   <TrendingDown className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos del mes</p>
+                  <p className="text-sm text-red-600 font-medium">Gastos y compras del mes</p>
                   <p className="text-xl font-bold text-red-700">
                     {currencySymbol}{totalExpenses.toFixed(2)}
                   </p>
