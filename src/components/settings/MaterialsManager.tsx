@@ -144,7 +144,7 @@ export function MaterialsManager() {
         quantity_presentations: p.quantity_presentations,
         units_added: p.units_added,
         total_paid: p.total_paid,
-        cost_per_unit: p.quantity_presentations > 0 ? p.total_paid / p.quantity_presentations : 0,
+        cost_per_unit: p.units_added > 0 ? p.total_paid / p.units_added : 0,
         provider: p.provider,
       })));
     } catch (e) {
@@ -259,7 +259,8 @@ export function MaterialsManager() {
       const mat = materials.find(m => m.id === newPurchase.material_id);
       if (mat) {
         const newStock = mat.total_purchased + totalUnits;
-        await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
+        const costPerUnit = totalUnits > 0 ? paid / totalUnits : 0;
+        await supabase.from('user_materials').update({ stock_current: newStock, cost_per_unit: costPerUnit }).eq('id', mat.id);
       }
 
       // Register expense in finances
