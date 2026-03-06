@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck, XCircle } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'cancelled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered'>('all');
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -63,9 +63,9 @@ export default function Orders() {
   const currency = getCurrencyByCode(profile?.currency || 'USD');
   const currencySymbol = currency?.symbol || '$';
 
-  // Quotes that have been converted to orders (approved, delivered, or cancelled)
+  // Quotes that have been converted to orders (approved or delivered)
   const orderQuotes = useMemo(() => {
-    return quotes.filter(q => q.status === 'approved' || q.status === 'delivered' || q.status === 'cancelled');
+    return quotes.filter(q => q.status === 'approved' || q.status === 'delivered');
   }, [quotes]);
 
   const filteredQuotes = useMemo(() => {
@@ -75,8 +75,7 @@ export default function Orders() {
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
         (statusFilter === 'approved' && q.status === 'approved') ||
-        (statusFilter === 'delivered' && q.status === 'delivered') ||
-        (statusFilter === 'cancelled' && q.status === 'cancelled');
+        (statusFilter === 'delivered' && q.status === 'delivered');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orderQuotes, searchTerm, statusFilter, fullyPaidQuotes]);
@@ -295,34 +294,16 @@ export default function Orders() {
     return `${y}-${m}-${d}`;
   };
 
-  // Cancel order
-  const cancelOrder = async (quote: Quote) => {
-    const updated = { ...quote, status: 'cancelled' as const };
-    await saveQuote(updated);
-    toast({ title: '❌ Pedido cancelado', description: `${quote.clientName} ha sido cancelado. Los materiales fueron devueltos al inventario.` });
-    await loadQuotes();
-  };
-
-  // Reactivate cancelled order
-  const reactivateOrder = async (quote: Quote) => {
-    const updated = { ...quote, status: 'approved' as const };
-    await saveQuote(updated);
-    toast({ title: '✅ Pedido reactivado', description: `${quote.clientName} está activo nuevamente.` });
-    await loadQuotes();
-  };
-
   const getStatusColor = (quote: Quote) => {
-    if (quote.status === 'cancelled') return 'bg-red-500';
     if (quote.status === 'delivered') return 'bg-blue-500';
     if (fullyPaidQuotes.has(quote.id)) return 'bg-green-500';
     return 'bg-amber-500';
   };
 
   const getStatusLabel = (quote: Quote) => {
-    if (quote.status === 'cancelled') return 'Cancelado';
     if (quote.status === 'delivered') return 'Entregado';
     if (fullyPaidQuotes.has(quote.id)) return 'Pagado';
-    return 'Pedido confirmado';
+    return 'Activo';
   };
 
   if (loading) return null;
@@ -486,7 +467,6 @@ export default function Orders() {
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
             <TabsTrigger value="approved" className="flex-1 text-xs">Pagados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
-            <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -604,74 +584,40 @@ export default function Orders() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
-                        {quote.status === 'cancelled' ? (
+                        {quote.status !== 'delivered' && (
                           <>
                             <Button
                               size="sm"
                               variant="outline"
                               className="text-xs"
-                              onClick={() => reactivateOrder(quote)}
+                              onClick={() => {
+                                setPaymentQuoteId(quote.id);
+                                setShowPaymentDialog(true);
+                              }}
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                              Reactivar pedido
+                              <CreditCard className="h-3.5 w-3.5 mr-1" />
+                              Registrar pago
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                              onClick={() => deleteOrder(quote)}
+                              className="text-xs"
+                              onClick={() => markAsDelivered(quote)}
                             >
-                              <Trash2 className="h-3.5 w-3.5 mr-1" />
-                              Eliminar pedido
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            {quote.status !== 'delivered' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={() => {
-                                    setPaymentQuoteId(quote.id);
-                                    setShowPaymentDialog(true);
-                                  }}
-                                >
-                                  <CreditCard className="h-3.5 w-3.5 mr-1" />
-                                  Registrar pago
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={() => markAsDelivered(quote)}
-                                >
-                                  <Truck className="h-3.5 w-3.5 mr-1" />
-                                  Marcar entregado
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
-                                  onClick={() => cancelOrder(quote)}
-                                >
-                                  <XCircle className="h-3.5 w-3.5 mr-1" />
-                                  Cancelar pedido
-                                </Button>
-                              </>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                              onClick={() => deleteOrder(quote)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-1" />
-                              Eliminar pedido
+                              <Truck className="h-3.5 w-3.5 mr-1" />
+                              Marcar entregado
                             </Button>
                           </>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                          onClick={() => deleteOrder(quote)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />
+                          Eliminar pedido
+                        </Button>
                       </div>
                     </div>
                   )}
