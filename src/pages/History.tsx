@@ -186,6 +186,16 @@ export default function History() {
                             <h3 className="font-display text-lg font-semibold">
                               {quote.clientName}
                             </h3>
+                            {(quote.status === 'approved' || quote.status === 'delivered') && (
+                              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">
+                                Cotización aprobada
+                              </Badge>
+                            )}
+                            {quote.status === 'cancelled' && (
+                              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-xs">
+                                Cancelada
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
