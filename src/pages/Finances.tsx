@@ -364,8 +364,6 @@ export default function Finances() {
           </Card>
         </div>
 
-        {/* Monthly Charts */}
-        <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
 
         {/* Transactions List */}
         <Card>
