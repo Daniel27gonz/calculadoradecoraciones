@@ -236,6 +236,53 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     }
   }, [profile]);
 
+  // Recalculate stock deductions for an order (delete old, insert new)
+  const recalculateStockDeductions = async (quote: Quote) => {
+    if (!user) return;
+    try {
+      // Get user materials to match by name
+      const { data: userMaterials } = await supabase
+        .from('user_materials')
+        .select('id, name')
+        .eq('user_id', user.id);
+
+      if (!userMaterials) return;
+
+      // Delete existing deductions for this quote
+      await supabase.from('stock_deductions').delete().eq('quote_id', quote.id).eq('user_id', user.id);
+
+      // Aggregate quantities by material_id
+      const aggregated: Record<string, number> = {};
+
+      for (const qMat of quote.materials) {
+        const match = userMaterials.find(m => m.name.toLowerCase() === qMat.name.toLowerCase());
+        if (match && qMat.quantity > 0) {
+          aggregated[match.id] = (aggregated[match.id] || 0) + qMat.quantity;
+        }
+      }
+
+      for (const balloon of quote.balloons) {
+        const match = userMaterials.find(m => m.name.toLowerCase() === balloon.description.toLowerCase());
+        if (match && balloon.quantity > 0) {
+          aggregated[match.id] = (aggregated[match.id] || 0) + balloon.quantity;
+        }
+      }
+
+      const deductions = Object.entries(aggregated).map(([material_id, quantity_deducted]) => ({
+        material_id,
+        quantity_deducted,
+        quote_id: quote.id,
+        user_id: user.id,
+      }));
+
+      if (deductions.length > 0) {
+        await supabase.from('stock_deductions').insert(deductions);
+      }
+    } catch (err) {
+      console.error('Error recalculating stock deductions:', err);
+    }
+  };
+
   const saveQuote = async (quote: Quote) => {
     if (!user) {
       toast({
