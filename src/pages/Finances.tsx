@@ -15,6 +15,9 @@ import { TransactionFormDialog } from '@/components/finances/TransactionFormDial
 import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 import { FinancialSummary } from '@/components/finances/FinancialSummary';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +65,8 @@ export default function Finances() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [realTotalExpenses, setRealTotalExpenses] = useState(0);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(selectedYear);
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
