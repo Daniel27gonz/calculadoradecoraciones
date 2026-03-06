@@ -59,6 +59,7 @@ export default function Finances() {
   const [quoteStats, setQuoteStats] = useState<QuoteStats>({ totalQuotes: 0, paidQuotes: 0 });
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [realTotalExpenses, setRealTotalExpenses] = useState(0);
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
