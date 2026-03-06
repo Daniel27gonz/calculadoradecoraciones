@@ -70,6 +70,17 @@ export default function Home() {
     return quotes.filter((q) => q.status === 'pending');
   }, [quotes]);
 
+  const eventsCompleted = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    return quotes.filter(q => {
+      if (q.status !== 'delivered') return false;
+      const [y, m] = q.updatedAt.split('-');
+      return parseInt(y) === currentYear && parseInt(m) === currentMonth;
+    }).length;
+  }, [quotes]);
+
   const formatMoney = (n: number) =>
   `${currencySymbol}${n.toLocaleString('es-LA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
@@ -144,6 +155,15 @@ export default function Home() {
             </div>
             <p className="text-lg font-bold text-destructive">{formatMoney(totalExpenses)}</p>
           </div>
+        </div>
+
+        {/* Eventos realizados */}
+        <div className="bg-blue-50/80 border-blue-100 rounded-2xl p-4 border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <span className="text-sm font-medium text-foreground">Eventos realizados este mes</span>
+          </div>
+          <span className="text-2xl font-extrabold text-blue-600">{eventsCompleted}</span>
         </div>
 
         {/* Acciones Rápidas - 2 col grid */}
