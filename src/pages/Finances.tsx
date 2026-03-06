@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuote } from '@/contexts/QuoteContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
