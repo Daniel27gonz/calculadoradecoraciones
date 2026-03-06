@@ -671,20 +671,22 @@ export default function Orders() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
+                        {(quote.status === 'approved' || quote.status === 'delivered') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => {
+                              setPaymentQuoteId(quote.id);
+                              setShowPaymentDialog(true);
+                            }}
+                          >
+                            <CreditCard className="h-3.5 w-3.5 mr-1" />
+                            Registrar pago
+                          </Button>
+                        )}
                         {quote.status === 'approved' && (
                           <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs"
-                              onClick={() => {
-                                setPaymentQuoteId(quote.id);
-                                setShowPaymentDialog(true);
-                              }}
-                            >
-                              <CreditCard className="h-3.5 w-3.5 mr-1" />
-                              Registrar pago
-                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
