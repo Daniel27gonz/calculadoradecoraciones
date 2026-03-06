@@ -106,11 +106,11 @@ export default function Auth() {
           
 
           
-          <p className="text-muted-foreground">
-            {isLogin ?
-            'Ingresa a tu cuenta para continuar' :
-            'Empieza a calcular tus ganancias hoy'}
-          </p>
+          
+
+
+
+          
         </div>
 
         {/* Form Card */}
