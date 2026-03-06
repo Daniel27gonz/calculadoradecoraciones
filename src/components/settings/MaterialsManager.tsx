@@ -107,7 +107,7 @@ export function MaterialsManager() {
     setLoading(true);
     try {
       const [matRes, purRes, dedRes] = await Promise.all([
-        supabase.from('user_materials').select('id, name, category, purchase_unit, stock_minimum').eq('user_id', user.id).order('name'),
+        supabase.from('user_materials').select('id, name, category, purchase_unit, stock_minimum, presentation_price').eq('user_id', user.id).order('name'),
         supabase.from('material_purchases').select('*').eq('user_id', user.id).order('purchase_date', { ascending: false }),
         supabase.from('stock_deductions').select('material_id, quantity_deducted').eq('user_id', user.id),
       ]);
@@ -158,6 +158,13 @@ export function MaterialsManager() {
   const materialMap = useMemo(() => {
     const map: Record<string, string> = {};
     materials.forEach(m => { map[m.id] = m.name; });
+    return map;
+  }, [materials]);
+
+  // Material presentation_price lookup
+  const materialPriceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    materials.forEach(m => { map[m.id] = (m as any).presentation_price || 0; });
     return map;
   }, [materials]);
 
@@ -623,7 +630,7 @@ export function MaterialsManager() {
                     <div className="flex gap-3 mt-1 text-xs">
                       <span>Cant: <strong>{p.quantity_presentations}</strong></span>
                       <span>Total: <strong>{fmt(p.total_paid)}</strong></span>
-                      <span>Costo/presentación: <strong>{fmt(p.cost_per_unit)}</strong></span>
+                      <span>Costo/presentación: <strong>{fmt(materialPriceMap[p.material_id] || p.cost_per_unit)}</strong></span>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
