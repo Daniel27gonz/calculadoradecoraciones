@@ -397,7 +397,7 @@ export default function Finances() {
                   <CheckCircle className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                   <p className="text-sm text-emerald-600 font-medium">Pedidos pagados</p>
+                   <p className="text-sm text-emerald-600 font-medium">Decoraciones entregadas</p>
                    <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
                    <p className="text-xs text-emerald-500">este mes</p>
                 </div>
