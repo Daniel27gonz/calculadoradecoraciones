@@ -189,8 +189,8 @@ export default function Orders() {
   // Convert quote to order (change status to approved)
   const convertToOrder = async (quote: Quote) => {
     const updated = { ...quote, status: 'approved' as const };
+    // saveQuote will auto-recalculate stock deductions since status is 'approved'
     await saveQuote(updated);
-    await deductMaterials(quote);
     toast({ title: '✅ Pedido creado', description: `${quote.clientName} ahora es un pedido activo.` });
     await loadQuotes();
   };
