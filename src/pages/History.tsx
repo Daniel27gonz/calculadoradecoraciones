@@ -186,12 +186,6 @@ export default function History() {
                             <h3 className="font-display text-lg font-semibold">
                               {quote.clientName}
                             </h3>
-                            <Badge
-                              variant={quote.status === 'approved' ? 'default' : 'secondary'}
-                              className={`text-xs ${quote.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-500/20 text-yellow-700'}`}
-                            >
-                              {quote.status === 'approved' ? 'Aprobada' : quote.status === 'delivered' ? 'Entregado' : 'Pendiente'}
-                            </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
