@@ -106,10 +106,18 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
 
   const fetchExpenses = async () => {
     try {
+      const monthNum = selectedMonth + 1;
+      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = monthNum === 12
+        ? `${selectedYear + 1}-01-01`
+        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
+
       const { data, error } = await supabase
         .from('indirect_expenses')
-        .select('description, monthly_amount')
-        .eq('user_id', user?.id);
+        .select('description, monthly_amount, payment_date')
+        .eq('user_id', user?.id)
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate);
 
       if (error) throw error;
       setExpenses((data || []).map(e => ({ description: e.description, amount: Number(e.monthly_amount) })));
