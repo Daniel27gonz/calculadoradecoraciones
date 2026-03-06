@@ -260,7 +260,7 @@ export default function Finances() {
               Finanzas del Negocio
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Control de ingresos y gastos
+              Resumen financiero del mes seleccionado
             </p>
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function Finances() {
                   <TrendingUp className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-green-600 font-medium">Ingresos</p>
+                  <p className="text-sm text-green-600 font-medium">Ingresos del mes</p>
                   <p className="text-xl font-bold text-green-700">
                     {currencySymbol}{totalIncome.toFixed(2)}
                   </p>
@@ -304,7 +304,7 @@ export default function Finances() {
                   <TrendingDown className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos</p>
+                  <p className="text-sm text-red-600 font-medium">Gastos del mes</p>
                   <p className="text-xl font-bold text-red-700">
                     {currencySymbol}{totalExpenses.toFixed(2)}
                   </p>
@@ -321,7 +321,7 @@ export default function Finances() {
                 </div>
                 <div>
                   <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {balance >= 0 ? 'Ganancia' : 'Pérdida'}
+                    {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
                   </p>
                   <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
@@ -341,9 +341,9 @@ export default function Finances() {
                   <FileText className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Cotizaciones Realizadas</p>
-                  <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
-                  <p className="text-xs text-purple-500">Este mes</p>
+                   <p className="text-sm text-purple-600 font-medium">Cotizaciones realizadas</p>
+                   <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
+                   <p className="text-xs text-purple-500">este mes</p>
                 </div>
               </div>
             </CardContent>
@@ -356,9 +356,9 @@ export default function Finances() {
                   <CheckCircle className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-emerald-600 font-medium">Cotizaciones Pagadas</p>
-                  <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
-                  <p className="text-xs text-emerald-500">Este mes</p>
+                   <p className="text-sm text-emerald-600 font-medium">Pedidos pagados</p>
+                   <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
+                   <p className="text-xs text-emerald-500">este mes</p>
                 </div>
               </div>
             </CardContent>
