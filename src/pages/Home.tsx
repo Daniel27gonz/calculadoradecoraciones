@@ -12,7 +12,7 @@ import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
+
 
 export default function Home() {
   const navigate = useNavigate();
