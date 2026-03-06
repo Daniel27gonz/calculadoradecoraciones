@@ -149,18 +149,14 @@ export default function Orders() {
 
     if (!userMaterials || userMaterials.length === 0) return;
 
-    const deductions: { material_id: string; quantity_deducted: number; quote_id: string; user_id: string }[] = [];
+    // Aggregate quantities by material_id to avoid unique constraint violations
+    const aggregated: Record<string, number> = {};
 
     // Match quote materials with inventory by name (case-insensitive)
     for (const qMat of quote.materials) {
       const match = userMaterials.find(m => m.name.toLowerCase() === qMat.name.toLowerCase());
       if (match && qMat.quantity > 0) {
-        deductions.push({
-          material_id: match.id,
-          quantity_deducted: qMat.quantity,
-          quote_id: quote.id,
-          user_id: user.id,
-        });
+        aggregated[match.id] = (aggregated[match.id] || 0) + qMat.quantity;
       }
     }
 
@@ -168,14 +164,16 @@ export default function Orders() {
     for (const balloon of quote.balloons) {
       const match = userMaterials.find(m => m.name.toLowerCase() === balloon.description.toLowerCase());
       if (match && balloon.quantity > 0) {
-        deductions.push({
-          material_id: match.id,
-          quantity_deducted: balloon.quantity,
-          quote_id: quote.id,
-          user_id: user.id,
-        });
+        aggregated[match.id] = (aggregated[match.id] || 0) + balloon.quantity;
       }
     }
+
+    const deductions = Object.entries(aggregated).map(([material_id, quantity_deducted]) => ({
+      material_id,
+      quantity_deducted,
+      quote_id: quote.id,
+      user_id: user.id,
+    }));
 
     if (deductions.length > 0) {
       await supabase.from('stock_deductions').insert(deductions);
