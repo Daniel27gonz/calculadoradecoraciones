@@ -101,7 +101,7 @@ export default function Auth() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center space-y-4">
-          <p className="text-3xl font-bold text-foreground">Bienvenida a</p>
+          <p className="font-bold text-foreground text-5xl font-serif">Bienvenida a</p>
           <img src={logoFull} alt="DecoControl" className="h-16 mx-auto" />
           
 
