@@ -19,6 +19,7 @@ export default function Home() {
   const { quotes, calculateCosts } = useQuote();
   const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
   const [transactions, setTransactions] = useState<{ id: string; type: 'income' | 'expense'; amount: number; description: string; category: string | null; transaction_date: string; created_at: string }[]>([]);
+  const [realTotalExpenses, setRealTotalExpenses] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -39,6 +40,37 @@ export default function Home() {
     }
   }, [user]);
 
+  // Fetch real expenses (same logic as Finances/Mi Dinero)
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const monthNum = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+    const endDate = monthNum === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
+
+    Promise.all([
+      supabase
+        .from('indirect_expenses')
+        .select('monthly_amount')
+        .eq('user_id', user.id)
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate),
+      supabase
+        .from('material_purchases')
+        .select('total_paid')
+        .eq('user_id', user.id)
+        .gte('purchase_date', startDate)
+        .lt('purchase_date', endDate),
+    ]).then(([expensesRes, purchasesRes]) => {
+      const indirectTotal = (expensesRes.data || []).reduce((sum, e) => sum + Number(e.monthly_amount), 0);
+      const purchasesTotal = (purchasesRes.data || []).reduce((sum, p) => sum + Number(p.total_paid), 0);
+      setRealTotalExpenses(indirectTotal + purchasesTotal);
+    });
+  }, [user]);
+
   const currencySymbol = useMemo(() => {
     const currency = getCurrencyByCode(profile?.currency || 'USD');
     return currency?.symbol || '$';
@@ -57,13 +89,9 @@ export default function Home() {
     const income = currentMonthTx
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    const expenses = currentMonthTx
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    return { totalIncome: income, totalExpenses: expenses, balance: income - expenses };
-  }, [transactions]);
+    return { totalIncome: income, totalExpenses: realTotalExpenses, balance: income - realTotalExpenses };
+  }, [transactions, realTotalExpenses]);
 
 
   const pendingQuotes = useMemo(() => {
