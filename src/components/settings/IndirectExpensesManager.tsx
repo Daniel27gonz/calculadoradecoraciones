@@ -236,7 +236,28 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
   };
 
-  const total = expenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  // Only sum expenses from the latest registered month
+  const total = (() => {
+    const withDates = expenses.filter(e => e.paymentDate);
+    if (withDates.length === 0) return expenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+
+    let latestY = 0, latestM = 0;
+    withDates.forEach(e => {
+      const [y, m] = e.paymentDate!.split('-');
+      const yr = parseInt(y), mo = parseInt(m);
+      if (yr > latestY || (yr === latestY && mo > latestM)) {
+        latestY = yr;
+        latestM = mo;
+      }
+    });
+
+    return withDates
+      .filter(e => {
+        const [y, m] = e.paymentDate!.split('-');
+        return parseInt(y) === latestY && parseInt(m) === latestM;
+      })
+      .reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  })();
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
