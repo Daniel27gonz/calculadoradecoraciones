@@ -36,7 +36,7 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'delivered'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered'>('all');
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -68,8 +68,7 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'pending' && q.status === 'approved' && !fullyPaidQuotes.has(q.id)) ||
-        (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
+        (statusFilter === 'approved' && q.status === 'approved') ||
         (statusFilter === 'delivered' && q.status === 'delivered');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -133,19 +132,85 @@ export default function Orders() {
     setFullyPaidQuotes(paid);
   };
 
+  // Deduct materials from inventory when converting to order
+  const deductMaterials = async (quote: Quote) => {
+    if (!user) return;
+    // Get user materials to match by name
+    const { data: userMaterials } = await supabase
+      .from('user_materials')
+      .select('id, name')
+      .eq('user_id', user.id);
+
+    if (!userMaterials || userMaterials.length === 0) return;
+
+    const deductions: { material_id: string; quantity_deducted: number; quote_id: string; user_id: string }[] = [];
+
+    // Match quote materials with inventory by name (case-insensitive)
+    for (const qMat of quote.materials) {
+      const match = userMaterials.find(m => m.name.toLowerCase() === qMat.name.toLowerCase());
+      if (match && qMat.quantity > 0) {
+        deductions.push({
+          material_id: match.id,
+          quantity_deducted: qMat.quantity,
+          quote_id: quote.id,
+          user_id: user.id,
+        });
+      }
+    }
+
+    // Also match balloons by name
+    for (const balloon of quote.balloons) {
+      const match = userMaterials.find(m => m.name.toLowerCase() === balloon.description.toLowerCase());
+      if (match && balloon.quantity > 0) {
+        deductions.push({
+          material_id: match.id,
+          quantity_deducted: balloon.quantity,
+          quote_id: quote.id,
+          user_id: user.id,
+        });
+      }
+    }
+
+    if (deductions.length > 0) {
+      await supabase.from('stock_deductions').insert(deductions);
+    }
+  };
+
+  // Remove stock deductions when deleting an order
+  const removeDeductions = async (quoteId: string) => {
+    if (!user) return;
+    await supabase.from('stock_deductions').delete().eq('quote_id', quoteId).eq('user_id', user.id);
+  };
+
   // Convert quote to order (change status to approved)
   const convertToOrder = async (quote: Quote) => {
     const updated = { ...quote, status: 'approved' as const };
     await saveQuote(updated);
+    await deductMaterials(quote);
     toast({ title: '✅ Pedido creado', description: `${quote.clientName} ahora es un pedido activo.` });
     await loadQuotes();
   };
 
-  // Mark as delivered
+  // Mark as delivered (counts as evento realizado)
   const markAsDelivered = async (quote: Quote) => {
     const updated = { ...quote, status: 'delivered' as const };
     await saveQuote(updated);
-    toast({ title: '📦 Pedido entregado', description: `${quote.clientName} marcado como entregado.` });
+    toast({ title: '📦 Pedido entregado', description: `${quote.clientName} marcado como entregado. Se cuenta como evento realizado.` });
+    await loadQuotes();
+  };
+
+  // Delete order (revert to pending, remove deductions and payments)
+  const deleteOrder = async (quote: Quote) => {
+    const updated = { ...quote, status: 'pending' as const };
+    await saveQuote(updated);
+    // Remove stock deductions
+    await removeDeductions(quote.id);
+    // Remove payments
+    await supabase.from('quote_payments').delete().eq('quote_id', quote.id).eq('user_id', user!.id);
+    // Remove related transactions
+    await supabase.from('transactions').delete().eq('reference_id', quote.id).eq('user_id', user!.id);
+    toast({ title: '🗑️ Pedido eliminado', description: `${quote.clientName} vuelve a cotización pendiente.` });
+    await loadPayments();
     await loadQuotes();
   };
 
@@ -396,7 +461,6 @@ export default function Orders() {
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
           <TabsList className="w-full">
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="pending" className="flex-1 text-xs">Activos</TabsTrigger>
             <TabsTrigger value="approved" className="flex-1 text-xs">Pagados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
           </TabsList>
@@ -541,6 +605,15 @@ export default function Orders() {
                             </Button>
                           </>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                          onClick={() => deleteOrder(quote)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />
+                          Eliminar pedido
+                        </Button>
                       </div>
                     </div>
                   )}
