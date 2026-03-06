@@ -159,6 +159,8 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     await supabase.from('transactions').delete().eq('reference_id', `indirect_expense_${expenseId}`).eq('user_id', user.id);
   };
 
+  const isFormValid = formDescription.trim().length > 0 && formAmount > 0 && formPaymentDate.length > 0;
+
   const handleSave = async () => {
     if (!user || !formDescription.trim()) {
       toast({ title: 'Error', description: 'Agrega una descripción', variant: 'destructive' });
@@ -166,6 +168,10 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
     if (formAmount <= 0) {
       toast({ title: 'Error', description: 'El monto debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+    if (!formPaymentDate) {
+      toast({ title: 'Error', description: 'Selecciona una fecha de pago', variant: 'destructive' });
       return;
     }
 
@@ -361,7 +367,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
-                Fecha de pago (opcional)
+                Fecha de pago
               </label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -398,7 +404,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || !isFormValid}>
               {saving ? 'Guardando...' : editingExpense ? 'Actualizar' : 'Registrar'}
             </Button>
           </DialogFooter>
