@@ -81,17 +81,17 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
 
       const matMap = new Map((mats || []).map(m => [m.id, m]));
 
-      // Aggregate by material
+      // Aggregate by category
       const aggregated = new Map<string, MaterialPurchaseItem>();
       for (const p of purchases) {
         const mat = matMap.get(p.material_id);
         if (!mat) continue;
-        const key = p.material_id;
+        const key = mat.category;
         if (aggregated.has(key)) {
           aggregated.get(key)!.totalPaid += Number(p.total_paid);
         } else {
           aggregated.set(key, {
-            materialName: mat.name,
+            materialName: mat.category,
             category: mat.category,
             totalPaid: Number(p.total_paid),
           });
@@ -204,18 +204,11 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
             {materials.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Sin compras este mes</p>
             ) : (
-              <div className="space-y-3">
-                {Object.entries(materialsByCategory).map(([category, items]) => (
-                  <div key={category}>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{category}</p>
-                    <div className="space-y-1">
-                      {items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span className="text-foreground">• {item.materialName}</span>
-                          <span className="font-medium">{currencySymbol}{item.totalPaid.toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
+              <div className="space-y-1">
+                {materials.map((item, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span className="text-foreground">{idx + 1}. {item.category}</span>
+                    <span className="font-medium">{currencySymbol}{item.totalPaid.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
