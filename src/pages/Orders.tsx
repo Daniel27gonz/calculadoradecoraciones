@@ -630,15 +630,6 @@ export default function Orders() {
                             </Button>
                           </>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                          onClick={() => deleteOrder(quote)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" />
-                          Eliminar pedido
-                        </Button>
                       </div>
                     </div>
                   )}
