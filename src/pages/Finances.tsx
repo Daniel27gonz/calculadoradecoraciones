@@ -160,6 +160,7 @@ export default function Finances() {
     }
   };
 
+  const fetchQuotePayments = async () => {
     try {
       const { data: payments } = await supabase
         .from('quote_payments')
