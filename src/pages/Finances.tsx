@@ -50,6 +50,7 @@ interface QuoteStats {
 }
 
 export default function Finances() {
+  const { quotes, calculateCosts } = useQuote();
   const navigate = useNavigate();
   const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
