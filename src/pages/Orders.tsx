@@ -42,7 +42,13 @@ export default function Orders() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentQuoteId, setPaymentQuoteId] = useState<string | null>(null);
   const [newPaymentAmount, setNewPaymentAmount] = useState('');
-  const [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newPaymentDate, setNewPaymentDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  });
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
 
@@ -360,7 +366,7 @@ export default function Orders() {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                           {q.eventType && <span>{q.eventType}</span>}
-                          {q.eventDate && <span>• {format(new Date(q.eventDate), 'dd MMM yyyy', { locale: es })}</span>}
+                          {q.eventDate && <span>• {format(new Date(q.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>}
                         </div>
                       </div>
                       <div className="text-right">
@@ -506,7 +512,7 @@ export default function Orders() {
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {quote.eventType && <span>{quote.eventType}</span>}
                         {quote.eventDate && (
-                          <span>• {format(new Date(quote.eventDate), 'dd MMM yyyy', { locale: es })}</span>
+                          <span>• {format(new Date(quote.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>
                         )}
                         <Badge variant="outline" className="text-[10px]">
                           {getStatusLabel(quote)}
@@ -560,7 +566,7 @@ export default function Orders() {
                               <div key={p.id} className="flex items-center justify-between text-xs bg-card rounded p-2">
                                 <div>
                                   <span className="font-medium">{currencySymbol}{p.amount.toFixed(2)}</span>
-                                  <span className="text-muted-foreground ml-2">{format(new Date(p.payment_date), 'dd/MM/yy')}</span>
+                                  <span className="text-muted-foreground ml-2">{format(new Date(p.payment_date + 'T12:00:00'), 'dd/MM/yy')}</span>
                                   {p.notes && <span className="text-muted-foreground ml-1">- {p.notes}</span>}
                                   {p.is_paid && <Badge className="ml-1 text-[9px] bg-green-100 text-green-700">Completo</Badge>}
                                 </div>
