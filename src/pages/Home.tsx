@@ -136,7 +136,7 @@ export default function Home() {
 
     return {
       clientName: q.clientName,
-      eventType: q.eventType || q.decorationDescription || 'Decoración',
+      eventType: q.eventType || q.decorationDescription || '',
       eventDate: eventDateObj ? format(eventDateObj, "d 'de' MMMM, yyyy", { locale: es }) : '',
       setupTime: q.setupTime || null,
     };
