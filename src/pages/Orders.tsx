@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
@@ -495,29 +496,57 @@ export default function Orders() {
                 selectedDay.getMonth() === currentMonth.getMonth() &&
                 selectedDay.getFullYear() === currentMonth.getFullYear();
 
-              return (
-                <button
-                  key={i}
-                  onClick={() => {
-                    if (hasEvents) {
-                      setSelectedDay(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
-                      const firstEvent = events[0];
-                      setExpandedQuoteId(firstEvent.id);
-                      setTimeout(() => {
-                        const el = document.getElementById(`order-${firstEvent.id}`);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }, 100);
-                    }
-                  }}
-                  className={`aspect-square rounded-full flex items-center justify-center text-xs transition-colors ${
-                    hasEvents
-                      ? `${events[0].status === 'delivered' ? 'bg-blue-500' : events.some(e => fullyPaidQuotes.has(e.id)) ? 'bg-green-500' : 'bg-amber-500'} text-white font-bold`
-                      : 'hover:bg-muted'
-                  } ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}`}
-                >
-                  {day}
-                </button>
-              );
+              return hasEvents ? (
+                  <Popover key={i}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`aspect-square rounded-full flex items-center justify-center text-xs transition-colors ${
+                          events[0].status === 'delivered' ? 'bg-blue-500' : events.some(e => fullyPaidQuotes.has(e.id)) ? 'bg-green-500' : 'bg-amber-500'
+                        } text-white font-bold ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                      >
+                        {day}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56 p-2" side="top" align="center">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1.5 px-1">
+                        {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day), 'dd MMM yyyy', { locale: es })}
+                      </p>
+                      <div className="space-y-0.5">
+                        {events.map(ev => {
+                          const time = ev.eventDate
+                            ? (() => { try { const d = new Date(ev.eventDate); return d.getHours() !== 0 || d.getMinutes() !== 0 ? format(d, 'HH:mm') : null; } catch { return null; } })()
+                            : null;
+                          const setupTime = ev.setupTime || null;
+                          const displayTime = time || setupTime || null;
+                          return (
+                            <button
+                              key={ev.id}
+                              onClick={() => {
+                                setSelectedDay(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+                                setExpandedQuoteId(ev.id);
+                                setTimeout(() => {
+                                  const el = document.getElementById(`order-${ev.id}`);
+                                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 100);
+                              }}
+                              className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-left text-sm hover:bg-muted transition-colors"
+                            >
+                              <span className="truncate font-medium">{ev.clientName}</span>
+                              {displayTime && <span className="text-xs text-muted-foreground ml-2 shrink-0">{displayTime}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <button
+                    key={i}
+                    className="aspect-square rounded-full flex items-center justify-center text-xs transition-colors hover:bg-muted"
+                  >
+                    {day}
+                  </button>
+                );
             })}
           </div>
         </CardContent>
