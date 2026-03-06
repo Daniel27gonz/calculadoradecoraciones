@@ -232,18 +232,34 @@ export default function Auth() {
             {/* Toggle */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                {isLogin ? '¿Aún no tienes tu acceso?' : '¿Ya tienes cuenta?'}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setErrors({});
-                    setFormData({ name: '', email: '', password: '' });
-                  }}
-                  className="ml-1 text-primary font-semibold hover:underline"
-                >
-                  {isLogin ? 'Consíguelo aquí' : 'Inicia sesión'}
-                </button>
+                {isLogin ? (
+                  <>
+                    ¿Aún no tienes tu acceso?{' '}
+                    <a
+                      href="https://decocontrol.click/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary font-semibold hover:underline"
+                    >
+                      Consíguelo aquí
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    ¿Ya tienes cuenta?
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLogin(true);
+                        setErrors({});
+                        setFormData({ name: '', email: '', password: '' });
+                      }}
+                      className="ml-1 text-primary font-semibold hover:underline"
+                    >
+                      Inicia sesión
+                    </button>
+                  </>
+                )}
               </p>
             </div>
           </CardContent>
