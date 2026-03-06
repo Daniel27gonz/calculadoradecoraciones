@@ -620,7 +620,7 @@ export default function Orders() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-2.5 h-2.5 rounded-full ${getStatusColor(quote)}`} />
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${getStatusColor(quote)}`} />
                         {quote.folio && <span className="text-xs font-mono text-muted-foreground">#{String(quote.folio).padStart(4, '0')}</span>}
                         <span className="font-semibold truncate">{quote.clientName}</span>
                       </div>
