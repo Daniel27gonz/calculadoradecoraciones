@@ -596,7 +596,7 @@ export default function Orders() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
-                        {quote.status !== 'delivered' && (
+                        {quote.status === 'approved' && (
                           <>
                             <Button
                               size="sm"
@@ -618,6 +618,15 @@ export default function Orders() {
                             >
                               <Truck className="h-3.5 w-3.5 mr-1" />
                               Marcar entregado
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs text-amber-700 border-amber-300 hover:bg-amber-50"
+                              onClick={() => cancelOrder(quote)}
+                            >
+                              <Ban className="h-3.5 w-3.5 mr-1" />
+                              Cancelar pedido
                             </Button>
                           </>
                         )}
