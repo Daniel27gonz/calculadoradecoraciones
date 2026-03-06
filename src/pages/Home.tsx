@@ -110,7 +110,7 @@ export default function Home() {
     const upcoming = quotes.filter(q => {
       if (q.status === 'cancelled' || q.status === 'delivered') return false;
       if (!q.eventDate) return false;
-      return q.eventDate >= todayStr && (q.status === 'approved' || q.status === 'confirmed');
+      return q.eventDate >= todayStr && q.status === 'approved';
     }).length;
 
     return { eventsCompleted: delivered, quotesCreated: created, upcomingEvents: upcoming };
@@ -125,7 +125,7 @@ export default function Home() {
       .filter(q => {
         if (q.status === 'cancelled' || q.status === 'delivered') return false;
         if (!q.eventDate) return false;
-        return q.eventDate >= todayStr && (q.status === 'approved' || q.status === 'confirmed');
+        return q.eventDate >= todayStr && q.status === 'approved';
       })
       .sort((a, b) => (a.eventDate || '').localeCompare(b.eventDate || ''));
 
