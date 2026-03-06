@@ -74,7 +74,7 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'approved' && q.status === 'approved') ||
+        (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
@@ -129,13 +129,21 @@ export default function Orders() {
     }
 
     const grouped: Record<string, QuotePayment[]> = {};
-    const paid = new Set<string>();
     (data || []).forEach((p: QuotePayment) => {
       if (!grouped[p.quote_id]) grouped[p.quote_id] = [];
       grouped[p.quote_id].push(p);
-      if (p.is_paid) paid.add(p.quote_id);
     });
     setPayments(grouped);
+
+    // Determine fully paid quotes by comparing totalPaid >= finalPrice
+    const paid = new Set<string>();
+    orderQuotes.forEach(q => {
+      const costs = calculateCosts(q);
+      const totalPaid = (grouped[q.id] || []).reduce((sum, p) => sum + p.amount, 0);
+      if (totalPaid > 0 && totalPaid >= costs.finalPrice) {
+        paid.add(q.id);
+      }
+    });
     setFullyPaidQuotes(paid);
   };
 
