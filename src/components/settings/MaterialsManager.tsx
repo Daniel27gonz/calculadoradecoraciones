@@ -631,7 +631,7 @@ export function MaterialsManager() {
                     <div className="flex gap-3 mt-1 text-xs">
                       <span>Cant: <strong>{p.quantity_presentations}</strong></span>
                       <span>Total: <strong>{fmt(p.total_paid)}</strong></span>
-                      <span>Costo/presentación: <strong>{fmt(materialPriceMap[p.material_id] || p.cost_per_unit)}</strong></span>
+                      <span>Costo/presentación: <strong>{fmt(p.cost_per_unit)}</strong></span>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
