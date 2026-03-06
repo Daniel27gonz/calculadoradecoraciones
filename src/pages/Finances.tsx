@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
 import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
+import { FinancialSummary } from '@/components/finances/FinancialSummary';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
 import {
   AlertDialog,
@@ -364,6 +365,9 @@ export default function Finances() {
           </Card>
         </div>
 
+
+        {/* Financial Summary */}
+        <FinancialSummary selectedMonth={selectedMonth} selectedYear={selectedYear} />
 
         {/* Transactions List */}
         <Card>
