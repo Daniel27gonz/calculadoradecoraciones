@@ -259,6 +259,7 @@ export default function Finances() {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
       setSelectedYear(selectedYear - 1);
+      setPickerYear(selectedYear - 1);
     } else {
       setSelectedMonth(selectedMonth - 1);
     }
@@ -268,6 +269,7 @@ export default function Finances() {
     if (selectedMonth === 11) {
       setSelectedMonth(0);
       setSelectedYear(selectedYear + 1);
+      setPickerYear(selectedYear + 1);
     } else {
       setSelectedMonth(selectedMonth + 1);
     }
