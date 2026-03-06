@@ -190,6 +190,8 @@ export default function Orders() {
   const convertToOrder = async (quote: Quote) => {
     const updated = { ...quote, status: 'approved' as const };
     await saveQuote(updated);
+    // Clean any previous deductions first (idempotent)
+    await removeDeductions(quote.id);
     await deductMaterials(quote);
     toast({ title: '✅ Pedido creado', description: `${quote.clientName} ahora es un pedido activo.` });
     await loadQuotes();
