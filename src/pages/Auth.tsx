@@ -232,7 +232,7 @@ export default function Auth() {
             {/* Toggle */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+                {isLogin ? '¿Aún no tienes tu acceso?' : '¿Ya tienes cuenta?'}
                 <button
                   type="button"
                   onClick={() => {
@@ -242,7 +242,7 @@ export default function Auth() {
                   }}
                   className="ml-1 text-primary font-semibold hover:underline"
                 >
-                  {isLogin ? 'Regístrate' : 'Inicia sesión'}
+                  {isLogin ? 'Consíguelo aquí' : 'Inicia sesión'}
                 </button>
               </p>
             </div>
