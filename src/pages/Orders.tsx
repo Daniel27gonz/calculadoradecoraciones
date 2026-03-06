@@ -732,6 +732,40 @@ export default function Orders() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {!editingPayment && paymentQuoteId && (() => {
+              const paymentQuote = quotes.find(q => q.id === paymentQuoteId);
+              if (!paymentQuote) return null;
+              const costs = calculateCosts(paymentQuote);
+              const quotePayments = payments[paymentQuoteId] || [];
+              const totalPaid = quotePayments.reduce((sum: number, p: any) => sum + p.amount, 0);
+              const saldoPendiente = costs.finalPrice - totalPaid;
+              return saldoPendiente > 0 ? (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total del pedido:</span>
+                    <span className="font-medium">{currencySymbol}{costs.finalPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Pagado acumulado:</span>
+                    <span className="font-medium text-green-600">{currencySymbol}{totalPaid.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span>Saldo pendiente:</span>
+                    <span className="text-amber-600">{currencySymbol}{saldoPendiente.toFixed(2)}</span>
+                  </div>
+                  <Button
+                    className="w-full mt-2"
+                    variant="secondary"
+                    onClick={() => {
+                      setNewPaymentAmount(saldoPendiente.toFixed(2));
+                      setNewPaymentNotes('Saldo pendiente');
+                    }}
+                  >
+                    Usar saldo pendiente ({currencySymbol}{saldoPendiente.toFixed(2)})
+                  </Button>
+                </div>
+              ) : null;
+            })()}
             <div>
               <Label>Monto ({currencySymbol})</Label>
               <Input
