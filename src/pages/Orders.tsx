@@ -371,8 +371,10 @@ export default function Orders() {
 
   const getStatusColor = (quote: Quote) => {
     if (quote.status === 'cancelled') return 'bg-red-500';
+    const isPaid = fullyPaidQuotes.has(quote.id);
+    if (quote.status === 'delivered' && isPaid) return 'bg-gradient-to-r from-green-500 to-blue-500';
     if (quote.status === 'delivered') return 'bg-blue-500';
-    if (fullyPaidQuotes.has(quote.id)) return 'bg-green-500';
+    if (isPaid) return 'bg-green-500';
     return 'bg-amber-500';
   };
 
