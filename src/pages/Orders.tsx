@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Calendar as CalendarIcon, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Search, Calendar as CalendarIcon, CheckCircle2, Clock, Eye, Edit2, ChevronDown, ChevronUp, Plus, Trash2, DollarSign, CircleCheck, CalendarDays, ListFilter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,8 @@ export default function Orders() {
   const [fullPaidQuote, setFullPaidQuote] = useState<Quote | null>(null);
   const [fullPaidDate, setFullPaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [fullPaidAmount, setFullPaidAmount] = useState('');
+  const [accordionSearch, setAccordionSearch] = useState('');
+  const [showAccordion, setShowAccordion] = useState(false);
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   useEffect(() => {
@@ -198,7 +200,8 @@ export default function Orders() {
     loadFullyPaid();
   }, [user, quotes]);
 
-  const filteredQuotes = quotes
+  // Quotes shown as order cards (approved/delivered)
+  const activeOrders = quotes
     .filter(q => {
       const matchesSearch = q.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -212,6 +215,16 @@ export default function Orders() {
       if (b.eventDate) return 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+
+  // All quotes for accordion selector
+  // All quotes for accordion selector
+  const allQuotesFiltered = quotes
+    .filter(q => q.clientName.toLowerCase().includes(accordionSearch.toLowerCase()) ||
+      (q.eventType || '').toLowerCase().includes(accordionSearch.toLowerCase()) ||
+      (q.folio ? String(q.folio).includes(accordionSearch) : false))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const filteredQuotes = activeOrders;
 
   const handleToggleStatus = async (quote: Quote) => {
     const newStatus = quote.status === 'approved' ? 'pending' : 'approved';
@@ -330,14 +343,98 @@ export default function Orders() {
         {/* Pedidos heading */}
         <h2 className="font-display text-lg font-semibold">Pedidos</h2>
 
-        {/* Filters */}
+        {/* Accordion Quote Selector */}
+        <Card className="overflow-hidden">
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            onClick={() => setShowAccordion(!showAccordion)}
+          >
+            <div className="flex items-center gap-2">
+              <ListFilter className="w-5 h-5 text-muted-foreground" />
+              <span className="font-medium">Buscar cotización del historial</span>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${showAccordion ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showAccordion && (
+            <div className="border-t border-border">
+              {/* Search within accordion */}
+              <div className="p-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={accordionSearch}
+                    onChange={(e) => setAccordionSearch(e.target.value)}
+                    placeholder="Buscar por cliente, tipo o folio..."
+                    className="pl-10 h-10"
+                  />
+                </div>
+              </div>
+
+              {/* Quote list */}
+              <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                {allQuotesFiltered.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No se encontraron cotizaciones</p>
+                ) : (
+                  allQuotesFiltered.map((q) => {
+                    const summary = calculateCosts(q);
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                        onClick={() => {
+                          setExpandedQuoteId(q.id);
+                          setShowAccordion(false);
+                          setAccordionSearch('');
+                          // Scroll to order if it exists in the list
+                          setTimeout(() => {
+                            const el = document.getElementById(`order-${q.id}`);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }, 100);
+                        }}
+                      >
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm truncate">{q.clientName}</span>
+                            <Badge
+                              variant="secondary"
+                              className={`text-[10px] shrink-0 ${
+                                q.status === 'delivered' ? 'bg-blue-600 text-white' :
+                                q.status === 'approved' ? 'bg-green-600 text-white' :
+                                'bg-yellow-500/20 text-yellow-700'
+                              }`}
+                            >
+                              {q.status === 'delivered' ? 'Entregado' : q.status === 'approved' ? 'Aprobada' : 'Pendiente'}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {q.folio && <span className="font-mono">#{String(q.folio).padStart(4, '0')}</span>}
+                            {q.eventDate && (
+                              <span>{format(new Date(q.eventDate + 'T12:00:00'), "d MMM yyyy", { locale: es })}</span>
+                            )}
+                            {q.eventType && <span>• {q.eventType}</span>}
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold shrink-0 ml-2">{currencySymbol}{summary.finalPrice.toFixed(2)}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Search filter for active orders */}
         <div className="space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por cliente..."
+              placeholder="Buscar pedido..."
               className="pl-10 h-12"
             />
           </div>
