@@ -839,7 +839,7 @@ export function MaterialsManager() {
                         <span className="text-green-600 font-semibold">Entrada: {m.total_purchased} pzas</span>
                         <span className="text-orange-600 font-semibold">Salida: {totalDeducted} pzas</span>
                         <span className={`font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
-                          Stock: {stockReal} pzas
+                          Existencia: {stockReal} pzas
                         </span>
                       </div>
                     </div>
