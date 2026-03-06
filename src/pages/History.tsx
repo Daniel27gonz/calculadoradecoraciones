@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown } from 'lucide-react';
+import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -96,6 +96,62 @@ export default function History() {
     }
   };
 
+  const handleToggleStatus = async (quote: Quote) => {
+    const newStatus = quote.status === 'approved' ? 'pending' : 'approved';
+    const updatedQuote = { ...quote, status: newStatus as 'pending' | 'approved' };
+    await saveQuote(updatedQuote);
+
+    if (user && newStatus === 'approved') {
+      try {
+        const { data: inventoryMaterials } = await supabase
+          .from('user_materials')
+          .select('id, name')
+          .eq('user_id', user.id);
+
+        if (inventoryMaterials && quote.materials.length > 0) {
+          const deductions = quote.materials
+            .map(qm => {
+              const match = inventoryMaterials.find(
+                im => im.name.toLowerCase() === qm.name.toLowerCase()
+              );
+              if (match && qm.quantity > 0) {
+                return {
+                  user_id: user.id,
+                  quote_id: quote.id,
+                  material_id: match.id,
+                  quantity_deducted: qm.quantity,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+
+          if (deductions.length > 0) {
+            await supabase.from('stock_deductions').insert(deductions);
+          }
+        }
+      } catch (e) {
+        console.error('Error deducting materials:', e);
+      }
+    } else if (user && newStatus === 'pending') {
+      try {
+        await supabase
+          .from('stock_deductions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('quote_id', quote.id);
+      } catch (e) {
+        console.error('Error reverting deductions:', e);
+      }
+    }
+
+    toast({
+      title: newStatus === 'approved' ? "Cotización aprobada" : "Cotización pendiente",
+      description: newStatus === 'approved'
+        ? `"${quote.clientName}" aprobada - materiales descontados del inventario`
+        : `"${quote.clientName}" pendiente - materiales restaurados`,
+    });
+  };
 
   if (loading) {
     return (
@@ -187,14 +243,15 @@ export default function History() {
                               {quote.clientName}
                             </h3>
                             <Badge
-                              variant="secondary"
-                              className={`text-xs ${
-                                quote.status === 'delivered' ? 'bg-blue-600 text-white' :
-                                quote.status === 'approved' ? 'bg-green-600 text-white' :
-                                'bg-yellow-500/20 text-yellow-700'
-                              }`}
+                              variant={quote.status === 'approved' ? 'default' : 'secondary'}
+                              className={`cursor-pointer text-xs ${quote.status === 'approved' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30'}`}
+                              onClick={() => handleToggleStatus(quote)}
                             >
-                              {quote.status === 'delivered' ? 'Entregado' : quote.status === 'approved' ? 'Aprobada' : 'Pendiente'}
+                              {quote.status === 'approved' ? (
+                                <><CheckCircle2 className="w-3 h-3 mr-1" /> Aprobada</>
+                              ) : (
+                                <><Clock className="w-3 h-3 mr-1" /> Pendiente</>
+                              )}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
