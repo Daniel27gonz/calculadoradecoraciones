@@ -196,11 +196,19 @@ export default function Orders() {
     await loadQuotes();
   };
 
-  // Mark as delivered (counts as evento realizado)
+  // Mark as delivered
   const markAsDelivered = async (quote: Quote) => {
     const updated = { ...quote, status: 'delivered' as const };
     await saveQuote(updated);
     toast({ title: '📦 Pedido entregado', description: `${quote.clientName} marcado como entregado. Se cuenta como evento realizado.` });
+    await loadQuotes();
+  };
+
+  // Cancel order (removes stock deductions automatically via saveQuote)
+  const cancelOrder = async (quote: Quote) => {
+    const updated = { ...quote, status: 'cancelled' as const };
+    await saveQuote(updated);
+    toast({ title: '❌ Pedido cancelado', description: `${quote.clientName} ha sido cancelado. Los materiales fueron devueltos al inventario.` });
     await loadQuotes();
   };
 
@@ -470,6 +478,7 @@ export default function Orders() {
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
             <TabsTrigger value="approved" className="flex-1 text-xs">Pagados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
+            <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
