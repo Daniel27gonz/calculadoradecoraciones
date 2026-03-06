@@ -91,7 +91,7 @@ export interface Quote {
   wastagePercentage: number;
   setupTime: string;
   notes: string;
-  status: 'pending' | 'approved' | 'delivered';
+  status: 'pending' | 'approved' | 'delivered' | 'cancelled';
   // Legacy field for backwards compatibility
   transportCost?: number;
 }
