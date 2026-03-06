@@ -320,6 +320,11 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         }
         return [quote, ...prev];
       });
+
+      // If this quote is an active order (approved/delivered), recalculate stock deductions
+      if (quote.status === 'approved' || quote.status === 'delivered') {
+        await recalculateStockDeductions(quote);
+      }
     } catch (error) {
       console.error('Error saving quote:', error);
       toast({
