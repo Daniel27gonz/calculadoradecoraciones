@@ -389,11 +389,11 @@ export function MaterialsManager() {
   }, [newPurchase.quantity_bought, newPurchase.presentation_price]);
 
   const purchaseCostPerUnit = useMemo(() => {
-    if (purchaseTotalPaid === null) return null;
+    const presPrice = Number(newPurchase.presentation_price);
     const qty = Number(newPurchase.quantity);
-    if (!qty || qty <= 0) return null;
-    return purchaseTotalPaid / qty;
-  }, [purchaseTotalPaid, newPurchase.quantity]);
+    if (!presPrice || presPrice <= 0 || !qty || qty <= 0) return null;
+    return presPrice / qty;
+  }, [newPurchase.presentation_price, newPurchase.quantity]);
 
   // Filtered materials for purchase dialog search
   const filteredPurchaseMaterials = useMemo(() => {
