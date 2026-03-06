@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -15,6 +15,9 @@ import { TransactionFormDialog } from '@/components/finances/TransactionFormDial
 import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 import { FinancialSummary } from '@/components/finances/FinancialSummary';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +65,8 @@ export default function Finances() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [realTotalExpenses, setRealTotalExpenses] = useState(0);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(selectedYear);
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
@@ -254,6 +259,7 @@ export default function Finances() {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
       setSelectedYear(selectedYear - 1);
+      setPickerYear(selectedYear - 1);
     } else {
       setSelectedMonth(selectedMonth - 1);
     }
@@ -263,6 +269,7 @@ export default function Finances() {
     if (selectedMonth === 11) {
       setSelectedMonth(0);
       setSelectedYear(selectedYear + 1);
+      setPickerYear(selectedYear + 1);
     } else {
       setSelectedMonth(selectedMonth + 1);
     }
@@ -311,10 +318,41 @@ export default function Finances() {
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePrevMonth}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
-          </div>
+          <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-accent transition-colors cursor-pointer">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="center">
+              <div className="flex items-center justify-between mb-3">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="font-semibold text-sm">{pickerYear}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {MONTH_NAMES.map((name, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                    className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                      idx === selectedMonth && pickerYear === selectedYear
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-accent text-foreground'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextMonth}>
             <ChevronRight className="w-5 h-5" />
           </Button>
