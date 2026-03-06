@@ -629,26 +629,37 @@ export default function Orders() {
                         {quote.eventDate && (
                           <span>• {format(new Date(quote.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>
                         )}
-                        <Badge variant="outline" className="text-[10px]">
-                          {getStatusLabel(quote)}
-                        </Badge>
                         {(() => {
                           const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
                           const isDelivered = quote.status === 'delivered';
                           const isCancelled = quote.status === 'cancelled';
-                          if (totalPaid >= costs.finalPrice && costs.finalPrice > 0) {
-                            return <Badge className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>;
-                          } else if (isDelivered && totalPaid > 0) {
-                            return <Badge className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>;
-                          } else if (isDelivered && totalPaid === 0) {
-                            return <Badge className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>;
-                          } else if (isCancelled) {
-                            return null;
-                          } else if (totalPaid > 0) {
-                            return <Badge className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>;
-                          } else {
-                            return <Badge className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>;
+                          const isFullyPaid = totalPaid >= costs.finalPrice && costs.finalPrice > 0;
+
+                          if (isCancelled) {
+                            return <Badge variant="outline" className="text-[10px]">Cancelado</Badge>;
                           }
+
+                          const badges = [];
+
+                          if (isDelivered) {
+                            badges.push(<Badge key="delivered" className="text-[10px] bg-blue-500/20 text-blue-700 border-blue-300 hover:bg-blue-500/30">Entregado</Badge>);
+                          } else {
+                            badges.push(<Badge key="status" variant="outline" className="text-[10px]">Pedido confirmado</Badge>);
+                          }
+
+                          if (isFullyPaid) {
+                            badges.push(<Badge key="paid" className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>);
+                          } else if (isDelivered && totalPaid > 0) {
+                            badges.push(<Badge key="partial" className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>);
+                          } else if (isDelivered && totalPaid === 0) {
+                            badges.push(<Badge key="nopay" className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>);
+                          } else if (totalPaid > 0) {
+                            badges.push(<Badge key="advance" className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>);
+                          } else {
+                            badges.push(<Badge key="noadv" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>);
+                          }
+
+                          return <>{badges}</>;
                         })()}
                       </div>
                     </div>
