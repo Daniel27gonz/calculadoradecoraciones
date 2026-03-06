@@ -97,8 +97,40 @@ export default function Finances() {
   useEffect(() => {
     if (user) {
       fetchQuoteStats();
+      fetchRealExpenses();
     }
   }, [user, selectedMonth, selectedYear]);
+
+  const fetchRealExpenses = async () => {
+    try {
+      const monthNum = selectedMonth + 1;
+      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = monthNum === 12
+        ? `${selectedYear + 1}-01-01`
+        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
+
+      const [expensesRes, purchasesRes] = await Promise.all([
+        supabase
+          .from('indirect_expenses')
+          .select('monthly_amount')
+          .eq('user_id', user?.id)
+          .gte('payment_date', startDate)
+          .lt('payment_date', endDate),
+        supabase
+          .from('material_purchases')
+          .select('total_paid')
+          .eq('user_id', user?.id)
+          .gte('purchase_date', startDate)
+          .lt('purchase_date', endDate),
+      ]);
+
+      const indirectTotal = (expensesRes.data || []).reduce((sum, e) => sum + Number(e.monthly_amount), 0);
+      const purchasesTotal = (purchasesRes.data || []).reduce((sum, p) => sum + Number(p.total_paid), 0);
+      setRealTotalExpenses(indirectTotal + purchasesTotal);
+    } catch (error) {
+      console.error('Error fetching real expenses:', error);
+    }
+  };
 
   const fetchTransactions = async () => {
     try {
