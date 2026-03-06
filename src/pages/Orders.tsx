@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck, XCircle, Ban } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck, XCircle, Ban, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,7 @@ export default function Orders() {
   });
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
+  const [editingPayment, setEditingPayment] = useState<QuotePayment | null>(null);
 
   // Accordion selector
   const [showAccordion, setShowAccordion] = useState(false);
@@ -288,6 +289,62 @@ export default function Orders() {
     // Also delete the related transaction
     await supabase.from('transactions').delete().eq('reference_id', quoteId).eq('user_id', user!.id);
     toast({ title: 'Pago eliminado' });
+    await loadPayments();
+  };
+
+  // Edit payment
+  const startEditPayment = (payment: QuotePayment) => {
+    setEditingPayment(payment);
+    setNewPaymentAmount(String(payment.amount));
+    setNewPaymentDate(payment.payment_date);
+    setNewPaymentNotes(payment.notes || '');
+    setPaymentQuoteId(payment.quote_id);
+    setShowPaymentDialog(true);
+  };
+
+  const updatePayment = async () => {
+    if (!editingPayment || !user) return;
+    const amount = parseFloat(newPaymentAmount);
+    if (!amount || amount <= 0) {
+      toast({ title: 'Error', description: 'Ingresa un monto válido.', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('quote_payments').update({
+      amount,
+      payment_date: newPaymentDate,
+      notes: newPaymentNotes || editingPayment.notes,
+    }).eq('id', editingPayment.id);
+
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el pago.', variant: 'destructive' });
+      return;
+    }
+
+    // Re-sync transactions for this quote
+    await supabase.from('transactions').delete().eq('reference_id', editingPayment.quote_id).eq('user_id', user.id);
+    const quote = quotes.find(q => q.id === editingPayment.quote_id);
+    const allPayments = [...(payments[editingPayment.quote_id] || [])].map(p =>
+      p.id === editingPayment.id ? { ...p, amount, payment_date: newPaymentDate, notes: newPaymentNotes || p.notes } : p
+    );
+    for (const p of allPayments) {
+      const category = p.is_paid ? 'Pagos completos' : 'Anticipos';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'income',
+        amount: p.amount,
+        description: `${category} - ${quote?.clientName || ''} (Folio #${quote?.folio || ''})`,
+        category,
+        transaction_date: p.payment_date,
+        reference_id: editingPayment.quote_id,
+      });
+    }
+
+    toast({ title: '✏️ Pago actualizado', description: `${currencySymbol}${amount.toFixed(2)} actualizado correctamente.` });
+    setShowPaymentDialog(false);
+    setNewPaymentAmount('');
+    setNewPaymentNotes('');
+    setEditingPayment(null);
     await loadPayments();
   };
 
@@ -588,14 +645,24 @@ export default function Orders() {
                                   {p.notes && <span className="text-muted-foreground ml-1">- {p.notes}</span>}
                                   {p.is_paid && <Badge className="ml-1 text-[9px] bg-green-100 text-green-700">Completo</Badge>}
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => deletePayment(p.id, quote.id)}
-                                >
-                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                </Button>
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => startEditPayment(p)}
+                                  >
+                                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => deletePayment(p.id, quote.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -649,12 +716,19 @@ export default function Orders() {
       )}
 
       {/* Payment dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+      <Dialog open={showPaymentDialog} onOpenChange={(open) => {
+        setShowPaymentDialog(open);
+        if (!open) {
+          setEditingPayment(null);
+          setNewPaymentAmount('');
+          setNewPaymentNotes('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Registrar pago</DialogTitle>
+            <DialogTitle>{editingPayment ? 'Editar pago' : 'Registrar pago'}</DialogTitle>
             <DialogDescription>
-              Ingresa los datos del pago para esta cotización.
+              {editingPayment ? 'Modifica los datos del pago.' : 'Ingresa los datos del pago para esta cotización.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -683,23 +757,33 @@ export default function Orders() {
                 onChange={e => setNewPaymentNotes(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            {editingPayment ? (
               <Button
-                className="flex-1"
-                variant="outline"
-                onClick={() => registerPayment('advance')}
+                className="w-full"
+                onClick={updatePayment}
                 disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
               >
-                Anticipo
+                Guardar cambios
               </Button>
-              <Button
-                className="flex-1"
-                onClick={() => registerPayment('full')}
-                disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
-              >
-                Pago completo
-              </Button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => registerPayment('advance')}
+                  disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
+                >
+                  Anticipo
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => registerPayment('full')}
+                  disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
+                >
+                  Pago completo
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
