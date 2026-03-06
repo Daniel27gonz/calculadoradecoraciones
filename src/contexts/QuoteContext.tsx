@@ -386,6 +386,12 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
+      // If this was an order, remove stock deductions first
+      const quoteToDelete = quotes.find(q => q.id === id);
+      if (quoteToDelete && (quoteToDelete.status === 'approved' || quoteToDelete.status === 'delivered')) {
+        await supabase.from('stock_deductions').delete().eq('quote_id', id).eq('user_id', user.id);
+      }
+
       const { error } = await supabase
         .from('quotes')
         .delete()
