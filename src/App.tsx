@@ -18,7 +18,7 @@ import Settings from "./pages/Settings";
 import Install from "./pages/Install";
 import Design from "./pages/Design";
 import AdminDatabase from "./pages/AdminDatabase";
-import Orders from "./pages/Orders";
+
 import NotFound from "./pages/NotFound";
 import InventoryConsumables from "./pages/InventoryConsumables";
 import InventoryReusables from "./pages/InventoryReusables";
@@ -48,7 +48,7 @@ function AppLayout() {
           <Route path="/install" element={<Install />} />
           <Route path="/design" element={<Design />} />
           <Route path="/admin/database" element={<AdminDatabase />} />
-          <Route path="/orders" element={<Orders />} />
+          
           <Route path="/inventory/consumables" element={<InventoryConsumables />} />
           <Route path="/inventory/reusables" element={<InventoryReusables />} />
           <Route path="/indirect-expenses" element={<IndirectExpenses />} />
