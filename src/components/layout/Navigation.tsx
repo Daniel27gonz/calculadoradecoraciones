@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoDecocontrol from '@/assets/logo-decocontrol.png';
-import { Home, Calculator, Package, History, Settings, User, Wallet, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, FileDown, Database, Receipt, TrendingUp, GraduationCap } from 'lucide-react';
+import { Home, Calculator, Package, History, Settings, User, Wallet, Calendar, LogOut, Menu, X, ChevronRight, FilePlus, PackageOpen, Droplets, Wrench, FileDown, Database, Receipt, TrendingUp, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,6 +36,7 @@ const sidebarItems: SidebarItem[] = [
 { path: '/history', icon: History, label: 'Historial' },
 { path: '/design', icon: FileDown, label: 'Cotización (PDF)' },
 { path: '/finances', icon: Wallet, label: 'Mi Dinero' },
+{ path: '/orders', icon: Calendar, label: 'Pedido y Agenda' },
 { path: '/earn-more', icon: TrendingUp, label: 'Gana Más' }];
 
 
