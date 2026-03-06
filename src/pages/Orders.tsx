@@ -732,9 +732,11 @@ export default function Orders() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {!editingPayment && selectedQuoteForPayment && (() => {
-              const costs = calculateCosts(selectedQuoteForPayment);
-              const quotePayments = payments[selectedQuoteForPayment.id] || [];
+            {!editingPayment && paymentQuoteId && (() => {
+              const paymentQuote = quotes.find(q => q.id === paymentQuoteId);
+              if (!paymentQuote) return null;
+              const costs = calculateCosts(paymentQuote);
+              const quotePayments = payments[paymentQuoteId] || [];
               const totalPaid = quotePayments.reduce((sum: number, p: any) => sum + p.amount, 0);
               const saldoPendiente = costs.finalPrice - totalPaid;
               return saldoPendiente > 0 ? (
