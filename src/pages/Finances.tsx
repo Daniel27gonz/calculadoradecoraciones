@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
