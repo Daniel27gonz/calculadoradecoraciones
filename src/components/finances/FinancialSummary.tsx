@@ -191,7 +191,7 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Resumen Financiero</CardTitle>
+        <CardTitle className="text-lg">Resumen Financiero del Mes</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -199,7 +199,7 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
               <ShoppingBag className="w-4 h-4 text-primary" />
-              <h3 className="font-semibold text-sm">Materiales Comprados</h3>
+              <h3 className="font-semibold text-sm">Materiales comprados este mes</h3>
             </div>
             {materials.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Sin compras este mes</p>
@@ -223,7 +223,7 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
               <Receipt className="w-4 h-4 text-primary" />
-              <h3 className="font-semibold text-sm">Gastos del Mes</h3>
+              <h3 className="font-semibold text-sm">Gastos del mes</h3>
             </div>
             {expenses.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Sin gastos registrados</p>
@@ -247,7 +247,7 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
               <Banknote className="w-4 h-4 text-primary" />
-              <h3 className="font-semibold text-sm">Ingresos</h3>
+              <h3 className="font-semibold text-sm">Ingresos del mes</h3>
             </div>
             {incomes.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Sin eventos entregados este mes</p>
