@@ -74,7 +74,7 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'approved' && q.status === 'approved') ||
+        (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
