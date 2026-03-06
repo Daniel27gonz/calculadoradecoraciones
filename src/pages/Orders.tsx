@@ -292,6 +292,62 @@ export default function Orders() {
     await loadPayments();
   };
 
+  // Edit payment
+  const startEditPayment = (payment: QuotePayment) => {
+    setEditingPayment(payment);
+    setNewPaymentAmount(String(payment.amount));
+    setNewPaymentDate(payment.payment_date);
+    setNewPaymentNotes(payment.notes || '');
+    setPaymentQuoteId(payment.quote_id);
+    setShowPaymentDialog(true);
+  };
+
+  const updatePayment = async () => {
+    if (!editingPayment || !user) return;
+    const amount = parseFloat(newPaymentAmount);
+    if (!amount || amount <= 0) {
+      toast({ title: 'Error', description: 'Ingresa un monto válido.', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('quote_payments').update({
+      amount,
+      payment_date: newPaymentDate,
+      notes: newPaymentNotes || editingPayment.notes,
+    }).eq('id', editingPayment.id);
+
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el pago.', variant: 'destructive' });
+      return;
+    }
+
+    // Re-sync transactions for this quote
+    await supabase.from('transactions').delete().eq('reference_id', editingPayment.quote_id).eq('user_id', user.id);
+    const quote = quotes.find(q => q.id === editingPayment.quote_id);
+    const allPayments = [...(payments[editingPayment.quote_id] || [])].map(p =>
+      p.id === editingPayment.id ? { ...p, amount, payment_date: newPaymentDate, notes: newPaymentNotes || p.notes } : p
+    );
+    for (const p of allPayments) {
+      const category = p.is_paid ? 'Pagos completos' : 'Anticipos';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'income',
+        amount: p.amount,
+        description: `${category} - ${quote?.clientName || ''} (Folio #${quote?.folio || ''})`,
+        category,
+        transaction_date: p.payment_date,
+        reference_id: editingPayment.quote_id,
+      });
+    }
+
+    toast({ title: '✏️ Pago actualizado', description: `${currencySymbol}${amount.toFixed(2)} actualizado correctamente.` });
+    setShowPaymentDialog(false);
+    setNewPaymentAmount('');
+    setNewPaymentNotes('');
+    setEditingPayment(null);
+    await loadPayments();
+  };
+
   // Calendar helpers
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
