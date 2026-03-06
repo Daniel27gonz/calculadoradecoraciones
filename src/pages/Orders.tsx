@@ -371,8 +371,10 @@ export default function Orders() {
 
   const getStatusColor = (quote: Quote) => {
     if (quote.status === 'cancelled') return 'bg-red-500';
+    const isPaid = fullyPaidQuotes.has(quote.id);
+    if (quote.status === 'delivered' && isPaid) return 'bg-gradient-to-r from-green-500 to-blue-500';
     if (quote.status === 'delivered') return 'bg-blue-500';
-    if (fullyPaidQuotes.has(quote.id)) return 'bg-green-500';
+    if (isPaid) return 'bg-green-500';
     return 'bg-amber-500';
   };
 
@@ -501,7 +503,16 @@ export default function Orders() {
                     <PopoverTrigger asChild>
                       <button
                         className={`aspect-square rounded-full flex items-center justify-center text-xs transition-colors ${
-                          events[0].status === 'delivered' ? 'bg-blue-500' : events.some(e => fullyPaidQuotes.has(e.id)) ? 'bg-green-500' : 'bg-amber-500'
+                          (() => {
+                            const hasDelivered = events.some(e => e.status === 'delivered');
+                            const hasPaid = events.some(e => fullyPaidQuotes.has(e.id));
+                            const hasCancelled = events.some(e => e.status === 'cancelled');
+                            if (hasDelivered && hasPaid) return 'bg-gradient-to-r from-green-500 to-blue-500';
+                            if (hasDelivered) return 'bg-blue-500';
+                            if (hasCancelled) return 'bg-red-500';
+                            if (hasPaid) return 'bg-green-500';
+                            return 'bg-amber-500';
+                          })()
                         } text-white font-bold ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                       >
                         {day}
