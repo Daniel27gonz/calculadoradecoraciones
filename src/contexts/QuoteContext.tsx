@@ -213,7 +213,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
           notes: q.notes || '',
-          status: (q.status === 'approved' ? 'approved' : q.status === 'delivered' ? 'delivered' : 'pending') as 'pending' | 'approved' | 'delivered',
+          status: (q.status === 'approved' ? 'approved' : q.status === 'delivered' ? 'delivered' : q.status === 'cancelled' ? 'cancelled' : 'pending') as 'pending' | 'approved' | 'delivered' | 'cancelled',
         }));
         setQuotes(loadedQuotes);
       }
@@ -371,6 +371,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       // If this quote is an active order (approved/delivered), recalculate stock deductions
       if (quote.status === 'approved' || quote.status === 'delivered') {
         await recalculateStockDeductions(quote);
+      } else if (quote.status === 'cancelled' || quote.status === 'pending') {
+        // If cancelled or reverted to pending, remove all stock deductions
+        await supabase.from('stock_deductions').delete().eq('quote_id', quote.id).eq('user_id', user.id);
       }
     } catch (error) {
       console.error('Error saving quote:', error);
