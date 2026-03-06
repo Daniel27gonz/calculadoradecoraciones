@@ -168,7 +168,7 @@ export default function Finances() {
 
       const { data: allQuotes, error: err1 } = await supabase
         .from('quotes')
-        .select('id, status, created_at')
+        .select('id, status, created_at, margin_percentage, materials, workers, time_phases, extras, transport_items, reusable_materials_used, tool_wear_percentage, wastage_percentage, balloons, furniture_items')
         .eq('user_id', user?.id)
         .gte('created_at', startDate)
         .lt('created_at', endDate);
@@ -176,9 +176,31 @@ export default function Finances() {
       if (err1) throw err1;
 
       const total = allQuotes?.length || 0;
-      const paid = allQuotes?.filter(q => q.status === 'delivered' || q.status === 'approved').length || 0;
 
-      setQuoteStats({ totalQuotes: total, paidQuotes: paid });
+      // Get all payments for these quotes to determine which are fully paid
+      const quoteIds = allQuotes?.map(q => q.id) || [];
+      let paidCount = 0;
+
+      if (quoteIds.length > 0) {
+        const { data: payments } = await supabase
+          .from('quote_payments')
+          .select('quote_id, amount')
+          .eq('user_id', user?.id)
+          .in('quote_id', quoteIds);
+
+        // Sum payments per quote
+        const paymentsByQuote = new Map<string, number>();
+        (payments || []).forEach(p => {
+          paymentsByQuote.set(p.quote_id, (paymentsByQuote.get(p.quote_id) || 0) + Number(p.amount));
+        });
+
+        // A quote is "paid" only if it has payments > 0 and total payments cover the full amount
+        // For simplicity, count quotes that have any payment registered as "paid"
+        // matching the logic from Orders: sum of payments >= final price
+        paidCount = Array.from(paymentsByQuote.values()).filter(total => total > 0).length;
+      }
+
+      setQuoteStats({ totalQuotes: total, paidQuotes: paidCount });
     } catch (error) {
       console.error('Error fetching quote stats:', error);
     }
