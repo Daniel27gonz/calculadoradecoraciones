@@ -181,31 +181,18 @@ export default function Finances() {
   const quoteStats = useMemo(() => {
     const monthNum = selectedMonth + 1;
     const monthStr = String(monthNum).padStart(2, '0');
-    const yearStr = String(selectedYear);
-    const prefix = `${yearStr}-${monthStr}`;
+    const prefix = `${selectedYear}-${monthStr}`;
 
-    // Filter quotes whose event date falls in the selected month
-    const monthQuotes = quotes.filter(q => {
-      const eventDate = q.eventDate;
-      if (!eventDate) return false;
-      return eventDate.startsWith(prefix);
-    });
+    // Cotizaciones realizadas: created in selected month
+    const totalQuotes = quotes.filter(q => q.createdAt?.startsWith(prefix)).length;
 
-    const totalQuotes = monthQuotes.length;
-
-    // Count fully paid quotes: total payments >= finalPrice
-    let paidQuotes = 0;
-    monthQuotes.forEach(q => {
-      const totalPaid = quotePayments[q.id] || 0;
-      if (totalPaid <= 0) return;
-      const costs = calculateCosts(q);
-      if (totalPaid >= costs.finalPrice && costs.finalPrice > 0) {
-        paidQuotes++;
-      }
-    });
+    // Pedidos pagados: status "delivered" with eventDate in selected month
+    const paidQuotes = quotes.filter(q =>
+      q.status === 'delivered' && q.eventDate?.startsWith(prefix)
+    ).length;
 
     return { totalQuotes, paidQuotes };
-  }, [quotes, selectedMonth, selectedYear, quotePayments, calculateCosts]);
+  }, [quotes, selectedMonth, selectedYear]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -410,7 +397,7 @@ export default function Finances() {
                   <CheckCircle className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                   <p className="text-sm text-emerald-600 font-medium">Pedidos pagados</p>
+                   <p className="text-sm text-emerald-600 font-medium">Decoraciones entregadas</p>
                    <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
                    <p className="text-xs text-emerald-500">este mes</p>
                 </div>
