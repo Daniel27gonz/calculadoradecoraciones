@@ -316,7 +316,7 @@ export function MaterialsManager() {
       material_id: purchase.material_id,
       purchase_date: purchase.purchase_date,
       purchase_unit: mat?.purchase_unit || '',
-      presentation_price: String(purchase.quantity_presentations > 0 ? purchase.total_paid / purchase.quantity_presentations : 0),
+      presentation_price: String(materialPriceMap[purchase.material_id] || (purchase.quantity_presentations > 0 ? purchase.total_paid / purchase.quantity_presentations : 0)),
       quantity: String(purchase.quantity_presentations > 0 ? purchase.units_added / purchase.quantity_presentations : 0),
       quantity_bought: String(purchase.quantity_presentations),
       provider: purchase.provider || '',
