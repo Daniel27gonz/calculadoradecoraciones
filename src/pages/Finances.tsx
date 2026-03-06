@@ -134,7 +134,32 @@ export default function Finances() {
     }
   };
 
-  const fetchQuotePayments = async () => {
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('transaction_date', { ascending: false });
+
+      if (error) throw error;
+      setTransactions((data || []).map(t => ({
+        ...t,
+        type: t.type as 'income' | 'expense',
+        category: t.category ?? null,
+      })));
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las transacciones",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
     try {
       const { data: payments } = await supabase
         .from('quote_payments')
