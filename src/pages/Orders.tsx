@@ -38,6 +38,7 @@ export default function Orders() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved'>('all');
+  const [selectedPendingQuote, setSelectedPendingQuote] = useState<Quote | null>(null);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
@@ -385,14 +386,22 @@ export default function Orders() {
                         type="button"
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
                         onClick={() => {
-                          setExpandedQuoteId(q.id);
-                          setShowAccordion(false);
-                          setAccordionSearch('');
-                          // Scroll to order if it exists in the list
-                          setTimeout(() => {
-                            const el = document.getElementById(`order-${q.id}`);
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }, 100);
+                          if (q.status === 'approved' || q.status === 'delivered') {
+                            // Already an order, scroll to it
+                            setExpandedQuoteId(q.id);
+                            setSelectedPendingQuote(null);
+                            setShowAccordion(false);
+                            setAccordionSearch('');
+                            setTimeout(() => {
+                              const el = document.getElementById(`order-${q.id}`);
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 100);
+                          } else {
+                            // Pending quote - show it for approval
+                            setSelectedPendingQuote(q);
+                            setShowAccordion(false);
+                            setAccordionSearch('');
+                          }
                         }}
                       >
                         <div className="space-y-0.5 min-w-0 flex-1">
@@ -427,7 +436,61 @@ export default function Orders() {
           )}
         </Card>
 
-        {/* Search filter for active orders */}
+
+        {/* Selected Pending Quote - Approve to create order */}
+        {selectedPendingQuote && selectedPendingQuote.status === 'pending' && (
+          <Card className="border-yellow-500/50 bg-yellow-500/5">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-lg font-semibold">{selectedPendingQuote.clientName}</h3>
+                    <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-700">
+                      <Clock className="w-3 h-3 mr-1" /> Pendiente
+                    </Badge>
+                  </div>
+                  {selectedPendingQuote.folio && (
+                    <p className="text-xs text-muted-foreground font-mono">Folio #{String(selectedPendingQuote.folio).padStart(4, '0')}</p>
+                  )}
+                  {selectedPendingQuote.eventType && (
+                    <p className="text-sm text-muted-foreground">{selectedPendingQuote.eventType}</p>
+                  )}
+                  {selectedPendingQuote.eventDate && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <CalendarIcon className="w-4 h-4" />
+                      {format(new Date(selectedPendingQuote.eventDate + 'T12:00:00'), "d MMM yyyy", { locale: es })}
+                    </p>
+                  )}
+                </div>
+                <div className="text-right shrink-0 ml-2">
+                  <p className="text-lg font-bold">{currencySymbol}{calculateCosts(selectedPendingQuote).finalPrice.toFixed(2)}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={async () => {
+                    await handleToggleStatus(selectedPendingQuote);
+                    setSelectedPendingQuote(null);
+                    await loadQuotes();
+                  }}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-1" /> Aprobar y crear pedido
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedPendingQuote(null)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
