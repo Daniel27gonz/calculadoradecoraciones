@@ -75,7 +75,7 @@ export default function Orders() {
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
         (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
-        (statusFilter === 'delivered' && q.status === 'delivered') ||
+        (statusFilter === 'delivered' && q.status === 'delivered' && !fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
