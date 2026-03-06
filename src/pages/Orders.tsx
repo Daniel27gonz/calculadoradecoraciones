@@ -584,7 +584,7 @@ export default function Orders() {
                         {quote.folio && <span className="text-xs font-mono text-muted-foreground">#{String(quote.folio).padStart(4, '0')}</span>}
                         <span className="font-semibold truncate">{quote.clientName}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {quote.eventType && <span>{quote.eventType}</span>}
                         {quote.eventDate && (
                           <span>• {format(new Date(quote.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>
@@ -592,6 +592,16 @@ export default function Orders() {
                         <Badge variant="outline" className="text-[10px]">
                           {getStatusLabel(quote)}
                         </Badge>
+                        {(() => {
+                          const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
+                          if (totalPaid >= costs.finalPrice && costs.finalPrice > 0) {
+                            return <Badge className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>;
+                          } else if (totalPaid > 0) {
+                            return <Badge className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>;
+                          } else {
+                            return <Badge className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>;
+                          }
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
