@@ -98,7 +98,7 @@ export default function Orders() {
   // Calendar events
   const calendarEvents = useMemo(() => {
     const events: Record<string, Quote[]> = {};
-    orderQuotes.forEach(q => {
+    orderQuotes.filter(q => q.status !== 'cancelled').forEach(q => {
       if (q.eventDate) {
         const dateKey = q.eventDate.split('T')[0];
         if (!events[dateKey]) events[dateKey] = [];
