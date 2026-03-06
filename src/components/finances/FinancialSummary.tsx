@@ -126,39 +126,54 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
         ? `${selectedYear + 1}-01-01`
         : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
-      const { data: quotes, error: quotesError } = await supabase
-        .from('quotes')
-        .select('id, client_name, status')
+      // Fetch payments within the selected month (based on payment_date)
+      const { data: payments, error: paymentsError } = await supabase
+        .from('quote_payments')
+        .select('quote_id, amount, is_paid')
         .eq('user_id', user?.id)
-        .in('status', ['delivered', 'approved'])
-        .gte('event_date', startDate)
-        .lt('event_date', endDate);
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate);
 
-      if (quotesError) throw quotesError;
-      if (!quotes || quotes.length === 0) {
+      if (paymentsError) throw paymentsError;
+      if (!payments || payments.length === 0) {
         setIncomes([]);
         return;
       }
 
-      const quoteIds = quotes.map(q => q.id);
-      const { data: payments, error: paymentsError } = await supabase
-        .from('quote_payments')
-        .select('quote_id, amount, is_paid')
-        .in('quote_id', quoteIds);
+      // Get unique quote IDs from payments
+      const quoteIds = [...new Set(payments.map(p => p.quote_id))];
+      const { data: quotes, error: quotesError } = await supabase
+        .from('quotes')
+        .select('id, client_name')
+        .in('id', quoteIds);
 
-      if (paymentsError) throw paymentsError;
+      if (quotesError) throw quotesError;
 
-      const incomeItems: IncomeItem[] = quotes.map(q => {
-        const qPayments = (payments || []).filter(p => p.quote_id === q.id);
-        const deposits = qPayments.filter(p => !p.is_paid).reduce((s, p) => s + Number(p.amount), 0);
-        const finalPay = qPayments.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0);
-        return {
-          clientName: q.client_name,
-          deposits,
-          finalPayment: finalPay,
-          total: deposits + finalPay,
-        };
-      });
+      const quoteMap = new Map((quotes || []).map(q => [q.id, q.client_name]));
+
+      // Group payments by quote
+      const paymentsByQuote = new Map<string, { deposits: number; finalPayment: number }>();
+      for (const p of payments) {
+        const existing = paymentsByQuote.get(p.quote_id) || { deposits: 0, finalPayment: 0 };
+        if (p.is_paid) {
+          existing.finalPayment += Number(p.amount);
+        } else {
+          existing.deposits += Number(p.amount);
+        }
+        paymentsByQuote.set(p.quote_id, existing);
+      }
+
+      const incomeItems: IncomeItem[] = [];
+      for (const [quoteId, totals] of paymentsByQuote) {
+        const total = totals.deposits + totals.finalPayment;
+        if (total <= 0) continue;
+        incomeItems.push({
+          clientName: quoteMap.get(quoteId) || 'Cliente',
+          deposits: totals.deposits,
+          finalPayment: totals.finalPayment,
+          total,
+        });
+      }
 
       setIncomes(incomeItems);
     } catch (error) {
