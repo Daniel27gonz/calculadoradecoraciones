@@ -236,9 +236,7 @@ export default function Finances() {
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
-  const totalExpenses = selectedMonthTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalExpenses = realTotalExpenses;
   
   const balance = totalIncome - totalExpenses;
 
