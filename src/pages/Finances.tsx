@@ -11,7 +11,6 @@ import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
-import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
 import {
   AlertDialog,
@@ -34,6 +33,17 @@ interface Transaction {
   created_at: string;
 }
 
+interface MaterialPurchase {
+  id: string;
+  purchase_date: string;
+  material_name: string;
+  quantity_presentations: number;
+  purchase_unit: string;
+  units_added: number;
+  base_unit: string;
+  total_paid: number;
+}
+
 interface Filters {
   day: string;
   month: string;
@@ -47,10 +57,13 @@ interface QuoteStats {
   paidQuotes: number;
 }
 
+type BreakdownFilter = 'all' | 'income' | 'materials' | 'expenses';
+
 export default function Finances() {
   const navigate = useNavigate();
   const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [materialPurchases, setMaterialPurchases] = useState<MaterialPurchase[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -58,6 +71,7 @@ export default function Finances() {
   const [quoteStats, setQuoteStats] = useState<QuoteStats>({ totalQuotes: 0, paidQuotes: 0 });
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [breakdownFilter, setBreakdownFilter] = useState<BreakdownFilter>('all');
   
   const [filters, setFilters] = useState<Filters>({
     day: '',
@@ -89,6 +103,7 @@ export default function Finances() {
   useEffect(() => {
     if (user) {
       fetchTransactions();
+      fetchMaterialPurchases();
     }
   }, [user]);
 
@@ -124,7 +139,31 @@ export default function Finances() {
     }
   };
 
-  const fetchQuoteStats = async () => {
+  const fetchMaterialPurchases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('material_purchases')
+        .select('id, purchase_date, quantity_presentations, total_paid, units_added, material_id, user_materials(name, purchase_unit, base_unit)')
+        .eq('user_id', user?.id)
+        .order('purchase_date', { ascending: false });
+
+      if (error) throw error;
+      setMaterialPurchases((data || []).map((p: any) => ({
+        id: p.id,
+        purchase_date: p.purchase_date,
+        material_name: p.user_materials?.name || 'Material',
+        quantity_presentations: p.quantity_presentations,
+        purchase_unit: p.user_materials?.purchase_unit || 'pzas',
+        units_added: p.units_added,
+        base_unit: p.user_materials?.base_unit || 'pzas',
+        total_paid: p.total_paid,
+      })));
+    } catch (error) {
+      console.error('Error fetching material purchases:', error);
+    }
+  };
+
+
     try {
       const monthNum = selectedMonth + 1;
       const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
@@ -207,6 +246,18 @@ export default function Finances() {
     .reduce((sum, t) => sum + Number(t.amount), 0);
   
   const balance = totalIncome - totalExpenses;
+
+  // Breakdown data filtered by selected month
+  const monthMaterialPurchases = materialPurchases.filter(p => {
+    const [y, m] = p.purchase_date.split('-');
+    return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
+  });
+
+  const monthExpenseTransactions = selectedMonthTransactions.filter(t => t.type === 'expense');
+  const monthIncomeTransactions = selectedMonthTransactions.filter(t => t.type === 'income');
+
+  const totalMaterialsCost = monthMaterialPurchases.reduce((sum, p) => sum + Number(p.total_paid), 0);
+  const totalBusinessExpenses = monthExpenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
   const handlePrevMonth = () => {
     if (selectedMonth === 0) {
@@ -364,8 +415,153 @@ export default function Finances() {
           </Card>
         </div>
 
+        {/* Expense Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Desglose de gastos del mes</CardTitle>
+            <div className="flex flex-wrap gap-2 pt-2">
+              {([
+                { key: 'all', label: 'Todo' },
+                { key: 'income', label: 'Ingresos' },
+                { key: 'materials', label: 'Materiales' },
+                { key: 'expenses', label: 'Gastos' },
+              ] as { key: BreakdownFilter; label: string }[]).map(tab => (
+                <Button
+                  key={tab.key}
+                  variant={breakdownFilter === tab.key ? 'default' : 'outline'}
+                  size="sm"
+                  className="rounded-full text-xs"
+                  onClick={() => setBreakdownFilter(tab.key)}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Income section */}
+            {(breakdownFilter === 'all' || breakdownFilter === 'income') && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-base">Ingresos</h3>
+                  <span className="text-sm font-medium text-green-600">Total: {currencySymbol}{totalIncome.toFixed(2)}</span>
+                </div>
+                {monthIncomeTransactions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">Sin ingresos este mes</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-2 font-medium">Fecha</th>
+                          <th className="text-left py-2 px-2 font-medium">Descripción</th>
+                          <th className="text-left py-2 px-2 font-medium">Categoría</th>
+                          <th className="text-right py-2 px-2 font-medium text-green-600">Monto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthIncomeTransactions.map(t => (
+                          <tr key={t.id} className="border-b last:border-0">
+                            <td className="py-2 px-2">{format(new Date(t.transaction_date + 'T12:00:00'), 'd MMM', { locale: es })}</td>
+                            <td className="py-2 px-2">{t.description}</td>
+                            <td className="py-2 px-2">{t.category || '-'}</td>
+                            <td className="py-2 px-2 text-right font-semibold">{currencySymbol}{Number(t.amount).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* Transactions List */}
+            {/* Materials purchased */}
+            {(breakdownFilter === 'all' || breakdownFilter === 'materials') && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-base">Materiales comprados</h3>
+                  <span className="text-sm font-medium text-muted-foreground">Total: {currencySymbol}{totalMaterialsCost.toFixed(2)}</span>
+                </div>
+                {monthMaterialPurchases.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">Sin compras de materiales este mes</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-2 font-medium">Fecha</th>
+                          <th className="text-left py-2 px-2 font-medium">Material</th>
+                          <th className="text-left py-2 px-2 font-medium">Cantidad</th>
+                          <th className="text-right py-2 px-2 font-medium">Costo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthMaterialPurchases.map(p => (
+                          <tr key={p.id} className="border-b last:border-0">
+                            <td className="py-2 px-2">{format(new Date(p.purchase_date + 'T12:00:00'), 'd MMM', { locale: es })}</td>
+                            <td className="py-2 px-2">{p.material_name}</td>
+                            <td className="py-2 px-2">{p.quantity_presentations} {p.purchase_unit}</td>
+                            <td className="py-2 px-2 text-right font-semibold">{currencySymbol}{Number(p.total_paid).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan={3} className="text-right py-2 px-2 text-sm font-medium text-muted-foreground">Total materiales:</td>
+                          <td className="text-right py-2 px-2 font-bold">{currencySymbol}{totalMaterialsCost.toFixed(2)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Business expenses */}
+            {(breakdownFilter === 'all' || breakdownFilter === 'expenses') && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-base">Gastos del negocio</h3>
+                  <span className="text-sm font-medium text-muted-foreground">Total: {currencySymbol}{totalBusinessExpenses.toFixed(2)}</span>
+                </div>
+                {monthExpenseTransactions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">Sin gastos este mes</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-2 font-medium">Fecha</th>
+                          <th className="text-left py-2 px-2 font-medium">Gasto</th>
+                          <th className="text-left py-2 px-2 font-medium">Descripción</th>
+                          <th className="text-right py-2 px-2 font-medium text-red-500">Monto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthExpenseTransactions.map(t => (
+                          <tr key={t.id} className="border-b last:border-0">
+                            <td className="py-2 px-2">{format(new Date(t.transaction_date + 'T12:00:00'), 'd MMM', { locale: es })}</td>
+                            <td className="py-2 px-2">{t.category || '-'}</td>
+                            <td className="py-2 px-2">{t.description}</td>
+                            <td className="py-2 px-2 text-right font-semibold">{currencySymbol}{Number(t.amount).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan={3} className="text-right py-2 px-2 text-sm font-medium text-red-500">Total gastos negocio:</td>
+                          <td className="text-right py-2 px-2 font-bold text-red-600">{currencySymbol}{totalBusinessExpenses.toFixed(2)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
