@@ -623,8 +623,13 @@ export default function Orders() {
                         </Badge>
                         {(() => {
                           const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
+                          const isDelivered = quote.status === 'delivered';
                           if (totalPaid >= costs.finalPrice && costs.finalPrice > 0) {
                             return <Badge className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>;
+                          } else if (isDelivered && totalPaid > 0) {
+                            return <Badge className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>;
+                          } else if (isDelivered && totalPaid === 0) {
+                            return <Badge className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>;
                           } else if (totalPaid > 0) {
                             return <Badge className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>;
                           } else {
