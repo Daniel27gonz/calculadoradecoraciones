@@ -182,12 +182,13 @@ export default function Finances() {
     const monthNum = selectedMonth + 1;
     const monthStr = String(monthNum).padStart(2, '0');
     const yearStr = String(selectedYear);
+    const prefix = `${yearStr}-${monthStr}`;
 
-    // Filter quotes created in the selected month
+    // Filter quotes whose event date falls in the selected month
     const monthQuotes = quotes.filter(q => {
-      const createdAt = q.createdAt;
-      if (!createdAt) return false;
-      return createdAt.startsWith(`${yearStr}-${monthStr}`);
+      const eventDate = q.eventDate;
+      if (!eventDate) return false;
+      return eventDate.startsWith(prefix);
     });
 
     const totalQuotes = monthQuotes.length;
