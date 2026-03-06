@@ -98,8 +98,8 @@ export default function Finances() {
 
   useEffect(() => {
     if (user) {
-      fetchQuoteStats();
       fetchRealExpenses();
+      fetchQuotePayments();
     }
   }, [user, selectedMonth, selectedYear]);
 
@@ -134,79 +134,51 @@ export default function Finances() {
     }
   };
 
-  const fetchTransactions = async () => {
+  const fetchQuotePayments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('transaction_date', { ascending: false });
+      const { data: payments } = await supabase
+        .from('quote_payments')
+        .select('quote_id, amount')
+        .eq('user_id', user?.id);
 
-      if (error) throw error;
-      setTransactions((data || []).map(t => ({
-        ...t,
-        type: t.type as 'income' | 'expense',
-        category: t.category ?? null,
-      })));
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las transacciones",
-        variant: "destructive",
+      const byQuote: Record<string, number> = {};
+      (payments || []).forEach(p => {
+        byQuote[p.quote_id] = (byQuote[p.quote_id] || 0) + Number(p.amount);
       });
-    } finally {
-      setLoadingTransactions(false);
-    }
-  };
-
-  const fetchQuoteStats = async () => {
-    try {
-      const monthNum = selectedMonth + 1;
-      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = monthNum === 12
-        ? `${selectedYear + 1}-01-01`
-        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-      const { data: allQuotes, error: err1 } = await supabase
-        .from('quotes')
-        .select('id, status, created_at, margin_percentage, materials, workers, time_phases, extras, transport_items, reusable_materials_used, tool_wear_percentage, wastage_percentage, balloons, furniture_items')
-        .eq('user_id', user?.id)
-        .gte('created_at', startDate)
-        .lt('created_at', endDate);
-
-      if (err1) throw err1;
-
-      const total = allQuotes?.length || 0;
-
-      // Get all payments for these quotes to determine which are fully paid
-      const quoteIds = allQuotes?.map(q => q.id) || [];
-      let paidCount = 0;
-
-      if (quoteIds.length > 0) {
-        const { data: payments } = await supabase
-          .from('quote_payments')
-          .select('quote_id, amount')
-          .eq('user_id', user?.id)
-          .in('quote_id', quoteIds);
-
-        // Sum payments per quote
-        const paymentsByQuote = new Map<string, number>();
-        (payments || []).forEach(p => {
-          paymentsByQuote.set(p.quote_id, (paymentsByQuote.get(p.quote_id) || 0) + Number(p.amount));
-        });
-
-        // A quote is "paid" only if it has payments > 0 and total payments cover the full amount
-        // For simplicity, count quotes that have any payment registered as "paid"
-        // matching the logic from Orders: sum of payments >= final price
-        paidCount = Array.from(paymentsByQuote.values()).filter(total => total > 0).length;
-      }
-
-      setQuoteStats({ totalQuotes: total, paidQuotes: paidCount });
+      setQuotePayments(byQuote);
     } catch (error) {
-      console.error('Error fetching quote stats:', error);
+      console.error('Error fetching quote payments:', error);
     }
   };
+
+  // Compute quote stats from context quotes
+  const quoteStats = useMemo(() => {
+    const monthNum = selectedMonth + 1;
+    const monthStr = String(monthNum).padStart(2, '0');
+    const yearStr = String(selectedYear);
+
+    // Filter quotes created in the selected month
+    const monthQuotes = quotes.filter(q => {
+      const createdAt = q.createdAt;
+      if (!createdAt) return false;
+      return createdAt.startsWith(`${yearStr}-${monthStr}`);
+    });
+
+    const totalQuotes = monthQuotes.length;
+
+    // Count fully paid quotes: total payments >= finalPrice
+    let paidQuotes = 0;
+    monthQuotes.forEach(q => {
+      const totalPaid = quotePayments[q.id] || 0;
+      if (totalPaid <= 0) return;
+      const costs = calculateCosts(q);
+      if (totalPaid >= costs.finalPrice && costs.finalPrice > 0) {
+        paidQuotes++;
+      }
+    });
+
+    return { totalQuotes, paidQuotes };
+  }, [quotes, selectedMonth, selectedYear, quotePayments, calculateCosts]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
