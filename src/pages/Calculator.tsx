@@ -152,6 +152,14 @@ export default function Calculator() {
       });
       return;
     }
+    if (!quote.eventDate) {
+      toast({
+        title: "Falta información",
+        description: "Por favor ingresa la fecha del evento para poder agregarlo a la agenda",
+        variant: "destructive",
+      });
+      return;
+    }
 
     await saveQuote(quote);
     toast({
@@ -254,7 +262,7 @@ export default function Calculator() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha del evento</label>
+                <label className="text-sm font-medium">Fecha del evento <span className="text-destructive">*</span></label>
                 <Input
                   type="date"
                   value={quote.eventDate}
