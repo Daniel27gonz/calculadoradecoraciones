@@ -496,12 +496,10 @@ export default function Orders() {
                 selectedDay.getMonth() === currentMonth.getMonth() &&
                 selectedDay.getFullYear() === currentMonth.getFullYear();
 
-              return (
-                {hasEvents ? (
-                  <Popover>
+              return hasEvents ? (
+                  <Popover key={i}>
                     <PopoverTrigger asChild>
                       <button
-                        key={i}
                         className={`aspect-square rounded-full flex items-center justify-center text-xs transition-colors ${
                           events[0].status === 'delivered' ? 'bg-blue-500' : events.some(e => fullyPaidQuotes.has(e.id)) ? 'bg-green-500' : 'bg-amber-500'
                         } text-white font-bold ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}`}
@@ -548,8 +546,7 @@ export default function Orders() {
                   >
                     {day}
                   </button>
-                )}
-              );
+                );
             })}
           </div>
         </CardContent>
