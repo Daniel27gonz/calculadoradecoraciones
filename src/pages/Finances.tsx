@@ -307,105 +307,113 @@ export default function Finances() {
         </div>
 
         {/* Month Selector */}
-        <div className="flex items-center justify-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePrevMonth}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePrevMonth}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextMonth}>
+              <ChevronRight className="w-5 h-5" />
+            </Button>
           </div>
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextMonth}>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          <p className="text-xs text-muted-foreground">Cambiar mes</p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+        {/* SECCIÓN 1: Finanzas del mes */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">💰 Finanzas del mes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-green-600 font-medium">Ingresos del mes</p>
+                    <p className="text-xl font-bold text-green-700">
+                      {currencySymbol}{totalIncome.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Ingresos del mes</p>
-                  <p className="text-xl font-bold text-green-700">
-                    {currencySymbol}{totalIncome.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-full">
-                  <TrendingDown className="w-5 h-5 text-red-600" />
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-full">
+                    <TrendingDown className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-red-600 font-medium">Gastos y compras del mes</p>
+                    <p className="text-xl font-bold text-red-700">
+                      {currencySymbol}{totalExpenses.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos y compras del mes</p>
-                  <p className="text-xl font-bold text-red-700">
-                    {currencySymbol}{totalExpenses.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                  <DollarSign className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+            <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                    <DollarSign className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                      {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
+                    </p>
+                    <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                      {currencySymbol}{balance.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
-                  </p>
-                  <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                    {currencySymbol}{balance.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Quote Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <FileText className="w-5 h-5 text-purple-600" />
+        {/* SECCIÓN 2: Actividad del negocio */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">📋 Actividad del negocio</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-purple-50 border-purple-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-purple-600 font-medium">Cotizaciones realizadas</p>
+                    <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
+                    <p className="text-xs text-purple-500">este mes</p>
+                  </div>
                 </div>
-                <div>
-                   <p className="text-sm text-purple-600 font-medium">Cotizaciones realizadas</p>
-                   <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
-                   <p className="text-xs text-purple-500">este mes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-emerald-50 border-emerald-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 rounded-full">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <Card className="bg-emerald-50 border-emerald-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 rounded-full">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-emerald-600 font-medium">Eventos realizados</p>
+                    <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
+                    <p className="text-xs text-emerald-500">este mes</p>
+                  </div>
                 </div>
-                <div>
-                   <p className="text-sm text-emerald-600 font-medium">Eventos realizados</p>
-                   <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
-                   <p className="text-xs text-emerald-500">este mes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
 
         {/* Financial Summary */}
         <FinancialSummary selectedMonth={selectedMonth} selectedYear={selectedYear} />
