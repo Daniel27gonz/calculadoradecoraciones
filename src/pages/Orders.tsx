@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck, XCircle, Ban } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, CalendarDays, ListFilter, PackageCheck, CreditCard, Truck, XCircle, Ban, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,7 @@ export default function Orders() {
   });
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
   const [fullyPaidQuotes, setFullyPaidQuotes] = useState<Set<string>>(new Set());
+  const [editingPayment, setEditingPayment] = useState<QuotePayment | null>(null);
 
   // Accordion selector
   const [showAccordion, setShowAccordion] = useState(false);
