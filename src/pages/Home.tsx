@@ -329,7 +329,7 @@ export default function Home() {
                 <span className="text-sm font-bold">{pendingQuotes.length} cotizaciones</span>
               </div>
             )}
-            <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
+            
           </CardContent>
         </Card>
       </div>
