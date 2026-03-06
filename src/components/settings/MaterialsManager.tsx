@@ -144,7 +144,7 @@ export function MaterialsManager() {
         quantity_presentations: p.quantity_presentations,
         units_added: p.units_added,
         total_paid: p.total_paid,
-        cost_per_unit: p.units_added > 0 ? p.total_paid / p.units_added : 0,
+        cost_per_unit: p.quantity_presentations > 0 ? p.total_paid / p.quantity_presentations : 0,
         provider: p.provider,
       })));
     } catch (e) {
@@ -623,7 +623,7 @@ export function MaterialsManager() {
                     <div className="flex gap-3 mt-1 text-xs">
                       <span>Cant: <strong>{p.quantity_presentations}</strong></span>
                       <span>Total: <strong>{fmt(p.total_paid)}</strong></span>
-                      <span>Precio: <strong>{fmt(p.cost_per_unit)}</strong></span>
+                      <span>Costo/presentación: <strong>{fmt(p.cost_per_unit)}</strong></span>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
