@@ -716,12 +716,19 @@ export default function Orders() {
       )}
 
       {/* Payment dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+      <Dialog open={showPaymentDialog} onOpenChange={(open) => {
+        setShowPaymentDialog(open);
+        if (!open) {
+          setEditingPayment(null);
+          setNewPaymentAmount('');
+          setNewPaymentNotes('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Registrar pago</DialogTitle>
+            <DialogTitle>{editingPayment ? 'Editar pago' : 'Registrar pago'}</DialogTitle>
             <DialogDescription>
-              Ingresa los datos del pago para esta cotización.
+              {editingPayment ? 'Modifica los datos del pago.' : 'Ingresa los datos del pago para esta cotización.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -750,23 +757,33 @@ export default function Orders() {
                 onChange={e => setNewPaymentNotes(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            {editingPayment ? (
               <Button
-                className="flex-1"
-                variant="outline"
-                onClick={() => registerPayment('advance')}
+                className="w-full"
+                onClick={updatePayment}
                 disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
               >
-                Anticipo
+                Guardar cambios
               </Button>
-              <Button
-                className="flex-1"
-                onClick={() => registerPayment('full')}
-                disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
-              >
-                Pago completo
-              </Button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => registerPayment('advance')}
+                  disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
+                >
+                  Anticipo
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => registerPayment('full')}
+                  disabled={!newPaymentAmount || parseFloat(newPaymentAmount) <= 0}
+                >
+                  Pago completo
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
