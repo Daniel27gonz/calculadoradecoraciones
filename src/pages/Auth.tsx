@@ -101,8 +101,16 @@ export default function Auth() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center space-y-4">
-          <p className="font-bold text-foreground text-5xl font-serif">Bienvenida a</p>
           <img src={logoFull} alt="DecoControl" className="h-16 mx-auto" />
+          <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg text-center">
+            <p className="font-bold text-primary text-base mb-2">🔐 ¿Es tu primer acceso?</p>
+            <p className="text-sm text-foreground/80 mb-2">
+              Ingresa con el correo electrónico que utilizaste en la compra y usa tu <span className="font-semibold">número de teléfono registrado</span> como contraseña temporal. Ejemplo: 521234567890
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Luego podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
+            </p>
+          </div>
           
 
           
@@ -127,17 +135,6 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             {/* First access info for login */}
-            {isLogin &&
-            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg text-center">
-                <p className="font-bold text-primary text-base mb-2">🔐 ¿Es tu primer acceso?</p>
-                <p className="text-sm text-foreground/80 mb-2">
-                  Ingresa con el correo electrónico que utilizaste en la compra y usa tu <span className="font-semibold">número de teléfono registrado</span> como contraseña temporal.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Una vez dentro, podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
-                </p>
-              </div>
-            }
             {/* Warning message for registration */}
             {!isLogin &&
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
