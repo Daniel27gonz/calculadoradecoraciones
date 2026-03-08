@@ -133,38 +133,30 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
-  // Load indirect expenses from database
+  // Load indirect expenses from database (current month)
   const loadIndirectExpenses = useCallback(async () => {
     if (!user) {
       setIndirectExpensesMonthlyTotal(0);
       return;
     }
     try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+      const endDate = m === 12
+        ? `${y + 1}-01-01`
+        : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+
       const { data, error } = await supabase
         .from('indirect_expenses')
-        .select('monthly_amount, payment_date')
-        .eq('user_id', user.id);
+        .select('monthly_amount')
+        .eq('user_id', user.id)
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate);
+
       if (error) throw error;
-      const withDates = (data || []).filter(e => e.payment_date);
-      if (withDates.length === 0) {
-        setIndirectExpensesMonthlyTotal(0);
-        return;
-      }
-      let latestY = 0, latestM = 0;
-      withDates.forEach(e => {
-        const [y, m] = e.payment_date!.split('-');
-        const yr = parseInt(y), mo = parseInt(m);
-        if (yr > latestY || (yr === latestY && mo > latestM)) {
-          latestY = yr;
-          latestM = mo;
-        }
-      });
-      const total = withDates
-        .filter(e => {
-          const [y, m] = e.payment_date!.split('-');
-          return parseInt(y) === latestY && parseInt(m) === latestM;
-        })
-        .reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
+      const total = (data || []).reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
       setIndirectExpensesMonthlyTotal(total);
     } catch (err) {
       console.error('Error loading indirect expenses:', err);

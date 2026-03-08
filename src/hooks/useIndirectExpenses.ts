@@ -20,10 +20,20 @@ export function useIndirectExpenses() {
     }
 
     try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+      const endDate = m === 12
+        ? `${y + 1}-01-01`
+        : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+
       const { data, error } = await supabase
         .from('indirect_expenses')
         .select('monthly_amount, payment_date')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate);
 
       if (error) throw error;
       setExpenses(data || []);
@@ -39,28 +49,9 @@ export function useIndirectExpenses() {
     loadExpenses();
   }, [loadExpenses]);
 
-  // Calculate total from the latest month that has expenses
-  const getLatestMonthTotal = useCallback(() => {
-    const withDates = expenses.filter(e => e.payment_date);
-    if (withDates.length === 0) return 0;
-
-    let latestY = 0, latestM = 0;
-    withDates.forEach(e => {
-      const [y, m] = e.payment_date!.split('-');
-      const yr = parseInt(y), mo = parseInt(m);
-      if (yr > latestY || (yr === latestY && mo > latestM)) {
-        latestY = yr;
-        latestM = mo;
-      }
-    });
-
-    return withDates
-      .filter(e => {
-        const [y, m] = e.payment_date!.split('-');
-        return parseInt(y) === latestY && parseInt(m) === latestM;
-      })
-      .reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
+  const getCurrentMonthTotal = useCallback(() => {
+    return expenses.reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
   }, [expenses]);
 
-  return { expenses, loading, getLatestMonthTotal, reload: loadExpenses };
+  return { expenses, loading, getLatestMonthTotal: getCurrentMonthTotal, reload: loadExpenses };
 }
