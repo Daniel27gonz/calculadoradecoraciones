@@ -360,7 +360,29 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
           </span>
         </div>
 
-        {/* Button */}
+        {/* Eventos al mes */}
+        <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+          <p className="text-sm font-medium text-foreground">Eventos al mes</p>
+          <p className="text-xs text-muted-foreground">¿Cuántos eventos realizas en promedio al mes?</p>
+          <div className="flex items-center gap-3">
+            <NumericField
+              min={0}
+              step={1}
+              value={eventsPerMonth || ''}
+              onChange={(e) => handleEventsChange(Number(e.target.value) || 0)}
+              className="max-w-[100px]"
+              placeholder="0"
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">eventos/mes</span>
+          </div>
+          {eventsPerMonth > 0 && total > 0 && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border">
+              <span className="text-sm font-medium text-foreground">Costo por gastos indirectos por evento</span>
+              <span className="text-lg font-bold text-primary">
+                {currencySymbol}{formatCurrency(costPerEvent)}
+              </span>
+            </div>
+          )}
         <Button
           variant="default"
           className="w-full h-12 text-base font-medium"
