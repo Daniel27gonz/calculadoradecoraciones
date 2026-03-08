@@ -383,6 +383,9 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
               </span>
             </div>
           )}
+        </div>
+
+        {/* Button */}
         <Button
           variant="default"
           className="w-full h-12 text-base font-medium"
