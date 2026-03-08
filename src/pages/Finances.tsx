@@ -439,8 +439,15 @@ export default function Finances() {
 
         {/* Transactions List */}
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-3">
             <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
+            <TransactionFilters
+              transactions={monthTransactions}
+              filterType={filterType}
+              filterCategory={filterCategory}
+              onTypeChange={setFilterType}
+              onCategoryChange={setFilterCategory}
+            />
           </CardHeader>
           <CardContent>
             
