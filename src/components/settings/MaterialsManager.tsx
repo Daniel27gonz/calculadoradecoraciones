@@ -479,7 +479,7 @@ export function MaterialsManager() {
         amount: total,
         description: `Compra material: ${quickPurchaseMaterial.name}`,
         category: 'Materiales',
-        transaction_date: format(new Date(), 'yyyy-MM-dd'),
+        transaction_date: getDefaultDateForMonth(),
       });
       toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
       setQuickPurchaseDialogOpen(false);
