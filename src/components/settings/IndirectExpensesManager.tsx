@@ -137,6 +137,20 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     return filteredExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
   }, [filteredExpenses]);
 
+  const costPerEvent = useMemo(() => {
+    if (eventsPerMonth <= 0 || total <= 0) return 0;
+    return total / eventsPerMonth;
+  }, [total, eventsPerMonth]);
+
+  const handleEventsChange = async (value: number) => {
+    setEventsPerMonth(value);
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({ events_per_month: value })
+      .eq('user_id', user.id);
+  };
+
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
