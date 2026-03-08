@@ -33,6 +33,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eventsPerMonth, setEventsPerMonth] = useState<number>(0);
 
   // Month selector state
   const now = new Date();
