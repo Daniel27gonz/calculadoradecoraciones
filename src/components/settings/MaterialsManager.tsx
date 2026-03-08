@@ -404,7 +404,7 @@ export function MaterialsManager() {
       toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
       setPurchaseDialogOpen(false);
       setEditingPurchase(null);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
