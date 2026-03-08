@@ -582,7 +582,7 @@ export default function Finances() {
                         Total ({filteredTransactions.length} registros)
                       </td>
                       <td className="px-6 py-3 text-right font-bold">
-                        {currencySymbol}{(filteredIncome - filteredExpense) < 0 ? '-' : ''}{Math.abs(filteredIncome - filteredExpense).toFixed(2)}
+                        {balance < 0 ? '-' : ''}{currencySymbol}{Math.abs(balance).toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>
