@@ -381,13 +381,10 @@ export function MaterialsManager() {
       }).eq('id', editingPurchase.id);
       if (error) throw error;
 
-      // Update corresponding expense: delete old, insert new
-      const oldMatName = materialMap[editingPurchase.material_id] || 'Material';
+      // Update corresponding expense using reference_id
       await supabase.from('transactions').delete()
         .eq('user_id', user.id)
-        .eq('description', `Compra material: ${oldMatName}`)
-        .eq('amount', editingPurchase.total_paid)
-        .eq('transaction_date', editingPurchase.purchase_date);
+        .eq('reference_id', `purchase_${editingPurchase.id}`);
 
       const newMatName = materialMap[newPurchase.material_id] || 'Material';
       await supabase.from('transactions').insert({
@@ -397,6 +394,7 @@ export function MaterialsManager() {
         description: `Compra material: ${newMatName}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${editingPurchase.id}`,
       });
 
       toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
