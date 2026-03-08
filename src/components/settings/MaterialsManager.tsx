@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, CheckCircle2, Search, ClipboardList } from 'lucide-react';
+import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, CheckCircle2, Search, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const UNITS = [
   { value: 'pieza', label: 'Pieza' },
@@ -64,6 +66,13 @@ export function MaterialsManager() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Month selector state
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
 
   // New material form
   const [newMaterial, setNewMaterial] = useState({ name: '', category: '', purchase_unit: '', stock_minimum: 0 });
@@ -174,6 +183,27 @@ export function MaterialsManager() {
     return materials.filter(m => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q));
   }, [materials, searchQuery]);
 
+  // Filter purchases by selected month/year
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter(p => {
+      const d = new Date(p.purchase_date + 'T12:00:00');
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [purchases, selectedMonth, selectedYear]);
+
+  // Helper: get default date for selected month
+  const getDefaultDateForMonth = () => {
+    const today = new Date();
+    if (today.getMonth() === selectedMonth && today.getFullYear() === selectedYear) {
+      return format(today, 'yyyy-MM-dd');
+    }
+    return format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
+  };
+
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+
+  const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
   // ---- Material CRUD ----
   const handleAddMaterial = async () => {
     if (!user || !newMaterial.name.trim()) {
@@ -276,7 +306,7 @@ export function MaterialsManager() {
 
       toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
       setPurchaseDialogOpen(false);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -374,7 +404,7 @@ export function MaterialsManager() {
       toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
       setPurchaseDialogOpen(false);
       setEditingPurchase(null);
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -436,7 +466,7 @@ export function MaterialsManager() {
       await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: quickPurchaseMaterial.id,
-        purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        purchase_date: getDefaultDateForMonth(),
         quantity_presentations: qty,
         units_added: qty,
         total_paid: total,
@@ -449,7 +479,7 @@ export function MaterialsManager() {
         amount: total,
         description: `Compra material: ${quickPurchaseMaterial.name}`,
         category: 'Materiales',
-        transaction_date: format(new Date(), 'yyyy-MM-dd'),
+        transaction_date: getDefaultDateForMonth(),
       });
       toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
       setQuickPurchaseDialogOpen(false);
@@ -532,7 +562,7 @@ export function MaterialsManager() {
       setIsCreatingNewMaterial(false);
       setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' });
       setPurchaseMaterialSearch('');
-      setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -613,13 +643,62 @@ export function MaterialsManager() {
 
       {/* ===== TAB COMPRAS ===== */}
       <TabsContent value="purchases" className="space-y-4 mt-4">
-        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: format(new Date(), 'yyyy-MM-dd'), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
+        {/* Month selector */}
+        <div className="flex items-center justify-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+            if (selectedMonth === 0) { setSelectedMonth(11); setSelectedYear(y => y - 1); }
+            else setSelectedMonth(m => m - 1);
+          }}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="min-w-[180px] capitalize font-semibold">
+                {selectedMonthLabel}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3 bg-background" align="center">
+              <div className="flex items-center justify-between mb-3">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="font-semibold text-sm">{pickerYear}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {MONTH_NAMES.map((name, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                    className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                      idx === selectedMonth && pickerYear === selectedYear
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-accent text-foreground'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+            if (selectedMonth === 11) { setSelectedMonth(0); setSelectedYear(y => y + 1); }
+            else setSelectedMonth(m => m + 1);
+          }}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
           <Plus className="w-4 h-4 mr-1" /> Registrar Compra
         </Button>
 
-        {purchases.length > 0 ? (
+        {filteredPurchases.length > 0 ? (
           <div className="space-y-2">
-            {purchases.map(p => (
+            {filteredPurchases.map(p => (
               <Card key={p.id} className="overflow-hidden">
                 <div className="flex items-center p-3 gap-3">
                   <div className="flex-1 min-w-0">
@@ -649,7 +728,7 @@ export function MaterialsManager() {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No hay compras registradas</p>
+            <p className="text-sm">No hay compras en {selectedMonthLabel}</p>
           </div>
         )}
 
