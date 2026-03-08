@@ -250,7 +250,7 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  const totalIncome = filteredIncome;
+  const totalIncome = (filterType === 'all' && filterCategory === 'all') ? realTotalIncome : filteredIncome;
   const totalExpenses = (filterType === 'all' && filterCategory === 'all') ? realTotalExpenses : filteredExpense;
   const balance = totalIncome - totalExpenses;
 
