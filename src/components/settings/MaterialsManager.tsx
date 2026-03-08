@@ -67,6 +67,13 @@ export function MaterialsManager() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Month selector state
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
+
   // New material form
   const [newMaterial, setNewMaterial] = useState({ name: '', category: '', purchase_unit: '', stock_minimum: 0 });
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
