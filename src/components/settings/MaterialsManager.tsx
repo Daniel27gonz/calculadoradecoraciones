@@ -274,7 +274,7 @@ export function MaterialsManager() {
     }
     try {
       // Insert purchase
-      const { error: pErr } = await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: newPurchase.material_id,
         purchase_date: newPurchase.purchase_date,
@@ -282,7 +282,7 @@ export function MaterialsManager() {
         units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
-      });
+      }).select('id').single();
       if (pErr) throw pErr;
 
       // Update stock_current on user_materials (increment)
@@ -302,6 +302,7 @@ export function MaterialsManager() {
         description: `Compra material: ${matName}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
       });
 
       toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
@@ -326,12 +327,9 @@ export function MaterialsManager() {
       }
 
       // Delete corresponding expense from finances
-      const matName = mat?.name || materialMap[purchase.material_id] || 'Material';
       await supabase.from('transactions').delete()
         .eq('user_id', user!.id)
-        .eq('description', `Compra material: ${matName}`)
-        .eq('amount', purchase.total_paid)
-        .eq('transaction_date', purchase.purchase_date);
+        .eq('reference_id', `purchase_${purchase.id}`);
 
       toast({ title: 'Compra eliminada', description: 'Gasto eliminado de finanzas' });
       loadAll();
@@ -383,13 +381,10 @@ export function MaterialsManager() {
       }).eq('id', editingPurchase.id);
       if (error) throw error;
 
-      // Update corresponding expense: delete old, insert new
-      const oldMatName = materialMap[editingPurchase.material_id] || 'Material';
+      // Update corresponding expense using reference_id
       await supabase.from('transactions').delete()
         .eq('user_id', user.id)
-        .eq('description', `Compra material: ${oldMatName}`)
-        .eq('amount', editingPurchase.total_paid)
-        .eq('transaction_date', editingPurchase.purchase_date);
+        .eq('reference_id', `purchase_${editingPurchase.id}`);
 
       const newMatName = materialMap[newPurchase.material_id] || 'Material';
       await supabase.from('transactions').insert({
@@ -399,6 +394,7 @@ export function MaterialsManager() {
         description: `Compra material: ${newMatName}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${editingPurchase.id}`,
       });
 
       toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
@@ -463,14 +459,15 @@ export function MaterialsManager() {
       return;
     }
     try {
-      await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: quickPurchaseMaterial.id,
         purchase_date: getDefaultDateForMonth(),
         quantity_presentations: qty,
         units_added: qty,
         total_paid: total,
-      });
+      }).select('id').single();
+      if (pErr) throw pErr;
       const newStock = quickPurchaseMaterial.total_purchased + qty;
       await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', quickPurchaseMaterial.id);
       await supabase.from('transactions').insert({
@@ -480,6 +477,7 @@ export function MaterialsManager() {
         description: `Compra material: ${quickPurchaseMaterial.name}`,
         category: 'Materiales',
         transaction_date: getDefaultDateForMonth(),
+        reference_id: `purchase_${purchaseData.id}`,
       });
       toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
       setQuickPurchaseDialogOpen(false);
@@ -537,7 +535,7 @@ export function MaterialsManager() {
       }
 
       // Register purchase
-      await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: purchaseErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: materialId,
         purchase_date: newPurchase.purchase_date,
@@ -545,7 +543,8 @@ export function MaterialsManager() {
         units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
-      });
+      }).select('id').single();
+      if (purchaseErr) throw purchaseErr;
 
       // Register expense
       await supabase.from('transactions').insert({
@@ -555,6 +554,7 @@ export function MaterialsManager() {
         description: `Compra material: ${name}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
       });
 
       toast({ title: isNew ? 'Material creado y compra registrada ✅' : 'Compra registrada ✅', description: `${name} · ${totalUnits} unidades · Gasto registrado` });

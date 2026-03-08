@@ -214,11 +214,15 @@ export default function Orders() {
     await loadQuotes();
   };
 
-  // Cancel order (removes stock deductions automatically via saveQuote)
+  // Cancel order (removes stock deductions automatically via saveQuote, and cleans payments + transactions)
   const cancelOrder = async (quote: Quote) => {
     const updated = { ...quote, status: 'cancelled' as const };
     await saveQuote(updated);
+    // Remove payments and related transactions
+    await supabase.from('quote_payments').delete().eq('quote_id', quote.id).eq('user_id', user!.id);
+    await supabase.from('transactions').delete().eq('reference_id', quote.id).eq('user_id', user!.id);
     toast({ title: '❌ Pedido cancelado', description: `${quote.clientName} ha sido cancelado. Los materiales fueron devueltos al inventario.` });
+    await loadPayments();
     await loadQuotes();
   };
 
