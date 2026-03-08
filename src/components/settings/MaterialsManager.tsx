@@ -274,7 +274,7 @@ export function MaterialsManager() {
     }
     try {
       // Insert purchase
-      const { error: pErr } = await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: newPurchase.material_id,
         purchase_date: newPurchase.purchase_date,
@@ -282,7 +282,7 @@ export function MaterialsManager() {
         units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
-      });
+      }).select('id').single();
       if (pErr) throw pErr;
 
       // Update stock_current on user_materials (increment)
@@ -302,6 +302,7 @@ export function MaterialsManager() {
         description: `Compra material: ${matName}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
       });
 
       toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
