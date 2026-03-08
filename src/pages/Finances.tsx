@@ -240,17 +240,8 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  const selectedMonthTransactions = transactions.filter(t => {
-    const [y, m] = t.transaction_date.split('-');
-    return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
-  });
-
-  const totalIncome = selectedMonthTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  
-  const totalExpenses = realTotalExpenses;
-  
+  const totalIncome = filteredIncome;
+  const totalExpenses = (filterType === 'all' && filterCategory === 'all') ? realTotalExpenses : filteredExpense;
   const balance = totalIncome - totalExpenses;
 
   const handlePrevMonth = () => {
