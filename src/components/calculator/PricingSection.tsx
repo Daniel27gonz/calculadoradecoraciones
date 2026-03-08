@@ -129,18 +129,6 @@ export function PricingSection({
               highlighted 
             />
           </div>
-
-          {/* Total General */}
-          <div className="p-3 sm:p-5 bg-gradient-to-r from-primary via-primary to-primary/90">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
-                Costo Total del evento
-              </span>
-              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
-                {formatCurrency(summary.totalCost)}
-              </span>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -170,35 +158,69 @@ export function PricingSection({
             <span className="text-sm text-muted-foreground whitespace-nowrap">Personalizado:</span>
             <NumericField min={0} max={200} value={marginPercentage ?? ''} onChange={e => onMarginChange(e.target.value === '' ? 0 : Number(e.target.value))} suffix="%" className="w-24 h-10" />
           </div>
-
-          <div className="h-px bg-border" />
-
-          {/* Final price */}
-          <div className="p-3 sm:p-5 rounded-xl gradient-primary">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-primary-foreground font-bold text-sm sm:text-lg shrink-0">
-                Precio sugerido al cliente
-              </span>
-              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground tabular-nums truncate">
-                {formatCurrency(summary.finalPrice)}
-              </span>
-            </div>
-          </div>
-
-          {/* Net profit box */}
-          <div className="p-3 sm:p-5 rounded-xl bg-emerald-600 dark:bg-emerald-700 mt-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-white font-bold text-sm sm:text-lg shrink-0">
-                Lo que te queda a ti
-              </span>
-              <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-white tabular-nums truncate">
-                {formatCurrency(summary.netProfit)}
-              </span>
-            </div>
-            <p className="text-emerald-100 text-xs sm:text-sm mt-1 text-center">Ganancia del evento</p>
-          </div>
         </CardContent>
       </Card>
+
+      {/* Results: 3 blocks */}
+      <div className="space-y-3">
+        {/* 1. Costo por evento - neutral */}
+        <Card className="shadow-card border border-border bg-muted/40">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">🧾</span>
+                <span className="font-semibold text-sm sm:text-base text-muted-foreground">
+                  Costo por evento
+                </span>
+              </div>
+              <span className="text-lg sm:text-2xl font-bold tabular-nums text-foreground">
+                {formatCurrency(summary.totalCost)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Precio sugerido al cliente - primary highlight */}
+        <Card className="shadow-elevated border-0 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="p-4 sm:p-6 bg-gradient-to-r from-primary via-primary to-primary/90">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl">💎</span>
+                  <span className="text-primary-foreground font-bold text-sm sm:text-lg">
+                    Precio sugerido al cliente
+                  </span>
+                </div>
+                <span className="text-2xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground tabular-nums truncate">
+                  {formatCurrency(summary.finalPrice)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Tu ganancia - green */}
+        <Card className="shadow-card border-0 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="p-4 sm:p-5 bg-emerald-600 dark:bg-emerald-700">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl">🤑</span>
+                  <span className="text-white font-bold text-sm sm:text-lg">
+                    Tu ganancia
+                  </span>
+                </div>
+                <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-white tabular-nums truncate">
+                  {formatCurrency(summary.netProfit)}
+                </span>
+              </div>
+              <p className="text-emerald-100 text-xs sm:text-sm mt-1 text-right">
+                {summary.profitPercentage.toFixed(0)}% de margen · {formatCurrency(summary.profitPerHour)}/hora
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Profit Analysis */}
       <Card className={cn("shadow-card border-2", getProfitBg(summary.profitPercentage))}>
@@ -206,7 +228,7 @@ export function PricingSection({
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="text-xl sm:text-2xl">📈</span>
-              <span>Tu Ganancia</span>
+              <span>Análisis de Rentabilidad</span>
             </span>
             <span className={cn("text-sm font-medium px-3 py-1 rounded-full bg-background/50", getProfitColor(summary.profitPercentage))}>
               {getProfitLabel(summary.profitPercentage)}
