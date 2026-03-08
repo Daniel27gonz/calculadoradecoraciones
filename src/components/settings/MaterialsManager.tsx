@@ -466,7 +466,7 @@ export function MaterialsManager() {
       await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: quickPurchaseMaterial.id,
-        purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        purchase_date: getDefaultDateForMonth(),
         quantity_presentations: qty,
         units_added: qty,
         total_paid: total,
