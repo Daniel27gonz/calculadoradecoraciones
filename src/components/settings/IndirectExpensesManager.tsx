@@ -111,6 +111,15 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   useEffect(() => {
     if (user) {
       loadExpenses();
+      // Load events_per_month from profile
+      supabase
+        .from('profiles')
+        .select('events_per_month')
+        .eq('user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.events_per_month) setEventsPerMonth(data.events_per_month);
+        });
     }
   }, [user, loadExpenses]);
 
