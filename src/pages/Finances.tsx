@@ -443,18 +443,45 @@ export default function Finances() {
 
         {/* Transactions List */}
         <Card>
-          <CardHeader className="space-y-3">
-            <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
-            <TransactionFilters
-              transactions={monthTransactions}
-              filterType={filterType}
-              filterCategory={filterCategory}
-              onTypeChange={setFilterType}
-              onCategoryChange={setFilterCategory}
-            />
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold">Historial de Transacciones</CardTitle>
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium capitalize">{selectedMonthLabel}</span>
+              </div>
+            </div>
+
+            {/* Inline Summary Cards */}
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
+                <p className="text-xs text-green-600 font-medium">Ingresos</p>
+                <p className="text-base font-bold text-green-600">{currencySymbol}{filteredIncome.toFixed(2)}</p>
+              </div>
+              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
+                <p className="text-xs text-red-600 font-medium">Gastos</p>
+                <p className="text-base font-bold text-red-600">{currencySymbol}{filteredExpense.toFixed(2)}</p>
+              </div>
+              <div className={`rounded-lg px-3 py-2.5 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <p className={`text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
+                <p className={`text-base font-bold ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="mt-3">
+              <TransactionFilters
+                transactions={monthTransactions}
+                filterType={filterType}
+                filterCategory={filterCategory}
+                onTypeChange={setFilterType}
+                onCategoryChange={setFilterCategory}
+              />
+            </div>
           </CardHeader>
-          <CardContent>
-            
+          <CardContent className="px-0 pb-0">
             {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...
@@ -462,67 +489,63 @@ export default function Finances() {
             ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 {transactions.length === 0 
-                  ? "No hay transacciones registradas. ¡Agrega tu primera transacción!"
-                  : "No hay transacciones que coincidan con los filtros seleccionados."
+                  ? "No hay transacciones registradas."
+                  : "No hay transacciones que coincidan con los filtros."
                 }
               </div>
             ) : (
-              <div className="space-y-3">
-                {filteredTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        transaction.type === 'income' 
-                          ? 'bg-green-100' 
-                          : 'bg-red-100'
-                      }`}>
-                        {transaction.type === 'income' ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}
-                          {transaction.category && ` • ${transaction.category}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-semibold ${
-                        transaction.type === 'income' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {transaction.type === 'income' ? '+' : '-'}
-                        {currencySymbol}{Number(transaction.amount).toFixed(2)}
-                      </span>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(transaction)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(transaction.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left font-medium text-muted-foreground px-6 py-2.5">Fecha</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Tipo</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Categoría</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Descripción</th>
+                      <th className="text-right font-medium text-muted-foreground px-6 py-2.5">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
+                        <td className="px-6 py-3 whitespace-nowrap">
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yyyy")}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                            transaction.type === 'income'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {transaction.type === 'income' ? (
+                              <TrendingUp className="w-3 h-3" />
+                            ) : (
+                              <TrendingDown className="w-3 h-3" />
+                            )}
+                            {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">{transaction.category || '—'}</td>
+                        <td className="px-3 py-3">{transaction.description}</td>
+                        <td className={`px-6 py-3 text-right font-semibold whitespace-nowrap ${
+                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'income' ? '' : '-'}{currencySymbol}{Number(transaction.amount).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-border">
+                      <td colSpan={4} className="px-6 py-3 font-medium text-muted-foreground">
+                        Total ({filteredTransactions.length} registros)
+                      </td>
+                      <td className="px-6 py-3 text-right font-bold">
+                        {currencySymbol}{(filteredIncome - filteredExpense) < 0 ? '-' : ''}{Math.abs(filteredIncome - filteredExpense).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             )}
           </CardContent>
