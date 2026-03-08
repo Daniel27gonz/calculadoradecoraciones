@@ -214,8 +214,6 @@ export function PricingSection({
             </div>
           </CardContent>
         </Card>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Profit Analysis - warm orange */}
