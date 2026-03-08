@@ -39,9 +39,18 @@ export function useIndirectExpenses() {
     loadExpenses();
   }, [loadExpenses]);
 
-  // Calculate total from the latest month that has expenses
+  // Calculate total from the latest month that has expenses, excluding current month
   const getLatestMonthTotal = useCallback(() => {
-    const withDates = expenses.filter(e => e.payment_date);
+    const now = new Date();
+    const currentY = now.getFullYear();
+    const currentM = now.getMonth() + 1;
+
+    const withDates = expenses.filter(e => {
+      if (!e.payment_date) return false;
+      const [y, m] = e.payment_date.split('-');
+      return !(parseInt(y) === currentY && parseInt(m) === currentM);
+    });
+
     if (withDates.length === 0) return 0;
 
     let latestY = 0, latestM = 0;
