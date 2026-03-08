@@ -590,9 +590,12 @@ export function MaterialsManager() {
       {/* Month selector with calendar icon */}
       <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-start gap-2 capitalize font-semibold h-11">
-            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-            {selectedMonthLabel}
+          <Button variant="outline" className="w-full justify-between capitalize font-semibold h-11">
+            <span className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              {selectedMonthLabel}
+            </span>
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3 bg-background" align="start">
