@@ -459,14 +459,15 @@ export function MaterialsManager() {
       return;
     }
     try {
-      await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: quickPurchaseMaterial.id,
         purchase_date: getDefaultDateForMonth(),
         quantity_presentations: qty,
         units_added: qty,
         total_paid: total,
-      });
+      }).select('id').single();
+      if (pErr) throw pErr;
       const newStock = quickPurchaseMaterial.total_purchased + qty;
       await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', quickPurchaseMaterial.id);
       await supabase.from('transactions').insert({
@@ -476,6 +477,7 @@ export function MaterialsManager() {
         description: `Compra material: ${quickPurchaseMaterial.name}`,
         category: 'Materiales',
         transaction_date: getDefaultDateForMonth(),
+        reference_id: `purchase_${purchaseData.id}`,
       });
       toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
       setQuickPurchaseDialogOpen(false);
