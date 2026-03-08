@@ -355,7 +355,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
         {/* Total del mes */}
         <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
           <span className="text-sm font-medium text-foreground">Total gastos del mes</span>
-          <span className="text-lg font-bold text-primary">
+          <span className="text-sm font-bold text-primary">
             {currencySymbol}{formatCurrency(total)}
           </span>
         </div>
@@ -373,7 +373,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
               className="max-w-[100px]"
               placeholder="0"
             />
-            <span className="text-sm text-muted-foreground whitespace-nowrap">eventos/mes</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">eventos/mes</span>
           </div>
           {eventsPerMonth > 0 && total > 0 && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border">
