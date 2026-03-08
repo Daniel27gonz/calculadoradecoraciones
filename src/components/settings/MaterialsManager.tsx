@@ -986,5 +986,6 @@ export function MaterialsManager() {
         </Card>
       </TabsContent>
     </Tabs>
+    </div>
   );
 }
