@@ -133,7 +133,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
-  // Load indirect expenses from database (latest month with data)
+  // Load indirect expenses from database (latest month with data, excluding current month)
   const loadIndirectExpenses = useCallback(async () => {
     if (!user) {
       setIndirectExpensesMonthlyTotal(0);
@@ -145,7 +145,18 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         .select('monthly_amount, payment_date')
         .eq('user_id', user.id);
       if (error) throw error;
-      const withDates = (data || []).filter(e => e.payment_date);
+
+      const now = new Date();
+      const currentY = now.getFullYear();
+      const currentM = now.getMonth() + 1;
+
+      // Exclude current month
+      const withDates = (data || []).filter(e => {
+        if (!e.payment_date) return false;
+        const [y, m] = e.payment_date.split('-');
+        return !(parseInt(y) === currentY && parseInt(m) === currentM);
+      });
+
       if (withDates.length === 0) {
         setIndirectExpensesMonthlyTotal(0);
         return;
