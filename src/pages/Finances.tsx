@@ -57,6 +57,7 @@ export default function Finances() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [realTotalExpenses, setRealTotalExpenses] = useState(0);
+  const [realTotalIncome, setRealTotalIncome] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
   
@@ -114,7 +115,7 @@ export default function Finances() {
         ? `${selectedYear + 1}-01-01`
         : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
-      const [expensesRes, purchasesRes] = await Promise.all([
+      const [expensesRes, purchasesRes, paymentsRes] = await Promise.all([
         supabase
           .from('indirect_expenses')
           .select('monthly_amount')
@@ -127,13 +128,22 @@ export default function Finances() {
           .eq('user_id', user?.id)
           .gte('purchase_date', startDate)
           .lt('purchase_date', endDate),
+        supabase
+          .from('quote_payments')
+          .select('amount')
+          .eq('user_id', user?.id)
+          .gte('payment_date', startDate)
+          .lt('payment_date', endDate),
       ]);
 
       const indirectTotal = (expensesRes.data || []).reduce((sum, e) => sum + Number(e.monthly_amount), 0);
       const purchasesTotal = (purchasesRes.data || []).reduce((sum, p) => sum + Number(p.total_paid), 0);
+      const incomeTotal = (paymentsRes.data || []).reduce((sum, p) => sum + Number(p.amount), 0);
+      
       setRealTotalExpenses(indirectTotal + purchasesTotal);
+      setRealTotalIncome(incomeTotal);
     } catch (error) {
-      console.error('Error fetching real expenses:', error);
+      console.error('Error fetching real data:', error);
     }
   };
 
@@ -240,7 +250,7 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  const totalIncome = filteredIncome;
+  const totalIncome = (filterType === 'all' && filterCategory === 'all') ? realTotalIncome : filteredIncome;
   const totalExpenses = (filterType === 'all' && filterCategory === 'all') ? realTotalExpenses : filteredExpense;
   const balance = totalIncome - totalExpenses;
 
