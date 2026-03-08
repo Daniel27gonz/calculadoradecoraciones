@@ -361,26 +361,27 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
         </div>
 
         {/* Eventos al mes */}
-        <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-          <p className="text-sm font-medium text-foreground">Eventos al mes</p>
-          <p className="text-xs text-muted-foreground">¿Cuántos eventos realizas en promedio al mes?</p>
-          <div className="flex items-center gap-3">
-            <NumericField
-              min={0}
-              step={1}
-              value={eventsPerMonth || ''}
-              onChange={(e) => handleEventsChange(Number(e.target.value) || 0)}
-              className="max-w-[100px]"
-              placeholder="0"
-            />
-            <span className="text-xs text-muted-foreground whitespace-nowrap">eventos/mes</span>
+        <div className="p-3 rounded-xl border border-border bg-card space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-foreground">Eventos al mes</span>
+              <span className="text-[11px] text-muted-foreground">¿Cuántos eventos al mes?</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <NumericField
+                min={0}
+                step={1}
+                value={eventsPerMonth || ''}
+                onChange={(e) => handleEventsChange(Number(e.target.value) || 0)}
+                className="w-16 h-8 text-center text-sm"
+                placeholder="0"
+              />
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">ev/mes</span>
+            </div>
           </div>
           {eventsPerMonth > 0 && total > 0 && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border">
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Costo por gasto</span>
-                <span className="text-[11px] text-muted-foreground/70">Total ÷ Eventos</span>
-              </div>
+            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-accent/50 border border-border">
+              <span className="text-xs text-muted-foreground">Costo por evento</span>
               <span className="text-sm font-bold text-primary">
                 {currencySymbol}{formatCurrency(costPerEvent)}
               </span>
