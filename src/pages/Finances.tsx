@@ -250,8 +250,8 @@ export default function Finances() {
     handleDialogClose();
   };
 
-  const totalIncome = (filterType === 'all' && filterCategory === 'all') ? realTotalIncome : filteredIncome;
-  const totalExpenses = (filterType === 'all' && filterCategory === 'all') ? realTotalExpenses : filteredExpense;
+  const totalIncome = realTotalIncome;
+  const totalExpenses = realTotalExpenses;
   const balance = totalIncome - totalExpenses;
 
   const handlePrevMonth = () => {
