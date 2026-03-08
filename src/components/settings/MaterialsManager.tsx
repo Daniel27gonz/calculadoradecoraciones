@@ -183,6 +183,27 @@ export function MaterialsManager() {
     return materials.filter(m => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q));
   }, [materials, searchQuery]);
 
+  // Filter purchases by selected month/year
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter(p => {
+      const d = new Date(p.purchase_date + 'T12:00:00');
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [purchases, selectedMonth, selectedYear]);
+
+  // Helper: get default date for selected month
+  const getDefaultDateForMonth = () => {
+    const today = new Date();
+    if (today.getMonth() === selectedMonth && today.getFullYear() === selectedYear) {
+      return format(today, 'yyyy-MM-dd');
+    }
+    return format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
+  };
+
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+
+  const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
   // ---- Material CRUD ----
   const handleAddMaterial = async () => {
     if (!user || !newMaterial.name.trim()) {
