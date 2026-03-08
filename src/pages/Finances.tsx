@@ -72,13 +72,13 @@ export default function Finances() {
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  // Transactions filtered by selected month
+  // Transactions filtered by transaction history's independent month
   const monthTransactions = useMemo(() => {
     return transactions.filter(t => {
       const [y, m] = t.transaction_date.split('-');
-      return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
+      return parseInt(y) === txYear && parseInt(m) === txMonth + 1;
     });
-  }, [transactions, selectedMonth, selectedYear]);
+  }, [transactions, txMonth, txYear]);
 
   // Further filter by type and category
   const filteredTransactions = useMemo(() => {
@@ -261,8 +261,6 @@ export default function Finances() {
   const balance = totalIncome - totalExpenses;
 
   const handlePrevMonth = () => {
-    setFilterType('all');
-    setFilterCategory('all');
     if (selectedMonth === 0) {
       setSelectedMonth(11);
       setSelectedYear(selectedYear - 1);
@@ -273,8 +271,6 @@ export default function Finances() {
   };
 
   const handleNextMonth = () => {
-    setFilterType('all');
-    setFilterCategory('all');
     if (selectedMonth === 11) {
       setSelectedMonth(0);
       setSelectedYear(selectedYear + 1);
@@ -285,6 +281,7 @@ export default function Finances() {
   };
 
   const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+  const txMonthLabel = format(new Date(txYear, txMonth, 1), "MMMM yyyy", { locale: es });
 
   if (authLoading) {
     return (
