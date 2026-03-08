@@ -186,17 +186,12 @@ export function PricingSection({
         <Card className="shadow-elevated border-0 overflow-hidden">
           <CardContent className="p-0">
             <div className="p-4 sm:p-6" style={{ background: 'linear-gradient(135deg, #E0527D, #F38DA8)' }}>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl sm:text-2xl">💎</span>
-                  <span className="text-white font-bold text-sm sm:text-lg">
-                    Precio sugerido al cliente
-                  </span>
-                </div>
-                <span className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tabular-nums truncate">
-                  {formatCurrency(summary.finalPrice)}
-                </span>
-              </div>
+              <p className="text-white/90 font-semibold text-xs sm:text-sm mb-1">
+                Precio sugerido al cliente
+              </p>
+              <p className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tabular-nums truncate">
+                {formatCurrency(summary.finalPrice)}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -205,21 +200,20 @@ export function PricingSection({
         <Card className="shadow-card border-0 overflow-hidden">
           <CardContent className="p-0">
             <div className="p-4 sm:p-5" style={{ backgroundColor: '#0FA968' }}>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl sm:text-2xl">🤑</span>
-                  <span className="text-white font-bold text-sm sm:text-lg">
-                    Tu ganancia
-                  </span>
-                </div>
+              <p className="text-white/90 font-semibold text-xs sm:text-sm mb-1">
+                Tu ganancia
+              </p>
+              <div className="flex items-baseline justify-between gap-2">
                 <span className="text-xl sm:text-3xl lg:text-4xl font-bold text-white tabular-nums truncate">
                   {formatCurrency(summary.netProfit)}
                 </span>
+                <span className="text-white/70 text-[10px] sm:text-xs shrink-0">
+                  {summary.profitPercentage.toFixed(0)}% · {formatCurrency(summary.profitPerHour)}/hr
+                </span>
               </div>
-              <p className="text-white/80 text-xs sm:text-sm mt-1 text-right">
-                {summary.profitPercentage.toFixed(0)}% de margen · {formatCurrency(summary.profitPerHour)}/hora
-              </p>
             </div>
+          </CardContent>
+        </Card>
           </CardContent>
         </Card>
       </div>
