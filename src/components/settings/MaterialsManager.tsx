@@ -689,6 +689,14 @@ export function MaterialsManager() {
 
       {/* ===== TAB COMPRAS ===== */}
       <TabsContent value="purchases" className="space-y-4 mt-4">
+        {/* Total del mes */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
+          <span className="text-sm font-medium text-foreground">Total compras del mes</span>
+          <span className="text-lg font-bold text-primary">
+            {fmt(filteredPurchases.reduce((sum, p) => sum + p.total_paid, 0))}
+          </span>
+        </div>
+
         <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
           <Plus className="w-4 h-4 mr-1" /> Registrar Compra
         </Button>
