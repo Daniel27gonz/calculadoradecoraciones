@@ -535,7 +535,7 @@ export function MaterialsManager() {
       }
 
       // Register purchase
-      await supabase.from('material_purchases').insert({
+      const { data: purchaseData, error: purchaseErr } = await supabase.from('material_purchases').insert({
         user_id: user.id,
         material_id: materialId,
         purchase_date: newPurchase.purchase_date,
@@ -543,7 +543,8 @@ export function MaterialsManager() {
         units_added: totalUnits,
         total_paid: paid,
         provider: newPurchase.provider.trim() || null,
-      });
+      }).select('id').single();
+      if (purchaseErr) throw purchaseErr;
 
       // Register expense
       await supabase.from('transactions').insert({
@@ -553,6 +554,7 @@ export function MaterialsManager() {
         description: `Compra material: ${name}`,
         category: 'Materiales',
         transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
       });
 
       toast({ title: isNew ? 'Material creado y compra registrada ✅' : 'Compra registrada ✅', description: `${name} · ${totalUnits} unidades · Gasto registrado` });
