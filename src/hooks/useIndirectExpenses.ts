@@ -20,10 +20,20 @@ export function useIndirectExpenses() {
     }
 
     try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+      const endDate = m === 12
+        ? `${y + 1}-01-01`
+        : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+
       const { data, error } = await supabase
         .from('indirect_expenses')
         .select('monthly_amount, payment_date')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('payment_date', startDate)
+        .lt('payment_date', endDate);
 
       if (error) throw error;
       setExpenses(data || []);
