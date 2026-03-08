@@ -68,13 +68,8 @@ export default function Finances() {
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
   
-  const [filters, setFilters] = useState<Filters>({
-    day: '',
-    month: '',
-    year: '',
-    category: '',
-    type: '',
-  });
+  const [filterType, setFilterType] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
