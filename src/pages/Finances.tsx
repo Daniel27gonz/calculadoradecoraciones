@@ -446,10 +446,41 @@ export default function Finances() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-bold">Historial de Transacciones</CardTitle>
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium capitalize">{selectedMonthLabel}</span>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer">
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium capitalize">{selectedMonthLabel}</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3" align="end">
+                  <div className="flex items-center justify-between mb-3">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="font-semibold text-sm">{pickerYear}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {MONTH_NAMES.map((name, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setFilterType('all'); setFilterCategory('all'); }}
+                        className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                          idx === selectedMonth && pickerYear === selectedYear
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-accent text-foreground'
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Inline Summary Cards */}
