@@ -57,6 +57,7 @@ export default function Finances() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [realTotalExpenses, setRealTotalExpenses] = useState(0);
+  const [realTotalIncome, setRealTotalIncome] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
   
