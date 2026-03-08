@@ -33,6 +33,7 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eventsPerMonth, setEventsPerMonth] = useState<number>(0);
 
   // Month selector state
   const now = new Date();
@@ -110,6 +111,15 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   useEffect(() => {
     if (user) {
       loadExpenses();
+      // Load events_per_month from profile
+      supabase
+        .from('profiles')
+        .select('events_per_month')
+        .eq('user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.events_per_month) setEventsPerMonth(data.events_per_month);
+        });
     }
   }, [user, loadExpenses]);
 
@@ -126,6 +136,20 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const total = useMemo(() => {
     return filteredExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
   }, [filteredExpenses]);
+
+  const costPerEvent = useMemo(() => {
+    if (eventsPerMonth <= 0 || total <= 0) return 0;
+    return total / eventsPerMonth;
+  }, [total, eventsPerMonth]);
+
+  const handleEventsChange = async (value: number) => {
+    setEventsPerMonth(value);
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({ events_per_month: value })
+      .eq('user_id', user.id);
+  };
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -334,6 +358,31 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
           <span className="text-lg font-bold text-primary">
             {currencySymbol}{formatCurrency(total)}
           </span>
+        </div>
+
+        {/* Eventos al mes */}
+        <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+          <p className="text-sm font-medium text-foreground">Eventos al mes</p>
+          <p className="text-xs text-muted-foreground">¿Cuántos eventos realizas en promedio al mes?</p>
+          <div className="flex items-center gap-3">
+            <NumericField
+              min={0}
+              step={1}
+              value={eventsPerMonth || ''}
+              onChange={(e) => handleEventsChange(Number(e.target.value) || 0)}
+              className="max-w-[100px]"
+              placeholder="0"
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">eventos/mes</span>
+          </div>
+          {eventsPerMonth > 0 && total > 0 && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border">
+              <span className="text-sm font-medium text-foreground">Costo por gastos indirectos por evento</span>
+              <span className="text-lg font-bold text-primary">
+                {currencySymbol}{formatCurrency(costPerEvent)}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Button */}
