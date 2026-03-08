@@ -60,6 +60,12 @@ export default function Finances() {
   const [realTotalIncome, setRealTotalIncome] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
+
+  // Independent month/year for transaction history
+  const [txMonth, setTxMonth] = useState(new Date().getMonth());
+  const [txYear, setTxYear] = useState(new Date().getFullYear());
+  const [txPickerOpen, setTxPickerOpen] = useState(false);
+  const [txPickerYear, setTxPickerYear] = useState(txYear);
   
   const [filterType, setFilterType] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
