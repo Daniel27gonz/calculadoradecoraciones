@@ -628,15 +628,13 @@ export function MaterialsManager() {
 
     <Tabs defaultValue="purchases" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm">
-          <ShoppingCart className="w-4 h-4" />
-          <span className="hidden sm:inline">Compras</span>
-          <span className="sm:hidden">Comp.</span>
+        <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm justify-start">
+          <ShoppingCart className="w-4 h-4 shrink-0" />
+          Compras
         </TabsTrigger>
-        <TabsTrigger value="stock" className="gap-1 text-xs sm:text-sm">
-          <ClipboardList className="w-4 h-4" />
-          <span className="hidden sm:inline">Existencia</span>
-          <span className="sm:hidden">Stock</span>
+        <TabsTrigger value="stock" className="gap-1 text-xs sm:text-sm justify-start">
+          <ClipboardList className="w-4 h-4 shrink-0" />
+          Existencias
         </TabsTrigger>
       </TabsList>
 
