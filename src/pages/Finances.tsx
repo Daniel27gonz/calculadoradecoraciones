@@ -39,14 +39,6 @@ interface Transaction {
   created_at: string;
 }
 
-interface Filters {
-  day: string;
-  month: string;
-  year: string;
-  category: string;
-  type: string;
-}
-
 interface QuoteStats {
   totalQuotes: number;
   paidQuotes: number;
@@ -73,22 +65,33 @@ export default function Finances() {
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  // Filter transactions based on active filters
-  const filteredTransactions = useMemo(() => {
+  // Transactions filtered by selected month
+  const monthTransactions = useMemo(() => {
     return transactions.filter(t => {
-      const [year, month, day] = t.transaction_date.split('-');
-      
-      if (filters.day && parseInt(day) !== parseInt(filters.day)) return false;
-      if (filters.month && month !== filters.month) return false;
-      if (filters.year && year !== filters.year) return false;
-      if (filters.category && t.category !== filters.category) return false;
-      if (filters.type && t.type !== filters.type) return false;
-      
+      const [y, m] = t.transaction_date.split('-');
+      return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
+    });
+  }, [transactions, selectedMonth, selectedYear]);
+
+  // Further filter by type and category
+  const filteredTransactions = useMemo(() => {
+    return monthTransactions.filter(t => {
+      if (filterType !== 'all' && t.type !== filterType) return false;
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
       return true;
     });
-  }, [transactions, filters]);
+  }, [monthTransactions, filterType, filterCategory]);
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+  // Summary cards based on filtered transactions
+  const filteredIncome = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
+    [filteredTransactions]
+  );
+  const filteredExpense = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0),
+    [filteredTransactions]
+  );
+  const filteredBalance = filteredIncome - filteredExpense;
 
   useEffect(() => {
     if (user) {
