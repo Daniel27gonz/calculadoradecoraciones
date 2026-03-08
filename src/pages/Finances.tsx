@@ -60,19 +60,25 @@ export default function Finances() {
   const [realTotalIncome, setRealTotalIncome] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
+
+  // Independent month/year for transaction history
+  const [txMonth, setTxMonth] = useState(new Date().getMonth());
+  const [txYear, setTxYear] = useState(new Date().getFullYear());
+  const [txPickerOpen, setTxPickerOpen] = useState(false);
+  const [txPickerYear, setTxPickerYear] = useState(txYear);
   
   const [filterType, setFilterType] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  // Transactions filtered by selected month
+  // Transactions filtered by transaction history's independent month
   const monthTransactions = useMemo(() => {
     return transactions.filter(t => {
       const [y, m] = t.transaction_date.split('-');
-      return parseInt(y) === selectedYear && parseInt(m) === selectedMonth + 1;
+      return parseInt(y) === txYear && parseInt(m) === txMonth + 1;
     });
-  }, [transactions, selectedMonth, selectedYear]);
+  }, [transactions, txMonth, txYear]);
 
   // Further filter by type and category
   const filteredTransactions = useMemo(() => {
@@ -255,8 +261,6 @@ export default function Finances() {
   const balance = totalIncome - totalExpenses;
 
   const handlePrevMonth = () => {
-    setFilterType('all');
-    setFilterCategory('all');
     if (selectedMonth === 0) {
       setSelectedMonth(11);
       setSelectedYear(selectedYear - 1);
@@ -267,8 +271,6 @@ export default function Finances() {
   };
 
   const handleNextMonth = () => {
-    setFilterType('all');
-    setFilterCategory('all');
     if (selectedMonth === 11) {
       setSelectedMonth(0);
       setSelectedYear(selectedYear + 1);
@@ -279,6 +281,7 @@ export default function Finances() {
   };
 
   const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+  const txMonthLabel = format(new Date(txYear, txMonth, 1), "MMMM yyyy", { locale: es });
 
   if (authLoading) {
     return (
@@ -456,21 +459,21 @@ export default function Finances() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-bold">Historial de Transacciones</CardTitle>
-              <Popover>
+              <Popover open={txPickerOpen} onOpenChange={setTxPickerOpen}>
                 <PopoverTrigger asChild>
                   <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium capitalize">{selectedMonthLabel}</span>
+                    <span className="text-sm font-medium capitalize">{txMonthLabel}</span>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3" align="end">
                   <div className="flex items-center justify-between mb-3">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTxPickerYear(y => y - 1)}>
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <span className="font-semibold text-sm">{pickerYear}</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                    <span className="font-semibold text-sm">{txPickerYear}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTxPickerYear(y => y + 1)}>
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -478,9 +481,9 @@ export default function Finances() {
                     {MONTH_NAMES.map((name, idx) => (
                       <button
                         key={idx}
-                        onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setFilterType('all'); setFilterCategory('all'); }}
+                        onClick={() => { setTxMonth(idx); setTxYear(txPickerYear); setTxPickerOpen(false); setFilterType('all'); setFilterCategory('all'); }}
                         className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
-                          idx === selectedMonth && pickerYear === selectedYear
+                          idx === txMonth && txPickerYear === txYear
                             ? 'bg-primary text-primary-foreground'
                             : 'hover:bg-accent text-foreground'
                         }`}
