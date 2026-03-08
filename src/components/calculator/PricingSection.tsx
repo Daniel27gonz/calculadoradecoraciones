@@ -163,35 +163,37 @@ export function PricingSection({
 
       {/* Results: 3 blocks */}
       <div className="space-y-3">
-        {/* 1. Costo por evento - neutral */}
-        <Card className="shadow-card border border-border bg-muted/40">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🧾</span>
-                <span className="font-semibold text-sm sm:text-base text-muted-foreground">
-                  Costo por evento
+        {/* 1. Costo por evento - neutral gray */}
+        <Card className="shadow-card border-0 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="p-4 sm:p-5" style={{ backgroundColor: '#F5F6F8' }}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl">🧾</span>
+                  <span className="font-semibold text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
+                    Costo por evento
+                  </span>
+                </div>
+                <span className="text-lg sm:text-2xl font-bold tabular-nums" style={{ color: '#1A1A1A' }}>
+                  {formatCurrency(summary.totalCost)}
                 </span>
               </div>
-              <span className="text-lg sm:text-2xl font-bold tabular-nums text-foreground">
-                {formatCurrency(summary.totalCost)}
-              </span>
             </div>
           </CardContent>
         </Card>
 
-        {/* 2. Precio sugerido al cliente - primary highlight */}
+        {/* 2. Precio sugerido al cliente - brand gradient */}
         <Card className="shadow-elevated border-0 overflow-hidden">
           <CardContent className="p-0">
-            <div className="p-4 sm:p-6 bg-gradient-to-r from-primary via-primary to-primary/90">
+            <div className="p-4 sm:p-6" style={{ background: 'linear-gradient(135deg, #E0527D, #F38DA8)' }}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xl sm:text-2xl">💎</span>
-                  <span className="text-primary-foreground font-bold text-sm sm:text-lg">
+                  <span className="text-white font-bold text-sm sm:text-lg">
                     Precio sugerido al cliente
                   </span>
                 </div>
-                <span className="text-2xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground tabular-nums truncate">
+                <span className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tabular-nums truncate">
                   {formatCurrency(summary.finalPrice)}
                 </span>
               </div>
@@ -202,7 +204,7 @@ export function PricingSection({
         {/* 3. Tu ganancia - green */}
         <Card className="shadow-card border-0 overflow-hidden">
           <CardContent className="p-0">
-            <div className="p-4 sm:p-5 bg-emerald-600 dark:bg-emerald-700">
+            <div className="p-4 sm:p-5" style={{ backgroundColor: '#0FA968' }}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xl sm:text-2xl">🤑</span>
@@ -214,7 +216,7 @@ export function PricingSection({
                   {formatCurrency(summary.netProfit)}
                 </span>
               </div>
-              <p className="text-emerald-100 text-xs sm:text-sm mt-1 text-right">
+              <p className="text-white/80 text-xs sm:text-sm mt-1 text-right">
                 {summary.profitPercentage.toFixed(0)}% de margen · {formatCurrency(summary.profitPerHour)}/hora
               </p>
             </div>
@@ -222,56 +224,60 @@ export function PricingSection({
         </Card>
       </div>
 
-      {/* Profit Analysis */}
-      <Card className={cn("shadow-card border-2", getProfitBg(summary.profitPercentage))}>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="flex items-center gap-2 text-lg sm:text-xl">
-              <span className="text-xl sm:text-2xl">📈</span>
-              <span>Análisis de Rentabilidad</span>
-            </span>
-            <span className={cn("text-sm font-medium px-3 py-1 rounded-full bg-background/50", getProfitColor(summary.profitPercentage))}>
-              {getProfitLabel(summary.profitPercentage)}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Stats grid */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
-            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
-              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Ganancia Neta</p>
-              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
-                {currencySymbol}{summary.netProfit.toFixed(0)}
-              </p>
-            </div>
-            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
-              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Porcentaje</p>
-              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
-                {summary.profitPercentage.toFixed(0)}%
-              </p>
-            </div>
-            <div className="text-center p-2 sm:p-4 rounded-xl bg-card border border-border/50 overflow-hidden">
-              <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Por Hora</p>
-              <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
-                {currencySymbol}{summary.profitPerHour.toFixed(0)}
-              </p>
-            </div>
-          </div>
+      {/* Profit Analysis - warm orange */}
+      <Card className="shadow-card border-0 overflow-hidden">
+        <div className="p-1" style={{ backgroundColor: '#F5A623' }}>
+          <div className="bg-card rounded-xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <span className="flex items-center gap-2 text-lg sm:text-xl">
+                  <span className="text-xl sm:text-2xl">📈</span>
+                  <span>Análisis de Rentabilidad</span>
+                </span>
+                <span className={cn("text-sm font-medium px-3 py-1 rounded-full", getProfitColor(summary.profitPercentage))} style={{ backgroundColor: 'rgba(245, 166, 35, 0.15)' }}>
+                  {getProfitLabel(summary.profitPercentage)}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Stats grid */}
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
+                <div className="text-center p-2 sm:p-4 rounded-xl border border-border/50 overflow-hidden" style={{ backgroundColor: '#FFF8EE' }}>
+                  <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Ganancia Neta</p>
+                  <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
+                    {currencySymbol}{summary.netProfit.toFixed(0)}
+                  </p>
+                </div>
+                <div className="text-center p-2 sm:p-4 rounded-xl border border-border/50 overflow-hidden" style={{ backgroundColor: '#FFF8EE' }}>
+                  <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Porcentaje</p>
+                  <p className={cn("text-sm sm:text-2xl font-bold tabular-nums", getProfitColor(summary.profitPercentage))}>
+                    {summary.profitPercentage.toFixed(0)}%
+                  </p>
+                </div>
+                <div className="text-center p-2 sm:p-4 rounded-xl border border-border/50 overflow-hidden" style={{ backgroundColor: '#FFF8EE' }}>
+                  <p className="text-[9px] sm:text-xs text-muted-foreground mb-1">Por Hora</p>
+                  <p className={cn("text-sm sm:text-2xl font-bold tabular-nums truncate", getProfitColor(summary.profitPercentage))}>
+                    {currencySymbol}{summary.profitPerHour.toFixed(0)}
+                  </p>
+                </div>
+              </div>
 
-          {/* Profit indicator bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>Bajo</span>
-              <span>Medio</span>
-              <span>Alto</span>
-            </div>
-            <div className="h-3 rounded-full bg-gradient-to-r from-profit-low via-profit-medium to-profit-high relative overflow-hidden">
-              <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-card border-2 border-foreground shadow-lg transition-all duration-300" style={{
-              left: `calc(${Math.min(Math.max(summary.profitPercentage, 0), 60)}% - 10px)`
-            }} />
-            </div>
+              {/* Profit indicator bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
+                  <span>Bajo</span>
+                  <span>Medio</span>
+                  <span>Alto</span>
+                </div>
+                <div className="h-3 rounded-full bg-gradient-to-r from-profit-low via-profit-medium to-profit-high relative overflow-hidden">
+                  <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-card border-2 border-foreground shadow-lg transition-all duration-300" style={{
+                  left: `calc(${Math.min(Math.max(summary.profitPercentage, 0), 60)}% - 10px)`
+                }} />
+                </div>
+              </div>
+            </CardContent>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>;
 }
