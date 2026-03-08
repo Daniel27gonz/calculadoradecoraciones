@@ -377,7 +377,10 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
           </div>
           {eventsPerMonth > 0 && total > 0 && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border">
-              <span className="text-sm font-medium text-foreground">Costo por gastos indirectos por evento</span>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Costo por gasto</span>
+                <span className="text-[11px] text-muted-foreground/70">Total ÷ Eventos</span>
+              </div>
               <span className="text-lg font-bold text-primary">
                 {currencySymbol}{formatCurrency(costPerEvent)}
               </span>
