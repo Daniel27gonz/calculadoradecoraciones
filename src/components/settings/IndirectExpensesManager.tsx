@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Pencil, CalendarIcon, Check } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Plus, Trash2, Pencil, CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,11 +26,20 @@ interface IndirectExpensesManagerProps {
   currencySymbol?: string;
 }
 
+const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
 export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpensesManagerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<IndirectExpense[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Month selector state
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,6 +48,8 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
   const [formAmount, setFormAmount] = useState<number>(0);
   const [formPaymentDate, setFormPaymentDate] = useState<string>('');
   const [saving, setSaving] = useState(false);
+
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
 
   const loadExpenses = useCallback(async () => {
     if (!user) return;
@@ -61,7 +72,6 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
           registeredInFinances: e.registered_in_finances,
         })));
       } else {
-        // Migrate from localStorage if exists
         const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
         if (stored) {
           const localExpenses: IndirectExpense[] = JSON.parse(stored);
@@ -103,11 +113,37 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
   }, [user, loadExpenses]);
 
+  // Filter expenses by selected month/year
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(e => {
+      if (!e.paymentDate) return false;
+      const d = new Date(e.paymentDate + 'T12:00:00');
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [expenses, selectedMonth, selectedYear]);
+
+  // Total for filtered month
+  const total = useMemo(() => {
+    return filteredExpenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
+  }, [filteredExpenses]);
+
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const getDefaultDateForMonth = () => {
+    const today = new Date();
+    if (today.getMonth() === selectedMonth && today.getFullYear() === selectedYear) {
+      return format(today, 'yyyy-MM-dd');
+    }
+    return format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
+  };
+
   const openAddDialog = () => {
     setEditingExpense(null);
     setFormDescription('');
     setFormAmount(0);
-    setFormPaymentDate('');
+    setFormPaymentDate(getDefaultDateForMonth());
     setDialogOpen(true);
   };
 
@@ -124,12 +160,10 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     const refId = `indirect_expense_${expenseId}`;
 
     if (!paymentDate || amount <= 0) {
-      // Remove transaction if no date or zero amount
       await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
       return;
     }
 
-    // Check if transaction already exists
     const { data: existing } = await supabase
       .from('transactions')
       .select('id')
@@ -236,33 +270,6 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
     }
   };
 
-  // Only sum expenses from the latest registered month
-  const total = (() => {
-    const withDates = expenses.filter(e => e.paymentDate);
-    if (withDates.length === 0) return expenses.reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
-
-    let latestY = 0, latestM = 0;
-    withDates.forEach(e => {
-      const [y, m] = e.paymentDate!.split('-');
-      const yr = parseInt(y), mo = parseInt(m);
-      if (yr > latestY || (yr === latestY && mo > latestM)) {
-        latestY = yr;
-        latestM = mo;
-      }
-    });
-
-    return withDates
-      .filter(e => {
-        const [y, m] = e.paymentDate!.split('-');
-        return parseInt(y) === latestY && parseInt(m) === latestM;
-      })
-      .reduce((sum, e) => sum + (e.monthlyAmount || 0), 0);
-  })();
-
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
   if (loading) {
     return (
       <Card>
@@ -275,41 +282,79 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
 
   return (
     <>
-      <Card className="shadow-card">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-              <span className="text-xl">📊</span>
-            </div>
-            <div className="flex-1">
-              <CardTitle className="text-lg">Gastos del mes</CardTitle>
-              <CardDescription>
-                Tus gastos fijos mensuales (renta, luz, internet, etc.)
-              </CardDescription>
-            </div>
-            <div className="px-3 py-1.5 rounded-full bg-beige border border-border">
-              <span className="text-sm font-bold text-foreground tabular-nums">
-                {currencySymbol}{formatCurrency(total)}/mes
+      <div className="space-y-4">
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <span className="text-xl">📊</span>
+          Gastos del Mes
+        </h1>
+
+        {/* Month selector */}
+        <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between capitalize font-semibold h-11">
+              <span className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                {selectedMonthLabel}
               </span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 bg-background" align="start">
+            <div className="flex items-center justify-between mb-3">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="font-semibold text-sm">{pickerYear}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-          </div>
-          <Button
-            variant="default"
-            className="w-full h-12 text-base font-medium mt-4"
-            onClick={openAddDialog}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Registrar gasto
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {expenses.length === 0 && (
+            <div className="grid grid-cols-4 gap-1.5">
+              {MONTH_NAMES.map((name, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                  className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                    idx === selectedMonth && pickerYear === selectedYear
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-accent text-foreground'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Total del mes */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
+          <span className="text-sm font-medium text-foreground">Total gastos del mes</span>
+          <span className="text-lg font-bold text-primary">
+            {currencySymbol}{formatCurrency(total)}
+          </span>
+        </div>
+
+        {/* Button */}
+        <Button
+          variant="default"
+          className="w-full h-12 text-base font-medium"
+          onClick={openAddDialog}
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Registrar gasto
+        </Button>
+
+        {/* Expense list */}
+        <div className="space-y-3">
+          {filteredExpenses.length === 0 && (
             <div className="text-center py-6 text-muted-foreground text-sm">
-              No hay gastos del mes registrados
+              No hay gastos registrados en este mes
             </div>
           )}
 
-          {expenses.map((expense) => (
+          {filteredExpenses.map((expense) => (
             <div
               key={expense.id}
               className="p-4 rounded-xl bg-beige/70 border border-border/50 animate-fade-in"
@@ -353,8 +398,8 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Dialog for adding/editing */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
