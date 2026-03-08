@@ -497,16 +497,16 @@ export default function Finances() {
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
                 <p className="text-xs text-green-600 font-medium">Ingresos</p>
-                <p className="text-base font-bold text-green-600">{currencySymbol}{filteredIncome.toFixed(2)}</p>
+                <p className="text-base font-bold text-green-600">{currencySymbol}{totalIncome.toFixed(2)}</p>
               </div>
               <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
                 <p className="text-xs text-red-600 font-medium">Gastos</p>
-                <p className="text-base font-bold text-red-600">{currencySymbol}{filteredExpense.toFixed(2)}</p>
+                <p className="text-base font-bold text-red-600">{currencySymbol}{totalExpenses.toFixed(2)}</p>
               </div>
-              <div className={`rounded-lg px-3 py-2.5 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-                <p className={`text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
-                <p className={`text-base font-bold ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                  {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+              <div className={`rounded-lg px-3 py-2.5 border ${balance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <p className={`text-xs font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
+                <p className={`text-base font-bold ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  {balance < 0 ? '-' : ''}{currencySymbol}{Math.abs(balance).toFixed(2)}
                 </p>
               </div>
             </div>
