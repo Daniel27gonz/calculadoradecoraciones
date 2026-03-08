@@ -580,6 +580,49 @@ export function MaterialsManager() {
   }
 
   return (
+    <div className="space-y-4">
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <Package className="w-6 h-6 text-primary" />
+        Materiales
+      </h1>
+
+      {/* Month selector with calendar icon */}
+      <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-start gap-2 capitalize font-semibold h-11">
+            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+            {selectedMonthLabel}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3 bg-background" align="start">
+          <div className="flex items-center justify-between mb-3">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="font-semibold text-sm">{pickerYear}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {MONTH_NAMES.map((name, idx) => (
+              <button
+                key={idx}
+                onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                  idx === selectedMonth && pickerYear === selectedYear
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
     <Tabs defaultValue="purchases" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm">
