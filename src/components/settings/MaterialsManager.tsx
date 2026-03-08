@@ -327,12 +327,9 @@ export function MaterialsManager() {
       }
 
       // Delete corresponding expense from finances
-      const matName = mat?.name || materialMap[purchase.material_id] || 'Material';
       await supabase.from('transactions').delete()
         .eq('user_id', user!.id)
-        .eq('description', `Compra material: ${matName}`)
-        .eq('amount', purchase.total_paid)
-        .eq('transaction_date', purchase.purchase_date);
+        .eq('reference_id', `purchase_${purchase.id}`);
 
       toast({ title: 'Compra eliminada', description: 'Gasto eliminado de finanzas' });
       loadAll();
