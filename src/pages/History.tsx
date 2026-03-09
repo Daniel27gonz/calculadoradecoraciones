@@ -180,10 +180,10 @@ export default function History() {
                   <CardContent className="p-0">
                     <div className="p-4 space-y-4">
                       {/* Header */}
-                        <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-display text-lg font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-display text-base sm:text-lg font-semibold truncate">
                               {quote.clientName}
                             </h3>
                             {(quote.status === 'approved' || quote.status === 'delivered') && (
