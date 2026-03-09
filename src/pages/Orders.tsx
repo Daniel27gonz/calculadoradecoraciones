@@ -394,7 +394,7 @@ export default function Orders() {
   if (!isApproved && !isAdmin) return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background pt-16 md:pt-4 px-3 sm:px-4 pb-24 max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')}>

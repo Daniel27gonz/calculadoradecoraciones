@@ -125,8 +125,8 @@ export default function Finances() {
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-24 md:pb-8">
-      <div className="container max-w-4xl space-y-6">
+    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8">
+      <div className="container max-w-4xl px-3 sm:px-4 md:px-6 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -185,16 +185,16 @@ export default function Finances() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <Card className="bg-green-50 border-green-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-green-100 rounded-full shrink-0">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Ingresos del mes</p>
-                  <p className="text-xl font-bold text-green-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-green-600 font-medium">Ingresos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-green-700 truncate">
                     {currencySymbol}{totalIncome.toFixed(2)}
                   </p>
                 </div>
@@ -203,14 +203,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-full">
-                  <TrendingDown className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-red-100 rounded-full shrink-0">
+                  <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos y compras del mes</p>
-                  <p className="text-xl font-bold text-red-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">Gastos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-red-700 truncate">
                     {currencySymbol}{totalExpenses.toFixed(2)}
                   </p>
                 </div>
@@ -219,16 +219,16 @@ export default function Finances() {
           </Card>
 
           <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                  <DollarSign className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                <div className={`p-2 rounded-full shrink-0 ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                  <DollarSign className={`w-4 h-4 sm:w-5 sm:h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
                 </div>
-                <div>
-                  <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                <div className="min-w-0">
+                  <p className={`text-xs sm:text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
                   </p>
-                  <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                  <p className={`text-lg sm:text-xl font-bold truncate ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
                   </p>
                 </div>
@@ -238,32 +238,32 @@ export default function Finances() {
         </div>
 
         {/* Quote Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <FileText className="w-5 h-5 text-purple-600" />
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-full shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
-                <div>
-                   <p className="text-sm text-purple-600 font-medium">Cotizaciones realizadas</p>
-                   <p className="text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
-                   <p className="text-xs text-purple-500">este mes</p>
+                <div className="min-w-0">
+                   <p className="text-xs sm:text-sm text-purple-600 font-medium">Cotizaciones</p>
+                   <p className="text-xl sm:text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
+                   <p className="text-[10px] sm:text-xs text-purple-500">este mes</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-emerald-50 border-emerald-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 rounded-full">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-full shrink-0">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                 </div>
-                <div>
-                   <p className="text-sm text-emerald-600 font-medium">Eventos realizados</p>
-                   <p className="text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
-                   <p className="text-xs text-emerald-500">este mes</p>
+                <div className="min-w-0">
+                   <p className="text-xs sm:text-sm text-emerald-600 font-medium">Eventos</p>
+                   <p className="text-xl sm:text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
+                   <p className="text-[10px] sm:text-xs text-emerald-500">este mes</p>
                 </div>
               </div>
             </CardContent>
@@ -276,11 +276,11 @@ export default function Finances() {
         {/* Transactions List */}
         <Card>
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold">Historial de Transacciones</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-bold">Historial de Transacciones</CardTitle>
               <Popover open={txPickerOpen} onOpenChange={setTxPickerOpen}>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer">
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer self-start">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium capitalize">{txMonthLabel}</span>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -316,18 +316,18 @@ export default function Finances() {
             </div>
 
             {/* Inline Summary Cards */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
-                <p className="text-xs text-green-600 font-medium">Ingresos</p>
-                <p className="text-base font-bold text-green-600">{currencySymbol}{filteredIncome.toFixed(2)}</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+              <div className="rounded-lg bg-green-50 border border-green-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-green-600 font-medium">Ingresos</p>
+                <p className="text-sm sm:text-base font-bold text-green-600 truncate">{currencySymbol}{filteredIncome.toFixed(2)}</p>
               </div>
-              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
-                <p className="text-xs text-red-600 font-medium">Gastos</p>
-                <p className="text-base font-bold text-red-600">{currencySymbol}{filteredExpense.toFixed(2)}</p>
+              <div className="rounded-lg bg-red-50 border border-red-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-red-600 font-medium">Gastos</p>
+                <p className="text-sm sm:text-base font-bold text-red-600 truncate">{currencySymbol}{filteredExpense.toFixed(2)}</p>
               </div>
-              <div className={`rounded-lg px-3 py-2.5 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-                <p className={`text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
-                <p className={`text-base font-bold ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              <div className={`rounded-lg px-2 sm:px-3 py-2 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <p className={`text-[10px] sm:text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
+                <p className={`text-sm sm:text-base font-bold truncate ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                   {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
                 </p>
               </div>
@@ -357,21 +357,58 @@ export default function Finances() {
                 }
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Mobile: card layout */}
+              <div className="sm:hidden space-y-2 px-4 pb-4">
+                {filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                          transaction.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yy")}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium truncate">{transaction.description}</p>
+                      {transaction.category && (
+                        <p className="text-[10px] text-muted-foreground truncate">{transaction.category}</p>
+                      )}
+                    </div>
+                    <p className={`text-sm font-bold ml-3 shrink-0 ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2 border-t border-border text-sm font-medium px-1">
+                  <span className="text-muted-foreground">Total ({filteredTransactions.length})</span>
+                  <span className="font-bold">
+                    {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop: table layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left font-medium text-muted-foreground px-6 py-2.5">Fecha</th>
+                      <th className="text-left font-medium text-muted-foreground px-4 md:px-6 py-2.5">Fecha</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Tipo</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Categoría</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Descripción</th>
-                      <th className="text-right font-medium text-muted-foreground px-6 py-2.5">Monto</th>
+                      <th className="text-right font-medium text-muted-foreground px-4 md:px-6 py-2.5">Monto</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTransactions.map((transaction) => (
                       <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
-                        <td className="px-6 py-3 whitespace-nowrap">
+                        <td className="px-4 md:px-6 py-3 whitespace-nowrap">
                           {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yyyy")}
                         </td>
                         <td className="px-3 py-3">
@@ -390,7 +427,7 @@ export default function Finances() {
                         </td>
                         <td className="px-3 py-3 text-muted-foreground">{transaction.category || '—'}</td>
                         <td className="px-3 py-3">{transaction.description}</td>
-                        <td className={`px-6 py-3 text-right font-semibold whitespace-nowrap ${
+                        <td className={`px-4 md:px-6 py-3 text-right font-semibold whitespace-nowrap ${
                           transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
@@ -400,16 +437,17 @@ export default function Finances() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-border">
-                      <td colSpan={4} className="px-6 py-3 font-medium text-muted-foreground">
+                      <td colSpan={4} className="px-4 md:px-6 py-3 font-medium text-muted-foreground">
                         Total ({filteredTransactions.length} registros)
                       </td>
-                      <td className="px-6 py-3 text-right font-bold">
+                      <td className="px-4 md:px-6 py-3 text-right font-bold">
                         {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
+              </>
             )}
           </CardContent>
         </Card>

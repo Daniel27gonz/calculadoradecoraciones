@@ -180,10 +180,10 @@ export default function History() {
                   <CardContent className="p-0">
                     <div className="p-4 space-y-4">
                       {/* Header */}
-                        <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-display text-lg font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-display text-base sm:text-lg font-semibold truncate">
                               {quote.clientName}
                             </h3>
                             {(quote.status === 'approved' || quote.status === 'delivered') && (
@@ -209,9 +209,9 @@ export default function History() {
                             )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
-                          <p className={`text-sm font-medium ${profitColor}`}>
+                        <div className="text-right shrink-0">
+                          <p className="text-xl sm:text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                          <p className={`text-xs sm:text-sm font-medium ${profitColor}`}>
                             +{currencySymbol}{summary.netProfit.toFixed(2)} ({summary.profitPercentage.toFixed(0)}%)
                           </p>
                         </div>
