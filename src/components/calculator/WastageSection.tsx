@@ -29,7 +29,7 @@ export function WastageSection({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <span className="text-xl sm:text-2xl">📉</span>
-          <span>Merma</span>
+          <span>Desperdicio</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
