@@ -357,21 +357,57 @@ export default function Finances() {
                 }
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              {/* Mobile: card layout */}
+              <div className="sm:hidden space-y-2 px-4 pb-4">
+                {filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                          transaction.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yy")}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium truncate">{transaction.description}</p>
+                      {transaction.category && (
+                        <p className="text-[10px] text-muted-foreground truncate">{transaction.category}</p>
+                      )}
+                    </div>
+                    <p className={`text-sm font-bold ml-3 shrink-0 ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2 border-t border-border text-sm font-medium px-1">
+                  <span className="text-muted-foreground">Total ({filteredTransactions.length})</span>
+                  <span className="font-bold">
+                    {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop: table layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left font-medium text-muted-foreground px-6 py-2.5">Fecha</th>
+                      <th className="text-left font-medium text-muted-foreground px-4 md:px-6 py-2.5">Fecha</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Tipo</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Categoría</th>
                       <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Descripción</th>
-                      <th className="text-right font-medium text-muted-foreground px-6 py-2.5">Monto</th>
+                      <th className="text-right font-medium text-muted-foreground px-4 md:px-6 py-2.5">Monto</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTransactions.map((transaction) => (
                       <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
-                        <td className="px-6 py-3 whitespace-nowrap">
+                        <td className="px-4 md:px-6 py-3 whitespace-nowrap">
                           {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yyyy")}
                         </td>
                         <td className="px-3 py-3">
@@ -390,7 +426,7 @@ export default function Finances() {
                         </td>
                         <td className="px-3 py-3 text-muted-foreground">{transaction.category || '—'}</td>
                         <td className="px-3 py-3">{transaction.description}</td>
-                        <td className={`px-6 py-3 text-right font-semibold whitespace-nowrap ${
+                        <td className={`px-4 md:px-6 py-3 text-right font-semibold whitespace-nowrap ${
                           transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
@@ -400,10 +436,10 @@ export default function Finances() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-border">
-                      <td colSpan={4} className="px-6 py-3 font-medium text-muted-foreground">
+                      <td colSpan={4} className="px-4 md:px-6 py-3 font-medium text-muted-foreground">
                         Total ({filteredTransactions.length} registros)
                       </td>
-                      <td className="px-6 py-3 text-right font-bold">
+                      <td className="px-4 md:px-6 py-3 text-right font-bold">
                         {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
                       </td>
                     </tr>
