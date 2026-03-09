@@ -1,63 +1,30 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuote } from '@/contexts/QuoteContext';
-import { supabase } from '@/integrations/supabase/client';
 import { PendingApproval } from '@/components/PendingApproval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
-import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
-import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
 import { FinancialSummary } from '@/components/finances/FinancialSummary';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useFinancialData, useMonthlyFinancials } from '@/hooks/useFinancialData';
 
 const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-interface Transaction {
-  id: string;
-  type: 'income' | 'expense';
-  amount: number;
-  description: string;
-  category: string | null;
-  transaction_date: string;
-  created_at: string;
-}
-
-interface QuoteStats {
-  totalQuotes: number;
-  paidQuotes: number;
-}
 
 export default function Finances() {
-  const { quotes, calculateCosts } = useQuote();
+  const { quotes } = useQuote();
   const navigate = useNavigate();
   const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [quotePayments, setQuotePayments] = useState<Record<string, number>>({});
+
+  const { transactions: allTransactions, loading: loadingTransactions } = useFinancialData();
+
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [realTotalExpenses, setRealTotalExpenses] = useState(0);
-  const [realTotalIncome, setRealTotalIncome] = useState(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(selectedYear);
 
@@ -66,199 +33,53 @@ export default function Finances() {
   const [txYear, setTxYear] = useState(new Date().getFullYear());
   const [txPickerOpen, setTxPickerOpen] = useState(false);
   const [txPickerYear, setTxPickerYear] = useState(txYear);
-  
+
   const [filterType, setFilterType] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  // Transactions filtered by transaction history's independent month
-  const monthTransactions = useMemo(() => {
-    return transactions.filter(t => {
-      const [y, m] = t.transaction_date.split('-');
-      return parseInt(y) === txYear && parseInt(m) === txMonth + 1;
-    });
-  }, [transactions, txMonth, txYear]);
+  // Summary cards use unified source
+  const { totalIncome, totalExpenses, balance } = useMonthlyFinancials(allTransactions, selectedMonth, selectedYear);
+
+  // Transaction history uses its own independent month
+  const { monthTransactions } = useMonthlyFinancials(allTransactions, txMonth, txYear);
+
+  // Adapt to legacy Transaction interface for TransactionFilters
+  const legacyMonthTx = useMemo(() => monthTransactions.map(t => ({
+    ...t,
+    created_at: t.transaction_date,
+  })), [monthTransactions]);
 
   // Further filter by type and category
   const filteredTransactions = useMemo(() => {
-    return monthTransactions.filter(t => {
+    return legacyMonthTx.filter(t => {
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (filterCategory !== 'all' && t.category !== filterCategory) return false;
       return true;
     });
-  }, [monthTransactions, filterType, filterCategory]);
+  }, [legacyMonthTx, filterType, filterCategory]);
 
-  // Summary cards based on filtered transactions
   const filteredIncome = useMemo(() =>
-    filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
+    filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
     [filteredTransactions]
   );
   const filteredExpense = useMemo(() =>
-    filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0),
+    filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
     [filteredTransactions]
   );
   const filteredBalance = filteredIncome - filteredExpense;
 
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      fetchRealExpenses();
-      fetchQuotePayments();
-    }
-  }, [user, selectedMonth, selectedYear]);
-
-  const fetchRealExpenses = async () => {
-    try {
-      const monthNum = selectedMonth + 1;
-      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = monthNum === 12
-        ? `${selectedYear + 1}-01-01`
-        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-      const [expensesRes, purchasesRes, paymentsRes] = await Promise.all([
-        supabase
-          .from('indirect_expenses')
-          .select('monthly_amount')
-          .eq('user_id', user?.id)
-          .gte('payment_date', startDate)
-          .lt('payment_date', endDate),
-        supabase
-          .from('material_purchases')
-          .select('total_paid')
-          .eq('user_id', user?.id)
-          .gte('purchase_date', startDate)
-          .lt('purchase_date', endDate),
-        supabase
-          .from('quote_payments')
-          .select('amount')
-          .eq('user_id', user?.id)
-          .gte('payment_date', startDate)
-          .lt('payment_date', endDate),
-      ]);
-
-      const indirectTotal = (expensesRes.data || []).reduce((sum, e) => sum + Number(e.monthly_amount), 0);
-      const purchasesTotal = (purchasesRes.data || []).reduce((sum, p) => sum + Number(p.total_paid), 0);
-      const incomeTotal = (paymentsRes.data || []).reduce((sum, p) => sum + Number(p.amount), 0);
-      
-      setRealTotalExpenses(indirectTotal + purchasesTotal);
-      setRealTotalIncome(incomeTotal);
-    } catch (error) {
-      console.error('Error fetching real data:', error);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('transaction_date', { ascending: false });
-
-      if (error) throw error;
-      setTransactions((data || []).map(t => ({
-        ...t,
-        type: t.type as 'income' | 'expense',
-        category: t.category ?? null,
-      })));
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las transacciones",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingTransactions(false);
-    }
-  };
-
-  const fetchQuotePayments = async () => {
-    try {
-      const { data: payments } = await supabase
-        .from('quote_payments')
-        .select('quote_id, amount')
-        .eq('user_id', user?.id);
-
-      const byQuote: Record<string, number> = {};
-      (payments || []).forEach(p => {
-        byQuote[p.quote_id] = (byQuote[p.quote_id] || 0) + Number(p.amount);
-      });
-      setQuotePayments(byQuote);
-    } catch (error) {
-      console.error('Error fetching quote payments:', error);
-    }
-  };
-
-  // Compute quote stats from context quotes
+  // Compute quote stats
   const quoteStats = useMemo(() => {
-    const monthNum = selectedMonth + 1;
-    const monthStr = String(monthNum).padStart(2, '0');
+    const monthStr = String(selectedMonth + 1).padStart(2, '0');
     const prefix = `${selectedYear}-${monthStr}`;
-
-    // Cotizaciones realizadas: created in selected month
     const totalQuotes = quotes.filter(q => q.createdAt?.startsWith(prefix)).length;
-
-    // Pedidos pagados: status "delivered" with eventDate in selected month
     const paidQuotes = quotes.filter(q =>
       q.status === 'delivered' && q.eventDate?.startsWith(prefix)
     ).length;
-
     return { totalQuotes, paidQuotes };
   }, [quotes, selectedMonth, selectedYear]);
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', deleteId);
-
-      if (error) throw error;
-
-      setTransactions(transactions.filter(t => t.id !== deleteId));
-      toast({
-        title: "Transacción eliminada",
-        description: "La transacción se eliminó correctamente",
-      });
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la transacción",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleteId(null);
-    }
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-    setIsDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingTransaction(null);
-  };
-
-  const handleTransactionSaved = () => {
-    fetchTransactions();
-    handleDialogClose();
-  };
-
-  const totalIncome = realTotalIncome;
-  const totalExpenses = realTotalExpenses;
-  const balance = totalIncome - totalExpenses;
 
   const handlePrevMonth = () => {
     if (selectedMonth === 0) {
@@ -299,7 +120,6 @@ export default function Finances() {
     return null;
   }
 
-  // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
@@ -450,7 +270,6 @@ export default function Finances() {
           </Card>
         </div>
 
-
         {/* Financial Summary */}
         <FinancialSummary selectedMonth={selectedMonth} selectedYear={selectedYear} />
 
@@ -517,7 +336,7 @@ export default function Finances() {
             {/* Filters */}
             <div className="mt-3">
               <TransactionFilters
-                transactions={monthTransactions}
+                transactions={legacyMonthTx}
                 filterType={filterType}
                 filterCategory={filterCategory}
                 onTypeChange={setFilterType}
@@ -532,7 +351,7 @@ export default function Finances() {
               </div>
             ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {transactions.length === 0 
+                {allTransactions.length === 0 
                   ? "No hay transacciones registradas."
                   : "No hay transacciones que coincidan con los filtros."
                 }
@@ -574,7 +393,7 @@ export default function Finances() {
                         <td className={`px-6 py-3 text-right font-semibold whitespace-nowrap ${
                           transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {transaction.type === 'income' ? '' : '-'}{currencySymbol}{Number(transaction.amount).toFixed(2)}
+                          {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -594,32 +413,6 @@ export default function Finances() {
             )}
           </CardContent>
         </Card>
-
-        {/* Transaction Form Dialog */}
-        <TransactionFormDialog
-          open={isDialogOpen}
-          onOpenChange={handleDialogClose}
-          transaction={editingTransaction}
-          onSaved={handleTransactionSaved}
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar transacción?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción no se puede deshacer. La transacción será eliminada permanentemente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Eliminar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );

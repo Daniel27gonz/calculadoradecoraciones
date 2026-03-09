@@ -7,133 +7,53 @@ import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
 import { PendingApproval } from '@/components/PendingApproval';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useFinancialData, useMonthlyFinancials } from '@/hooks/useFinancialData';
 
 export default function Home() {
   const navigate = useNavigate();
   const { quotes } = useQuote();
   const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
-  const [transactions, setTransactions] = useState<{ id: string; type: 'income' | 'expense'; amount: number; description: string; category: string | null; transaction_date: string; created_at: string }[]>([]);
-  const [realTotalExpenses, setRealTotalExpenses] = useState(0);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
+  const { transactions: allTransactions } = useFinancialData();
 
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('transaction_date', { ascending: false })
-        .then(({ data }) => {
-          if (data) setTransactions(data.map(t => ({ ...t, type: t.type as 'income' | 'expense', category: t.category ?? null })));
-        });
-    }
-  }, [user]);
-
-  // Fetch real expenses (same logic as Finances/Mi Dinero)
-  useEffect(() => {
-    if (!user) return;
-    const now = new Date();
-    const monthNum = now.getMonth() + 1;
-    const year = now.getFullYear();
-    const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
-    const endDate = monthNum === 12
-      ? `${year + 1}-01-01`
-      : `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-    Promise.all([
-      supabase
-        .from('indirect_expenses')
-        .select('monthly_amount')
-        .eq('user_id', user.id)
-        .gte('payment_date', startDate)
-        .lt('payment_date', endDate),
-      supabase
-        .from('material_purchases')
-        .select('total_paid')
-        .eq('user_id', user.id)
-        .gte('purchase_date', startDate)
-        .lt('purchase_date', endDate),
-    ]).then(([expensesRes, purchasesRes]) => {
-      const indirectTotal = (expensesRes.data || []).reduce((sum, e) => sum + Number(e.monthly_amount), 0);
-      const purchasesTotal = (purchasesRes.data || []).reduce((sum, p) => sum + Number(p.total_paid), 0);
-      setRealTotalExpenses(indirectTotal + purchasesTotal);
-    });
-  }, [user]);
+  const now = new Date();
+  const { totalIncome, totalExpenses, balance } = useMonthlyFinancials(allTransactions, now.getMonth(), now.getFullYear());
 
   const currencySymbol = useMemo(() => {
     const currency = getCurrencyByCode(profile?.currency || 'USD');
     return currency?.symbol || '$';
   }, [profile?.currency]);
 
-  const { totalIncome, totalExpenses, balance } = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-
-    const currentMonthTx = transactions.filter(t => {
-      const [y, m] = t.transaction_date.split('-');
-      return parseInt(y) === currentYear && parseInt(m) === currentMonth;
-    });
-
-    const income = currentMonthTx
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    return { totalIncome: income, totalExpenses: realTotalExpenses, balance: income - realTotalExpenses };
-  }, [transactions, realTotalExpenses]);
-
   // Activity stats
   const { eventsCompleted, quotesCreated, upcomingEvents } = useMemo(() => {
-    const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
     const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
     const todayStr = format(now, 'yyyy-MM-dd');
 
-    const delivered = quotes.filter(q => {
-      if (q.status !== 'delivered') return false;
-      return q.eventDate?.startsWith(prefix);
-    }).length;
-
+    const delivered = quotes.filter(q => q.status === 'delivered' && q.eventDate?.startsWith(prefix)).length;
     const created = quotes.filter(q => q.createdAt?.startsWith(prefix)).length;
-
-    const upcoming = quotes.filter(q => {
-      if (q.status === 'cancelled' || q.status === 'delivered') return false;
-      if (!q.eventDate) return false;
-      return q.eventDate >= todayStr && q.status === 'approved';
-    }).length;
+    const upcoming = quotes.filter(q =>
+      q.status === 'approved' && q.eventDate && q.eventDate >= todayStr
+    ).length;
 
     return { eventsCompleted: delivered, quotesCreated: created, upcomingEvents: upcoming };
   }, [quotes]);
 
   // Next event
   const nextEvent = useMemo(() => {
-    const now = new Date();
     const todayStr = format(now, 'yyyy-MM-dd');
-
     const future = quotes
-      .filter(q => {
-        if (q.status === 'cancelled' || q.status === 'delivered') return false;
-        if (!q.eventDate) return false;
-        return q.eventDate >= todayStr && q.status === 'approved';
-      })
+      .filter(q => q.status === 'approved' && q.eventDate && q.eventDate >= todayStr)
       .sort((a, b) => (a.eventDate || '').localeCompare(b.eventDate || ''));
 
     if (future.length === 0) return null;
-
     const q = future[0];
     const eventDateObj = q.eventDate ? new Date(q.eventDate + 'T12:00:00') : null;
-
     return {
       clientName: q.clientName,
       eventType: q.eventType || q.decorationDescription || '',
@@ -156,7 +76,10 @@ export default function Home() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
 
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
@@ -165,7 +88,6 @@ export default function Home() {
   const userName = profile?.name || profile?.business_name || user.email?.split('@')[0];
   const currentMonthLabel = format(new Date(), "MMMM yyyy", { locale: es });
 
-  // Shared quick actions
   const quickActions = [
     { to: '/calculator', icon: Calculator, label: 'Nueva Cotización', color: 'bg-rose-light text-rose-dark' },
     { to: '/orders', icon: Calendar, label: 'Agenda y Pedidos', color: 'bg-accent/40 text-accent-foreground' },
@@ -396,84 +318,76 @@ export default function Home() {
                 </div>
                 <p className="text-xl font-bold text-destructive">{formatMoney(totalExpenses)}</p>
               </div>
-              <div className={`${balance >= 0 ? 'bg-profit-medium/10 border-profit-medium/20' : 'bg-orange-50 border-orange-200'} rounded-xl p-4 border`}>
+              <div className={`rounded-xl p-4 border ${balance >= 0 ? 'bg-blue-50/80 border-blue-200' : 'bg-orange-50/80 border-orange-200'}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className={`w-4 h-4 ${balance >= 0 ? 'text-profit-medium' : 'text-orange-600'}`} />
-                  <span className="text-xs font-medium text-muted-foreground">{balance >= 0 ? 'Ganancia' : 'Pérdida'}</span>
+                  <TrendingUp className={`w-4 h-4 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {balance >= 0 ? 'Ganancia' : 'Pérdida'}
+                  </span>
                 </div>
-                <p className={`text-xl font-bold ${balance >= 0 ? 'text-profit-medium' : 'text-orange-600'}`}>{formatMoney(balance)}</p>
+                <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-600'}`}>
+                  {formatMoney(balance)}
+                </p>
+              </div>
+            </div>
+
+            {/* Activity row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-emerald-50/80 rounded-xl p-3 border border-emerald-100 flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <p className="text-lg font-bold text-emerald-700">{eventsCompleted}</p>
+                  <p className="text-xs text-emerald-600">Eventos realizados</p>
+                </div>
+              </div>
+              <div className="bg-purple-50/80 rounded-xl p-3 border border-purple-100 flex items-center gap-3">
+                <FileText className="w-5 h-5 text-purple-600" />
+                <div>
+                  <p className="text-lg font-bold text-purple-700">{quotesCreated}</p>
+                  <p className="text-xs text-purple-600">Cotizaciones creadas</p>
+                </div>
+              </div>
+              <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-100 flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-amber-600" />
+                <div>
+                  <p className="text-lg font-bold text-amber-700">{upcomingEvents}</p>
+                  <p className="text-xs text-amber-600">Eventos en agenda</p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Actividad del Mes + Próximo Evento side by side */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarCheck className="w-5 h-5 text-muted-foreground" />
-                Actividad del Mes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-emerald-50/80 rounded-xl p-4 border border-emerald-100 text-center">
-                  <CheckCircle className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                  <p className="text-3xl font-extrabold text-emerald-700">{eventsCompleted}</p>
-                  <p className="text-xs text-emerald-600 font-medium mt-1">Eventos realizados</p>
-                </div>
-                <div className="bg-purple-50/80 rounded-xl p-4 border border-purple-100 text-center">
-                  <FileText className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                  <p className="text-3xl font-extrabold text-purple-700">{quotesCreated}</p>
-                  <p className="text-xs text-purple-600 font-medium mt-1">Cotizaciones creadas</p>
-                </div>
-                <div className="bg-amber-50/80 rounded-xl p-4 border border-amber-100 text-center">
-                  <Calendar className="w-6 h-6 text-amber-600 mx-auto mb-2" />
-                  <p className="text-3xl font-extrabold text-amber-700">{upcomingEvents}</p>
-                  <p className="text-xs text-amber-600 font-medium mt-1">Eventos en agenda</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-rose-200/60 bg-gradient-to-br from-rose-50/30 to-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="w-5 h-5 text-rose-dark" />
+        {/* Próximo Evento */}
+        {nextEvent && (
+          <Card className="border-rose-200/60 bg-gradient-to-br from-rose-50/50 to-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Clock className="w-4 h-4 text-rose-dark" />
                 Próximo Evento
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {nextEvent ? (
-                <div className="space-y-3">
-                  <p className="font-bold text-xl text-foreground">{nextEvent.eventType}</p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span className="capitalize">{nextEvent.eventDate}</span>
-                    </div>
-                    {nextEvent.setupTime && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span>{nextEvent.setupTime} hrs</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      <span>Cliente: {nextEvent.clientName}</span>
-                    </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+                <p className="font-bold text-foreground">{nextEvent.eventType}</p>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span className="capitalize">{nextEvent.eventDate}</span>
+                </div>
+                {nextEvent.setupTime && (
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{nextEvent.setupTime} hrs</span>
                   </div>
+                )}
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{nextEvent.clientName}</span>
                 </div>
-              ) : (
-                <div className="text-center py-4">
-                  <Calendar className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No hay eventos próximos</p>
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
-        </div>
+        )}
       </div>
 
       <InstallPrompt />
