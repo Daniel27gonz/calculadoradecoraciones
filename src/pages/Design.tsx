@@ -435,8 +435,8 @@ const Design = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 pt-20">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="min-h-screen bg-background pb-24 pt-16 md:pt-20">
+      <div className="container mx-auto px-3 sm:px-4 py-4 md:py-6 max-w-4xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">
