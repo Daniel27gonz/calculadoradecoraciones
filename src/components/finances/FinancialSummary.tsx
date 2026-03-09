@@ -1,202 +1,63 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { ShoppingBag, Receipt, Banknote } from 'lucide-react';
-
-interface MaterialPurchaseItem {
-  materialName: string;
-  category: string;
-  totalPaid: number;
-}
-
-interface ExpenseItem {
-  description: string;
-  amount: number;
-}
-
-interface IncomeItem {
-  clientName: string;
-  deposits: number;
-  finalPayment: number;
-  total: number;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import type { FinancialTransaction } from '@/hooks/useFinancialData';
 
 interface FinancialSummaryProps {
-  selectedMonth: number;
-  selectedYear: number;
+  transactions: FinancialTransaction[];
+  loading?: boolean;
 }
 
-export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSummaryProps) {
-  const { user, profile } = useAuth();
-  const [materials, setMaterials] = useState<MaterialPurchaseItem[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
-  const [incomes, setIncomes] = useState<IncomeItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
+export function FinancialSummary({ transactions, loading }: FinancialSummaryProps) {
+  const { profile } = useAuth();
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  useEffect(() => {
-    if (user) {
-      fetchAllData();
+  // Derive materials breakdown by category
+  const materials = useMemo(() => {
+    const matTx = transactions.filter(t => t.source === 'material_purchase');
+    const byCategory = new Map<string, number>();
+    for (const t of matTx) {
+      const cat = t.materialCategory || 'Sin categoría';
+      byCategory.set(cat, (byCategory.get(cat) || 0) + t.amount);
     }
-  }, [user, selectedMonth, selectedYear]);
+    return Array.from(byCategory.entries()).map(([category, total]) => ({ category, total }));
+  }, [transactions]);
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    await Promise.all([fetchMaterials(), fetchExpenses(), fetchIncomes()]);
-    setLoading(false);
-  };
+  // Derive indirect expenses list
+  const expenses = useMemo(() => {
+    return transactions
+      .filter(t => t.source === 'indirect_expense')
+      .map(t => ({
+        description: t.description.replace('Gasto del mes: ', ''),
+        amount: t.amount,
+      }));
+  }, [transactions]);
 
-  const fetchMaterials = async () => {
-    try {
-      const monthNum = selectedMonth + 1;
-      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = monthNum === 12
-        ? `${selectedYear + 1}-01-01`
-        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-      const { data: purchases, error: purchaseError } = await supabase
-        .from('material_purchases')
-        .select('material_id, total_paid')
-        .eq('user_id', user?.id)
-        .gte('purchase_date', startDate)
-        .lt('purchase_date', endDate);
-
-      if (purchaseError) throw purchaseError;
-
-      if (!purchases || purchases.length === 0) {
-        setMaterials([]);
-        return;
+  // Derive incomes grouped by client
+  const incomes = useMemo(() => {
+    const incomeTx = transactions.filter(t => t.source === 'quote_payment');
+    const byClient = new Map<string, { deposits: number; finalPayment: number }>();
+    for (const t of incomeTx) {
+      const name = t.clientName || 'Cliente';
+      const existing = byClient.get(name) || { deposits: 0, finalPayment: 0 };
+      if (t.isPaid) {
+        existing.finalPayment += t.amount;
+      } else {
+        existing.deposits += t.amount;
       }
-
-      const materialIds = [...new Set(purchases.map(p => p.material_id))];
-      const { data: mats, error: matError } = await supabase
-        .from('user_materials')
-        .select('id, name, category')
-        .in('id', materialIds);
-
-      if (matError) throw matError;
-
-      const matMap = new Map((mats || []).map(m => [m.id, m]));
-
-      // Aggregate by category
-      const aggregated = new Map<string, MaterialPurchaseItem>();
-      for (const p of purchases) {
-        const mat = matMap.get(p.material_id);
-        if (!mat) continue;
-        const key = mat.category;
-        if (aggregated.has(key)) {
-          aggregated.get(key)!.totalPaid += Number(p.total_paid);
-        } else {
-          aggregated.set(key, {
-            materialName: mat.category,
-            category: mat.category,
-            totalPaid: Number(p.total_paid),
-          });
-        }
-      }
-
-      setMaterials(Array.from(aggregated.values()));
-    } catch (error) {
-      console.error('Error fetching materials:', error);
+      byClient.set(name, existing);
     }
-  };
+    return Array.from(byClient.entries()).map(([clientName, totals]) => ({
+      clientName,
+      deposits: totals.deposits,
+      finalPayment: totals.finalPayment,
+      total: totals.deposits + totals.finalPayment,
+    }));
+  }, [transactions]);
 
-  const fetchExpenses = async () => {
-    try {
-      const monthNum = selectedMonth + 1;
-      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = monthNum === 12
-        ? `${selectedYear + 1}-01-01`
-        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-      const { data, error } = await supabase
-        .from('indirect_expenses')
-        .select('description, monthly_amount, payment_date')
-        .eq('user_id', user?.id)
-        .gte('payment_date', startDate)
-        .lt('payment_date', endDate);
-
-      if (error) throw error;
-      setExpenses((data || []).map(e => ({ description: e.description, amount: Number(e.monthly_amount) })));
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
-    }
-  };
-
-  const fetchIncomes = async () => {
-    try {
-      const monthNum = selectedMonth + 1;
-      const startDate = `${selectedYear}-${String(monthNum).padStart(2, '0')}-01`;
-      const endDate = monthNum === 12
-        ? `${selectedYear + 1}-01-01`
-        : `${selectedYear}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-      // Fetch payments within the selected month (based on payment_date)
-      const { data: payments, error: paymentsError } = await supabase
-        .from('quote_payments')
-        .select('quote_id, amount, is_paid')
-        .eq('user_id', user?.id)
-        .gte('payment_date', startDate)
-        .lt('payment_date', endDate);
-
-      if (paymentsError) throw paymentsError;
-      if (!payments || payments.length === 0) {
-        setIncomes([]);
-        return;
-      }
-
-      // Get unique quote IDs from payments
-      const quoteIds = [...new Set(payments.map(p => p.quote_id))];
-      const { data: quotes, error: quotesError } = await supabase
-        .from('quotes')
-        .select('id, client_name')
-        .in('id', quoteIds);
-
-      if (quotesError) throw quotesError;
-
-      const quoteMap = new Map((quotes || []).map(q => [q.id, q.client_name]));
-
-      // Group payments by quote
-      const paymentsByQuote = new Map<string, { deposits: number; finalPayment: number }>();
-      for (const p of payments) {
-        const existing = paymentsByQuote.get(p.quote_id) || { deposits: 0, finalPayment: 0 };
-        if (p.is_paid) {
-          existing.finalPayment += Number(p.amount);
-        } else {
-          existing.deposits += Number(p.amount);
-        }
-        paymentsByQuote.set(p.quote_id, existing);
-      }
-
-      const incomeItems: IncomeItem[] = [];
-      for (const [quoteId, totals] of paymentsByQuote) {
-        const total = totals.deposits + totals.finalPayment;
-        if (total <= 0) continue;
-        incomeItems.push({
-          clientName: quoteMap.get(quoteId) || 'Cliente',
-          deposits: totals.deposits,
-          finalPayment: totals.finalPayment,
-          total,
-        });
-      }
-
-      setIncomes(incomeItems);
-    } catch (error) {
-      console.error('Error fetching incomes:', error);
-    }
-  };
-
-  // Group materials by category
-  const materialsByCategory = materials.reduce<Record<string, MaterialPurchaseItem[]>>((acc, m) => {
-    if (!acc[m.category]) acc[m.category] = [];
-    acc[m.category].push(m);
-    return acc;
-  }, {});
-
-  const totalMaterials = materials.reduce((s, m) => s + m.totalPaid, 0);
+  const totalMaterials = materials.reduce((s, m) => s + m.total, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const totalDeposits = incomes.reduce((s, i) => s + i.deposits, 0);
   const totalIncomeEvents = incomes.reduce((s, i) => s + i.total, 0);
@@ -231,7 +92,7 @@ export function FinancialSummary({ selectedMonth, selectedYear }: FinancialSumma
                 {materials.map((item, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span className="text-foreground">{idx + 1}. {item.category}</span>
-                    <span className="font-medium">{currencySymbol}{item.totalPaid.toFixed(2)}</span>
+                    <span className="font-medium">{currencySymbol}{item.total.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
