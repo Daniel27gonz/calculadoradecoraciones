@@ -125,8 +125,8 @@ export default function Finances() {
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-24 md:pb-8">
-      <div className="container max-w-4xl space-y-6">
+    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8">
+      <div className="container max-w-4xl px-3 sm:px-4 md:px-6 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
