@@ -546,6 +546,7 @@ export type Database = {
         Args: { p_email: string; p_new_user_id: string }
         Returns: Json
       }
+      resync_all_transactions: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
