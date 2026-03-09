@@ -185,16 +185,16 @@ export default function Finances() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <Card className="bg-green-50 border-green-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-green-100 rounded-full shrink-0">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Ingresos del mes</p>
-                  <p className="text-xl font-bold text-green-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-green-600 font-medium">Ingresos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-green-700 truncate">
                     {currencySymbol}{totalIncome.toFixed(2)}
                   </p>
                 </div>
@@ -203,14 +203,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-full">
-                  <TrendingDown className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-red-100 rounded-full shrink-0">
+                  <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos y compras del mes</p>
-                  <p className="text-xl font-bold text-red-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">Gastos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-red-700 truncate">
                     {currencySymbol}{totalExpenses.toFixed(2)}
                   </p>
                 </div>
@@ -219,16 +219,16 @@ export default function Finances() {
           </Card>
 
           <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                  <DollarSign className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                <div className={`p-2 rounded-full shrink-0 ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                  <DollarSign className={`w-4 h-4 sm:w-5 sm:h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
                 </div>
-                <div>
-                  <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                <div className="min-w-0">
+                  <p className={`text-xs sm:text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
                   </p>
-                  <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                  <p className={`text-lg sm:text-xl font-bold truncate ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
                   </p>
                 </div>
