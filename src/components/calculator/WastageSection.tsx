@@ -74,7 +74,7 @@ export function WastageSection({
             <span className="font-medium">{formatCurrency(totalMaterials)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Merma ({wastagePercentage}%):</span>
+            <span className="text-muted-foreground">Desperdicio ({wastagePercentage}%):</span>
             <span className="font-bold text-primary">{formatCurrency(wastageAmount)}</span>
           </div>
         </div>
