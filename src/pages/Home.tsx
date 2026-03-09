@@ -63,7 +63,7 @@ export default function Home() {
   }, [quotes]);
 
   const formatMoney = (n: number) =>
-    `${currencySymbol}${n.toLocaleString('es-LA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    `${currencySymbol}${n.toLocaleString('es-LA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (loading) {
     return (
