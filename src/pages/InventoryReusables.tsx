@@ -7,7 +7,7 @@ const InventoryReusables = () => {
   const currency = getCurrencyByCode(profile?.currency || 'MXN');
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+    <div className="pt-16 md:pt-4 p-3 sm:p-4 md:p-6 max-w-5xl mx-auto">
       <ReusableMaterialsManager currencySymbol={currency.symbol} />
     </div>
   );

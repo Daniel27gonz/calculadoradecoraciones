@@ -34,8 +34,8 @@ export default function EarnMore() {
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-24 md:pb-8">
-      <div className="container max-w-4xl space-y-6">
+    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8">
+      <div className="container max-w-4xl px-3 sm:px-4 space-y-4 md:space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground flex items-center gap-3">
             <TrendingUp className="w-7 h-7 text-primary" />

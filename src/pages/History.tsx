@@ -209,9 +209,9 @@ export default function History() {
                             )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
-                          <p className={`text-sm font-medium ${profitColor}`}>
+                        <div className="text-right shrink-0">
+                          <p className="text-xl sm:text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                          <p className={`text-xs sm:text-sm font-medium ${profitColor}`}>
                             +{currencySymbol}{summary.netProfit.toFixed(2)} ({summary.profitPercentage.toFixed(0)}%)
                           </p>
                         </div>

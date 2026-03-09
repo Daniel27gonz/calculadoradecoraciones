@@ -276,11 +276,11 @@ export default function Finances() {
         {/* Transactions List */}
         <Card>
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold">Historial de Transacciones</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-bold">Historial de Transacciones</CardTitle>
               <Popover open={txPickerOpen} onOpenChange={setTxPickerOpen}>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer">
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer self-start">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium capitalize">{txMonthLabel}</span>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
