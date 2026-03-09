@@ -357,6 +357,7 @@ export default function Finances() {
                 }
               </div>
             ) : (
+              <>
               {/* Mobile: card layout */}
               <div className="sm:hidden space-y-2 px-4 pb-4">
                 {filteredTransactions.map((transaction) => (
@@ -446,6 +447,7 @@ export default function Finances() {
                   </tfoot>
                 </table>
               </div>
+              </>
             )}
           </CardContent>
         </Card>
