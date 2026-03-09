@@ -271,7 +271,7 @@ export default function Finances() {
         </div>
 
         {/* Financial Summary */}
-        <FinancialSummary selectedMonth={selectedMonth} selectedYear={selectedYear} />
+        <FinancialSummary transactions={useMonthlyFinancials(allTransactions, selectedMonth, selectedYear).monthTransactions} loading={loadingTransactions} />
 
         {/* Transactions List */}
         <Card>
