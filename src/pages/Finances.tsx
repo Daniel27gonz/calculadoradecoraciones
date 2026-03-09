@@ -316,18 +316,18 @@ export default function Finances() {
             </div>
 
             {/* Inline Summary Cards */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
-                <p className="text-xs text-green-600 font-medium">Ingresos</p>
-                <p className="text-base font-bold text-green-600">{currencySymbol}{filteredIncome.toFixed(2)}</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+              <div className="rounded-lg bg-green-50 border border-green-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-green-600 font-medium">Ingresos</p>
+                <p className="text-sm sm:text-base font-bold text-green-600 truncate">{currencySymbol}{filteredIncome.toFixed(2)}</p>
               </div>
-              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
-                <p className="text-xs text-red-600 font-medium">Gastos</p>
-                <p className="text-base font-bold text-red-600">{currencySymbol}{filteredExpense.toFixed(2)}</p>
+              <div className="rounded-lg bg-red-50 border border-red-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-red-600 font-medium">Gastos</p>
+                <p className="text-sm sm:text-base font-bold text-red-600 truncate">{currencySymbol}{filteredExpense.toFixed(2)}</p>
               </div>
-              <div className={`rounded-lg px-3 py-2.5 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-                <p className={`text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
-                <p className={`text-base font-bold ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              <div className={`rounded-lg px-2 sm:px-3 py-2 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <p className={`text-[10px] sm:text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
+                <p className={`text-sm sm:text-base font-bold truncate ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                   {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
                 </p>
               </div>
