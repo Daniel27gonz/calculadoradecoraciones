@@ -10,6 +10,10 @@ export interface FinancialTransaction {
   category: string | null;
   transaction_date: string;
   source: 'quote_payment' | 'material_purchase' | 'indirect_expense';
+  /** Extra metadata for detailed breakdowns */
+  clientName?: string;
+  isPaid?: boolean;
+  materialCategory?: string;
 }
 
 interface FinancialData {
@@ -51,7 +55,6 @@ export function useFinancialData(): FinancialData {
 
       // Income from quote_payments
       if (paymentsRes.data) {
-        // Fetch quote names for descriptions
         const quoteIds = [...new Set(paymentsRes.data.map(p => p.quote_id))];
         let quoteMap = new Map<string, { client_name: string; folio: number | null }>();
         if (quoteIds.length > 0) {
@@ -76,6 +79,8 @@ export function useFinancialData(): FinancialData {
             category: label,
             transaction_date: p.payment_date,
             source: 'quote_payment',
+            clientName: q?.client_name || 'Cliente',
+            isPaid: p.is_paid,
           });
         }
       }
@@ -83,27 +88,29 @@ export function useFinancialData(): FinancialData {
       // Expenses from material_purchases
       if (purchasesRes.data) {
         const materialIds = [...new Set(purchasesRes.data.map(p => p.material_id))];
-        let matMap = new Map<string, string>();
+        let matMap = new Map<string, { name: string; category: string }>();
         if (materialIds.length > 0) {
           const { data: mats } = await supabase
             .from('user_materials')
-            .select('id, name')
+            .select('id, name, category')
             .in('id', materialIds);
           if (mats) {
-            matMap = new Map(mats.map(m => [m.id, m.name]));
+            matMap = new Map(mats.map(m => [m.id, { name: m.name, category: m.category }]));
           }
         }
 
         for (const p of purchasesRes.data) {
           if (Number(p.total_paid) <= 0) continue;
+          const mat = matMap.get(p.material_id);
           allTx.push({
             id: `mp_${p.id}`,
             type: 'expense',
             amount: Number(p.total_paid),
-            description: `Compra: ${matMap.get(p.material_id) || 'Material'}`,
+            description: `Compra: ${mat?.name || 'Material'}`,
             category: 'Materiales',
             transaction_date: p.purchase_date,
             source: 'material_purchase',
+            materialCategory: mat?.category || 'Sin categoría',
           });
         }
       }

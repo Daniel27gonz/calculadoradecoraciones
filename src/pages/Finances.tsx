@@ -40,7 +40,7 @@ export default function Finances() {
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
   // Summary cards use unified source
-  const { totalIncome, totalExpenses, balance } = useMonthlyFinancials(allTransactions, selectedMonth, selectedYear);
+  const { totalIncome, totalExpenses, balance, monthTransactions: summaryMonthTx } = useMonthlyFinancials(allTransactions, selectedMonth, selectedYear);
 
   // Transaction history uses its own independent month
   const { monthTransactions } = useMonthlyFinancials(allTransactions, txMonth, txYear);
@@ -271,7 +271,7 @@ export default function Finances() {
         </div>
 
         {/* Financial Summary */}
-        <FinancialSummary selectedMonth={selectedMonth} selectedYear={selectedYear} />
+        <FinancialSummary transactions={summaryMonthTx} loading={loadingTransactions} />
 
         {/* Transactions List */}
         <Card>
