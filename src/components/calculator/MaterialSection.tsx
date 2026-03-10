@@ -91,11 +91,14 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
       name: saved.name,
       costPerUnit: price,
     });
-    setOpenDropdowns(prev => ({ ...prev, [materialId]: false }));
+    setSearchQueries(prev => ({ ...prev, [materialId]: '' }));
+    setFocusedSearch(null);
   };
 
-  const toggleDropdown = (materialId: string) => {
-    setOpenDropdowns(prev => ({ ...prev, [materialId]: !prev[materialId] }));
+  const getFilteredMaterials = (materialId: string) => {
+    const query = (searchQueries[materialId] || '').toLowerCase().trim();
+    if (!query) return [];
+    return savedMaterials.filter(m => m.name.toLowerCase().includes(query));
   };
 
   const total = materials.reduce((sum, m) => sum + (m.costPerUnit || 0) * (m.quantity || 0), 0);
