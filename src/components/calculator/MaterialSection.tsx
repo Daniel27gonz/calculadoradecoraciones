@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { Plus, Trash2, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,9 +23,8 @@ interface MaterialSectionProps {
 
 export function MaterialSection({ materials, onChange, currencySymbol = '$' }: MaterialSectionProps) {
   const [savedMaterials, setSavedMaterials] = useState<SavedMaterial[]>([]);
-  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
-  const [focusedSearch, setFocusedSearch] = useState<string | null>(null);
-  const searchRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     const fetchSavedMaterials = async () => {
@@ -39,7 +38,6 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
         .order('name');
 
       if (!error && data) {
-        // Fetch latest purchase price for each material
         const { data: purchases } = await supabase
           .from('material_purchases')
           .select('material_id, total_paid, quantity_presentations, units_added, purchase_date')
@@ -68,11 +66,27 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
     fetchSavedMaterials();
   }, []);
 
-  const addMaterial = () => {
-    onChange([
-      ...materials,
-      { id: crypto.randomUUID(), name: '', costPerUnit: undefined as unknown as number, quantity: undefined as unknown as number },
-    ]);
+  const addFromSaved = (saved: SavedMaterial) => {
+    // Check if already added
+    const existing = materials.find(m => m.name === saved.name);
+    if (existing) {
+      // Increment quantity
+      onChange(materials.map(m => 
+        m.id === existing.id 
+          ? { ...m, quantity: (m.quantity || 0) + 1 } 
+          : m
+      ));
+    } else {
+      const price = saved.latest_presentation_price != null 
+        ? Math.round(saved.latest_presentation_price * 100) / 100
+        : Math.round((saved.cost_per_unit || 0) * 100) / 100;
+      onChange([
+        ...materials,
+        { id: crypto.randomUUID(), name: saved.name, costPerUnit: price, quantity: 1 },
+      ]);
+    }
+    setSearchQuery('');
+    setIsSearchFocused(false);
   };
 
   const updateMaterial = (id: string, updates: Partial<Material>) => {
@@ -83,23 +97,9 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
     onChange(materials.filter(m => m.id !== id));
   };
 
-  const selectSavedMaterial = (materialId: string, saved: SavedMaterial) => {
-    const price = saved.latest_presentation_price != null 
-      ? Math.round(saved.latest_presentation_price * 100) / 100
-      : Math.round((saved.cost_per_unit || 0) * 100) / 100;
-    updateMaterial(materialId, {
-      name: saved.name,
-      costPerUnit: price,
-    });
-    setSearchQueries(prev => ({ ...prev, [materialId]: '' }));
-    setFocusedSearch(null);
-  };
-
-  const getFilteredMaterials = (materialId: string) => {
-    const query = (searchQueries[materialId] || '').toLowerCase().trim();
-    if (!query) return [];
-    return savedMaterials.filter(m => m.name.toLowerCase().includes(query));
-  };
+  const filteredSaved = savedMaterials.filter(m => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
 
   const total = materials.reduce((sum, m) => sum + (m.costPerUnit || 0) * (m.quantity || 0), 0);
 
@@ -127,7 +127,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
       <CardContent className="space-y-4">
         {materials.length === 0 && (
           <div className="text-center py-6 text-muted-foreground text-sm">
-            No hay materiales agregados
+            Busca y selecciona materiales para agregarlos
           </div>
         )}
 
@@ -136,76 +136,26 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
             key={material.id}
             className="p-4 rounded-xl bg-lavender-light/50 border border-lavender/30 space-y-4 animate-fade-in"
           >
-            {/* Header with delete button */}
-            <div className="flex items-start justify-between gap-3">
+            {/* Header with name and delete */}
+            <div className="flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
-                
-                {/* Saved materials dropdown */}
-                {savedMaterials.length > 0 && (
-                  <div className="mt-2 relative" ref={(el) => { searchRefs.current[material.id] = el; }}>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        value={searchQueries[material.id] || ''}
-                        onChange={(e) => setSearchQueries(prev => ({ ...prev, [material.id]: e.target.value }))}
-                        onFocus={() => setFocusedSearch(material.id)}
-                        onBlur={() => setTimeout(() => setFocusedSearch(null), 200)}
-                        placeholder="Buscar en mis materiales..."
-                        className="h-9 text-xs pl-8 bg-background"
-                      />
-                    </div>
-                    {focusedSearch === material.id && (searchQueries[material.id] || '').trim() !== '' && (
-                      <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
-                        {getFilteredMaterials(material.id).length === 0 ? (
-                          <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                            No se encontraron materiales
-                          </div>
-                        ) : (
-                          getFilteredMaterials(material.id).map((saved) => (
-                            <button
-                              key={saved.id}
-                              type="button"
-                              onClick={() => selectSavedMaterial(material.id, saved)}
-                              className="w-full text-left px-3 py-2 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
-                            >
-                              <div className="font-medium text-sm truncate">{saved.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {saved.latest_presentation_price != null 
-                                  ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-primary">(última compra x pieza)</span></>
-                                  : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
-                                }
-                              </div>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <span className="font-medium text-base truncate block">{material.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  Precio/unidad: {currencySymbol}{(material.costPerUnit || 0).toFixed(2)}
+                </span>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => removeMaterial(material.id)}
-                className="h-9 w-9 text-destructive hover:bg-destructive/10 shrink-0 mt-6"
+                className="h-9 w-9 text-destructive hover:bg-destructive/10 shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* Numeric fields grid */}
+            {/* Quantity and subtotal */}
             <div className="grid grid-cols-2 gap-4">
-              <NumericField
-                label="Precio/unidad"
-                prefix={currencySymbol}
-                min={0}
-                step={0.01}
-                value={material.costPerUnit ?? ''}
-                onChange={(e) => updateMaterial(material.id, { 
-                  costPerUnit: e.target.value === '' ? undefined as unknown as number : Number(e.target.value) 
-                })}
-                placeholder="0.00"
-              />
               <NumericField
                 label="Cantidad"
                 min={0}
@@ -215,13 +165,9 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                 })}
                 placeholder="0"
               />
-            </div>
-
-            {/* Subtotal */}
-            <div className="flex justify-end pt-2 border-t border-lavender/20">
-              <div className="text-right">
-                <span className="text-xs text-muted-foreground block mb-0.5">Subtotal</span>
-                <span className="text-base sm:text-lg font-bold text-accent-foreground tabular-nums">
+              <div className="flex flex-col justify-end">
+                <span className="text-xs text-muted-foreground mb-1">Subtotal</span>
+                <span className="text-lg font-bold text-accent-foreground tabular-nums">
                   {currencySymbol}{formatCurrency((material.costPerUnit || 0) * (material.quantity || 0))}
                 </span>
               </div>
@@ -229,10 +175,46 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
           </div>
         ))}
 
-        <Button variant="lavender" className="w-full h-12 text-base font-medium" onClick={addMaterial}>
-          <Plus className="w-5 h-5 mr-2" />
-          Agregar material
-        </Button>
+        {/* Search bar to add materials */}
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder="Buscar material para agregar..."
+              className="h-12 text-base pl-9 bg-background"
+            />
+          </div>
+          {isSearchFocused && searchQuery.trim() !== '' && (
+            <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+              {filteredSaved.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                  No se encontraron materiales
+                </div>
+              ) : (
+                filteredSaved.map((saved) => (
+                  <button
+                    key={saved.id}
+                    type="button"
+                    onClick={() => addFromSaved(saved)}
+                    className="w-full text-left px-3 py-2 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
+                  >
+                    <div className="font-medium text-sm truncate">{saved.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {saved.latest_presentation_price != null 
+                        ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-primary">(última compra x pieza)</span></>
+                        : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
+                      }
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
