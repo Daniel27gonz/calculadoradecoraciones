@@ -699,7 +699,16 @@ export function MaterialsManager() {
           <Plus className="w-4 h-4 mr-1" /> Registrar Compra
         </Button>
 
-        {filteredPurchases.length > 0 ? (
+        {/* Search bar for purchases */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar compra por material..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-9 text-sm"
+          />
+        </div>
           <div className="space-y-2">
             {filteredPurchases.map(p => (
               <Card key={p.id} className="overflow-hidden">
