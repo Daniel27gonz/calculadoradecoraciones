@@ -425,7 +425,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
 
               {/* Material cost */}
               <div className="space-y-2">
-                <Label htmlFor="material_cost">Valor del material</Label>
+                <Label htmlFor="material_cost">Precio de compra original del material</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {currencySymbol}
