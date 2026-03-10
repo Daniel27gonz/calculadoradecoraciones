@@ -76,8 +76,8 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
-        (statusFilter === 'delivered' && q.status === 'delivered' && !fullyPaidQuotes.has(q.id)) ||
+        (statusFilter === 'approved' && q.status === 'approved') ||
+        (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
