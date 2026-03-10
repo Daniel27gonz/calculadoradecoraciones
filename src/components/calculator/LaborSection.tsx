@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { Worker, TimePhase } from '@/types/quote';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LaborSectionProps {
   workers: Worker[];
