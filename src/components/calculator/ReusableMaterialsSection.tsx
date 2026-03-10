@@ -146,7 +146,7 @@ export function ReusableMaterialsSection({
               <span>Material Reutilizable (Renta de Equipo Decorativo)</span>
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 ml-8 sm:ml-9">
-              Bases, estructuras, herramientas
+              Bases, estructuras y mobiliario
             </p>
           </div>
           <div className="px-3 py-1.5 rounded-full bg-accent/30 border border-accent/40">
