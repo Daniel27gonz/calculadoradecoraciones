@@ -66,6 +66,7 @@ export function MaterialsManager() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [stockSearchQuery, setStockSearchQuery] = useState('');
 
   // Month selector state
   const now = new Date();
