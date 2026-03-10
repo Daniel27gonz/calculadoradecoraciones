@@ -30,7 +30,8 @@ export function LaborSection({
   onTimePhasesChange,
   currencySymbol = '$',
 }: LaborSectionProps) {
-  const { defaultHourlyRate } = useQuote();
+  const { defaultHourlyRate, setDefaultHourlyRate } = useQuote();
+  const { profile, updateProfile } = useAuth();
   const prevRateRef = useRef(defaultHourlyRate);
 
   // Auto-fill time phase rates when defaultHourlyRate changes
