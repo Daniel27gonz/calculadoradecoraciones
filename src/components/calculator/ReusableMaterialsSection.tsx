@@ -127,9 +127,13 @@ export function ReusableMaterialsSection({
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  // Filter out already added materials
+  // Filter out already added materials and apply search
   const availableMaterials = savedMaterials.filter(
     saved => !reusableMaterialsUsed.some(used => used.reusableMaterialId === saved.id)
+  );
+
+  const filteredMaterials = availableMaterials.filter(m => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
 
   return (
