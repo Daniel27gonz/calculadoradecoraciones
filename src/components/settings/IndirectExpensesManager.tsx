@@ -310,8 +310,9 @@ export function IndirectExpensesManager({ currencySymbol = '$' }: IndirectExpens
         {/* Title */}
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <span className="text-xl">📊</span>
-          Gastos del Mes
-        </h1>
+           Gastos del Mes
+         </h1>
+         <p className="text-xs text-muted-foreground">Ej: Luz, Internet, Renta del local</p>
 
         {/* Month selector */}
         <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
