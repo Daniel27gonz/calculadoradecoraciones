@@ -908,10 +908,20 @@ export function MaterialsManager() {
               Stock real = Total comprado − Usado en pedidos confirmados
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="space-y-3">
+            {/* Search bar for stock */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar material..."
+                value={stockSearchQuery}
+                onChange={(e) => setStockSearchQuery(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
             {materials.length > 0 ? (
-              <div className="divide-y">
-                {materials.map((m, index) => {
+              <div className="divide-y border rounded-md">
+                {materials.filter(m => !stockSearchQuery.trim() || m.name.toLowerCase().includes(stockSearchQuery.toLowerCase())).map((m, index) => {
                   const totalDeducted = deductions[m.id] || 0;
                   const stockReal = m.total_purchased - totalDeducted;
                   const isLow = stockReal <= m.stock_minimum;
