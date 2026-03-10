@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, ChevronDown, Package, Save, X } from 'lucide-react';
+import { Plus, Trash2, Package, Save, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,6 @@ import { NumericField } from '@/components/ui/numeric-field';
 import { ReusableMaterialUsed } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 interface SavedReusableMaterial {
   id: string;
@@ -31,7 +26,8 @@ export function ReusableMaterialsSection({
   currencySymbol = '$' 
 }: ReusableMaterialsSectionProps) {
   const [savedMaterials, setSavedMaterials] = useState<SavedReusableMaterial[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newCostPerUse, setNewCostPerUse] = useState('');
@@ -111,9 +107,9 @@ export function ReusableMaterialsSection({
         },
       ]);
     }
-    setIsDropdownOpen(false);
+    setSearchQuery('');
+    setIsSearchFocused(false);
   };
-
   const updateMaterial = (id: string, updates: Partial<ReusableMaterialUsed>) => {
     onChange(reusableMaterialsUsed.map(m => (m.id === id ? { ...m, ...updates } : m)));
   };
@@ -131,9 +127,13 @@ export function ReusableMaterialsSection({
     return amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  // Filter out already added materials
+  // Filter out already added materials and apply search
   const availableMaterials = savedMaterials.filter(
     saved => !reusableMaterialsUsed.some(used => used.reusableMaterialId === saved.id)
+  );
+
+  const filteredMaterials = availableMaterials.filter(m => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
 
   return (
@@ -263,50 +263,51 @@ export function ReusableMaterialsSection({
           </div>
         )}
 
-        {/* Add materials dropdown */}
-        <Collapsible 
-          open={isDropdownOpen} 
-          onOpenChange={setIsDropdownOpen}
-        >
-          <CollapsibleTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full h-12 text-base font-medium justify-between"
-            >
-              <span className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Agregar material reutilizable
-              </span>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
-              {availableMaterials.map((saved) => (
-                <button
-                  key={saved.id}
-                  type="button"
-                  onClick={() => addMaterial(saved)}
-                  className="w-full text-left px-4 py-3 hover:bg-accent/20 border-b border-border/50 last:border-b-0 transition-colors"
-                >
-                  <div className="font-medium text-sm">{saved.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
-                  </div>
-                </button>
-              ))}
-              {/* Create new option at bottom of list */}
+        {/* Search bar for adding materials */}
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder="Buscar material reutilizable..."
+              className="h-12 text-base pl-9 bg-background"
+            />
+          </div>
+          {isSearchFocused && searchQuery.trim() !== '' && (
+            <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+              {filteredMaterials.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                  No se encontraron materiales
+                </div>
+              ) : (
+                filteredMaterials.map((saved) => (
+                  <button
+                    key={saved.id}
+                    type="button"
+                    onClick={() => addMaterial(saved)}
+                    className="w-full text-left px-4 py-3 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
+                  >
+                    <div className="font-medium text-sm">{saved.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
+                    </div>
+                  </button>
+                ))
+              )}
               <button
                 type="button"
-                onClick={() => { setShowCreateForm(true); setIsDropdownOpen(false); }}
+                onClick={() => { setShowCreateForm(true); setSearchQuery(''); setIsSearchFocused(false); }}
                 className="w-full text-left px-4 py-3 hover:bg-primary/10 border-t border-border transition-colors text-primary font-medium text-sm flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Crear nuevo material
               </button>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
