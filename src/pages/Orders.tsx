@@ -78,6 +78,7 @@ export default function Orders() {
       const matchesStatus = statusFilter === 'all' ||
         (statusFilter === 'approved' && q.status === 'approved') ||
         (statusFilter === 'delivered' && q.status === 'delivered') ||
+        (statusFilter === 'paid' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
