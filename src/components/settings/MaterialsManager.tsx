@@ -185,11 +185,14 @@ export function MaterialsManager() {
 
   // Filter purchases by selected month/year
   const filteredPurchases = useMemo(() => {
-    return purchases.filter(p => {
+    const byMonth = purchases.filter(p => {
       const d = new Date(p.purchase_date + 'T12:00:00');
       return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
     });
-  }, [purchases, selectedMonth, selectedYear]);
+    if (!searchQuery.trim()) return byMonth;
+    const q = searchQuery.toLowerCase();
+    return byMonth.filter(p => (materialMap[p.material_id] || '').toLowerCase().includes(q));
+  }, [purchases, selectedMonth, selectedYear, searchQuery, materialMap]);
 
   // Helper: get default date for selected month
   const getDefaultDateForMonth = () => {
