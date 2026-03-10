@@ -139,15 +139,6 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
             {/* Header with delete button */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Descripción del material
-                </label>
-                <Input
-                  value={material.name}
-                  onChange={(e) => updateMaterial(material.id, { name: e.target.value })}
-                  placeholder="Ej: Cinta de globos 5 metros"
-                  className="h-11 text-base"
-                />
                 
                 {/* Saved materials dropdown */}
                 {savedMaterials.length > 0 && (
