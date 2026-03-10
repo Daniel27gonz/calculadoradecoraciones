@@ -37,7 +37,7 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'cancelled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'paid' | 'cancelled'>('all');
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -78,6 +78,7 @@ export default function Orders() {
       const matchesStatus = statusFilter === 'all' ||
         (statusFilter === 'approved' && q.status === 'approved') ||
         (statusFilter === 'delivered' && q.status === 'delivered') ||
+        (statusFilter === 'paid' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -592,6 +593,7 @@ export default function Orders() {
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
             <TabsTrigger value="approved" className="flex-1 text-xs">Confirmados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
+            <TabsTrigger value="paid" className="flex-1 text-xs">Pagados</TabsTrigger>
             <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
           </TabsList>
         </Tabs>
