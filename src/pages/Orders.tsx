@@ -749,7 +749,7 @@ export default function Orders() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
-                        {(quote.status === 'approved' || quote.status === 'delivered') && (
+                        {(quote.status === 'approved' || quote.status === 'delivered') && !fullyPaidQuotes.has(quote.id) && (
                           <Button
                             size="sm"
                             variant="outline"
