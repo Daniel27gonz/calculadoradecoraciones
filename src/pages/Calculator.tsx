@@ -67,7 +67,6 @@ export default function Calculator() {
     saveQuote, 
     calculateCosts, 
     defaultHourlyRate,
-    setDefaultHourlyRate,
     packages 
   } = useQuote();
 
