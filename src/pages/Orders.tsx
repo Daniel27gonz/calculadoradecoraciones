@@ -76,8 +76,8 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'approved' && fullyPaidQuotes.has(q.id)) ||
-        (statusFilter === 'delivered' && q.status === 'delivered' && !fullyPaidQuotes.has(q.id)) ||
+        (statusFilter === 'approved' && q.status === 'approved') ||
+        (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -585,7 +585,7 @@ export default function Orders() {
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
           <TabsList className="w-full">
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Pagados</TabsTrigger>
+            <TabsTrigger value="approved" className="flex-1 text-xs">Confirmados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
             <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
           </TabsList>
