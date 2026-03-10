@@ -91,6 +91,35 @@ export function LaborSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Hourly Rate */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            💰 Tarifa por hora
+          </h4>
+          <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50 border border-border/50">
+            <span className="text-2xl text-muted-foreground">{currencySymbol}</span>
+            <Input
+              type="number"
+              min="0"
+              value={defaultHourlyRate ?? ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                setDefaultHourlyRate(value);
+                if (profile) {
+                  updateProfile({ default_hourly_rate: value });
+                }
+              }}
+              placeholder="0"
+              className="text-2xl font-bold h-14 w-32"
+            />
+            <span className="text-muted-foreground">por hora</span>
+          </div>
+          <p className="text-xs text-muted-foreground ml-4">
+            Se aplicará como tarifa predeterminada en las fases de tiempo.
+          </p>
+        </div>
+
         {/* Time phases */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">

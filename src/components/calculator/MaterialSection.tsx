@@ -114,7 +114,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
           <div>
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="text-xl sm:text-2xl">🎀</span>
-              <span>Materiales de Consumo (No Reutilizables)</span>
+              <span>Materiales utilizados</span>
             </CardTitle>
           </div>
           <div className="px-3 py-1.5 rounded-full bg-lavender/30 border border-lavender/40">
