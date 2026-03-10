@@ -208,7 +208,7 @@ export default function Home() {
               <div className="bg-emerald-50/80 rounded-xl p-3 border border-emerald-100 text-center">
                 <CheckCircle className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
                 <p className="text-2xl font-extrabold text-emerald-700">{eventsCompleted}</p>
-                <p className="text-[10px] text-emerald-600 font-medium leading-tight">Eventos realizados</p>
+                <p className="text-[10px] text-emerald-600 font-medium leading-tight">Decoraciones realizadas</p>
               </div>
               <div className="bg-purple-50/80 rounded-xl p-3 border border-purple-100 text-center">
                 <FileText className="w-5 h-5 text-purple-600 mx-auto mb-1" />
