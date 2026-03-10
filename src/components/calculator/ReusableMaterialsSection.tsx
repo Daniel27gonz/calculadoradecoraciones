@@ -143,7 +143,7 @@ export function ReusableMaterialsSection({
           <div>
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="text-xl sm:text-2xl">🧮</span>
-              <span>Material Reutilizable (Renta de Equipo Decorativo)</span>
+              <span>Renta/ alquiler de elementos decorativos</span>
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 ml-8 sm:ml-9">
               Bases, estructuras y mobiliario
