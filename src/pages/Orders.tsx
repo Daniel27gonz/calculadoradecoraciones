@@ -585,7 +585,7 @@ export default function Orders() {
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
           <TabsList className="w-full">
             <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Pagados</TabsTrigger>
+            <TabsTrigger value="approved" className="flex-1 text-xs">Confirmados</TabsTrigger>
             <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
             <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
           </TabsList>
