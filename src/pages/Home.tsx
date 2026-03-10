@@ -337,7 +337,7 @@ export default function Home() {
                 <CheckCircle className="w-5 h-5 text-emerald-600" />
                 <div>
                   <p className="text-lg font-bold text-emerald-700">{eventsCompleted}</p>
-                  <p className="text-xs text-emerald-600">Eventos realizados</p>
+                  <p className="text-xs text-emerald-600">Decoraciones realizadas</p>
                 </div>
               </div>
               <div className="bg-purple-50/80 rounded-xl p-3 border border-purple-100 flex items-center gap-3">
