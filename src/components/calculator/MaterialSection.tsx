@@ -23,7 +23,9 @@ interface MaterialSectionProps {
 
 export function MaterialSection({ materials, onChange, currencySymbol = '$' }: MaterialSectionProps) {
   const [savedMaterials, setSavedMaterials] = useState<SavedMaterial[]>([]);
-  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  const [focusedSearch, setFocusedSearch] = useState<string | null>(null);
+  const searchRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     const fetchSavedMaterials = async () => {
