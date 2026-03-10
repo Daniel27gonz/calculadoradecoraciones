@@ -712,6 +712,8 @@ export function MaterialsManager() {
             className="pl-8 h-9 text-sm"
           />
         </div>
+
+        {filteredPurchases.length > 0 ? (
           <div className="space-y-2">
             {filteredPurchases.map(p => (
               <Card key={p.id} className="overflow-hidden">
