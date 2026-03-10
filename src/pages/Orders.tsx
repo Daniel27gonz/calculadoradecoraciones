@@ -206,12 +206,17 @@ export default function Orders() {
     await loadQuotes();
   };
 
-  // Mark as delivered
+  // Mark as delivered and open payment dialog
   const markAsDelivered = async (quote: Quote) => {
     const updated = { ...quote, status: 'delivered' as const };
     await saveQuote(updated);
-    toast({ title: '📦 Pedido entregado', description: `${quote.clientName} marcado como entregado. Se cuenta como evento realizado.` });
+    toast({ title: '📦 Decoración realizada', description: `${quote.clientName} marcado como entregado.` });
     await loadQuotes();
+    // Open payment dialog automatically
+    setPaymentQuoteId(quote.id);
+    setNewPaymentAmount('');
+    setNewPaymentNotes('');
+    setShowPaymentDialog(true);
   };
 
   // Cancel order (removes stock deductions automatically via saveQuote, and cleans payments + transactions)
