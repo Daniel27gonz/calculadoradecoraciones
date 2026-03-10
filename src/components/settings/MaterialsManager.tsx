@@ -790,7 +790,7 @@ export function MaterialsManager() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Fecha</Label>
+                <Label className="text-xs">Fecha de compra</Label>
                 <Input type="date" value={newPurchase.purchase_date} onChange={(e) => setNewPurchase(p => ({ ...p, purchase_date: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
