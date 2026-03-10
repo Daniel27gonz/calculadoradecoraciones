@@ -116,7 +116,7 @@ export function PricingSection({
             <CostLine icon="👩‍🎨" label="Mi trabajo (mano de obra)" amount={summary.totalLabor} />
             <CostLine icon="🚗" label="Total transporte" amount={summary.totalTransport} />
             
-            <CostLine icon="✨" label="Total extras" amount={summary.totalExtras} />
+            <CostLine icon="⭐" label="Adicionales del cliente" amount={summary.totalExtras} />
             <CostLine 
               icon="📊" 
               label="Gastos del negocio" 
