@@ -134,7 +134,7 @@ export function FinancialSummary({ transactions, loading }: FinancialSummaryProp
               <h3 className="font-semibold text-sm">Ingresos del mes</h3>
             </div>
             {incomes.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-2">Sin eventos entregados este mes</p>
+              <p className="text-xs text-muted-foreground py-2">Sin decoraciones realizadas este mes</p>
             ) : (
               <div className="space-y-2">
                 {incomes.map((inc, idx) => (
