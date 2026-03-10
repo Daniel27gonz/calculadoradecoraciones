@@ -109,7 +109,7 @@ export function ReusableMaterialsSection({
     }
     setSearchQuery('');
     setIsSearchFocused(false);
-
+  };
   const updateMaterial = (id: string, updates: Partial<ReusableMaterialUsed>) => {
     onChange(reusableMaterialsUsed.map(m => (m.id === id ? { ...m, ...updates } : m)));
   };
