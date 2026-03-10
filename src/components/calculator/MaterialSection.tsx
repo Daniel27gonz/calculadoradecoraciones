@@ -151,42 +151,45 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
                 
                 {/* Saved materials dropdown */}
                 {savedMaterials.length > 0 && (
-                  <Collapsible 
-                    open={openDropdowns[material.id]} 
-                    onOpenChange={() => toggleDropdown(material.id)}
-                    className="mt-2"
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-between text-xs h-9 bg-background hover:bg-lavender/20"
-                      >
-                        <span>Seleccionar de mis materiales</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${openDropdowns[material.id] ? 'rotate-180' : ''}`} />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-1">
-                      <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
-                        {savedMaterials.map((saved) => (
-                          <button
-                            key={saved.id}
-                            type="button"
-                            onClick={() => selectSavedMaterial(material.id, saved)}
-                            className="w-full text-left px-3 py-2 hover:bg-lavender/20 border-b border-border/50 last:border-b-0 transition-colors"
-                          >
-                            <div className="font-medium text-sm truncate">{saved.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {saved.latest_presentation_price != null 
-                                ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-green-600">(última compra x pieza)</span></>
-                                : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
-                              }
-                            </div>
-                          </button>
-                        ))}
+                  <div className="mt-2 relative" ref={(el) => { searchRefs.current[material.id] = el; }}>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={searchQueries[material.id] || ''}
+                        onChange={(e) => setSearchQueries(prev => ({ ...prev, [material.id]: e.target.value }))}
+                        onFocus={() => setFocusedSearch(material.id)}
+                        onBlur={() => setTimeout(() => setFocusedSearch(null), 200)}
+                        placeholder="Buscar en mis materiales..."
+                        className="h-9 text-xs pl-8 bg-background"
+                      />
+                    </div>
+                    {focusedSearch === material.id && (searchQueries[material.id] || '').trim() !== '' && (
+                      <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+                        {getFilteredMaterials(material.id).length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                            No se encontraron materiales
+                          </div>
+                        ) : (
+                          getFilteredMaterials(material.id).map((saved) => (
+                            <button
+                              key={saved.id}
+                              type="button"
+                              onClick={() => selectSavedMaterial(material.id, saved)}
+                              className="w-full text-left px-3 py-2 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
+                            >
+                              <div className="font-medium text-sm truncate">{saved.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {saved.latest_presentation_price != null 
+                                  ? <>{currencySymbol}{saved.latest_presentation_price.toFixed(2)} <span className="text-primary">(última compra x pieza)</span></>
+                                  : <>{currencySymbol}{(saved.cost_per_unit || 0).toFixed(2)} × {saved.quantity_per_presentation || 1} unidades</>
+                                }
+                              </div>
+                            </button>
+                          ))
+                        )}
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                    )}
+                  </div>
                 )}
               </div>
               <Button
