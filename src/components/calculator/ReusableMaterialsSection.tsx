@@ -263,50 +263,51 @@ export function ReusableMaterialsSection({
           </div>
         )}
 
-        {/* Add materials dropdown */}
-        <Collapsible 
-          open={isDropdownOpen} 
-          onOpenChange={setIsDropdownOpen}
-        >
-          <CollapsibleTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full h-12 text-base font-medium justify-between"
-            >
-              <span className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Agregar material reutilizable
-              </span>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
-              {availableMaterials.map((saved) => (
-                <button
-                  key={saved.id}
-                  type="button"
-                  onClick={() => addMaterial(saved)}
-                  className="w-full text-left px-4 py-3 hover:bg-accent/20 border-b border-border/50 last:border-b-0 transition-colors"
-                >
-                  <div className="font-medium text-sm">{saved.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
-                  </div>
-                </button>
-              ))}
-              {/* Create new option at bottom of list */}
+        {/* Search bar for adding materials */}
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder="Buscar material reutilizable..."
+              className="h-12 text-base pl-9 bg-background"
+            />
+          </div>
+          {isSearchFocused && searchQuery.trim() !== '' && (
+            <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+              {filteredMaterials.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                  No se encontraron materiales
+                </div>
+              ) : (
+                filteredMaterials.map((saved) => (
+                  <button
+                    key={saved.id}
+                    type="button"
+                    onClick={() => addMaterial(saved)}
+                    className="w-full text-left px-4 py-3 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
+                  >
+                    <div className="font-medium text-sm">{saved.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Costo por uso: {currencySymbol}{saved.cost_per_use.toFixed(2)}
+                    </div>
+                  </button>
+                ))
+              )}
               <button
                 type="button"
-                onClick={() => { setShowCreateForm(true); setIsDropdownOpen(false); }}
+                onClick={() => { setShowCreateForm(true); setSearchQuery(''); setIsSearchFocused(false); }}
                 className="w-full text-left px-4 py-3 hover:bg-primary/10 border-t border-border transition-colors text-primary font-medium text-sm flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Crear nuevo material
               </button>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
