@@ -26,7 +26,8 @@ export function ReusableMaterialsSection({
   currencySymbol = '$' 
 }: ReusableMaterialsSectionProps) {
   const [savedMaterials, setSavedMaterials] = useState<SavedReusableMaterial[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newCostPerUse, setNewCostPerUse] = useState('');
