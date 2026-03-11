@@ -65,15 +65,17 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       const fileName = `cotizacion-${sanitizedName}-${new Date().toISOString().split("T")[0]}`;
 
       const imgData = canvas.toDataURL("image/png", 1.0);
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const pdfWidth = 210;
-      const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
+      // Letter size: 215.9mm x 279.4mm
+      const pdfWidth = 215.9;
+      const pdfHeight = 279.4;
+      const imgRatio = canvas.width / canvas.height;
+      const contentWidth = pdfWidth;
+      const contentHeight = contentWidth / imgRatio;
 
       const pdf = new jsPDF({
-        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
+        orientation: "portrait",
         unit: "mm",
-        format: [pdfWidth, pdfHeight],
+        format: "letter",
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
