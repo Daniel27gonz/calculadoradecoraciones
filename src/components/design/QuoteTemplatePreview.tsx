@@ -65,12 +65,26 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       const fileName = `cotizacion-${sanitizedName}-${new Date().toISOString().split("T")[0]}`;
 
       const imgData = canvas.toDataURL("image/png", 1.0);
-      // Letter size: 215.9mm x 279.4mm
+      // Letter size: 215.9mm x 279.4mm with margins
+      const margin = 10; // 10mm margins
       const pdfWidth = 215.9;
       const pdfHeight = 279.4;
+      const printableWidth = pdfWidth - margin * 2;
+      const printableHeight = pdfHeight - margin * 2;
       const imgRatio = canvas.width / canvas.height;
-      const contentWidth = pdfWidth;
-      const contentHeight = contentWidth / imgRatio;
+      
+      // Fit content within printable area preserving aspect ratio
+      let contentWidth = printableWidth;
+      let contentHeight = contentWidth / imgRatio;
+      
+      // If content is taller than printable area, scale down to fit
+      if (contentHeight > printableHeight) {
+        contentHeight = printableHeight;
+        contentWidth = contentHeight * imgRatio;
+      }
+      
+      // Center horizontally
+      const xOffset = (pdfWidth - contentWidth) / 2;
 
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -78,19 +92,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
         format: "letter",
       });
 
-      if (contentHeight <= pdfHeight) {
-        pdf.addImage(imgData, "PNG", 0, 0, contentWidth, contentHeight);
-      } else {
-        // Content taller than one page: split across pages
-        let remainingHeight = contentHeight;
-        let yOffset = 0;
-        while (remainingHeight > 0) {
-          if (yOffset > 0) pdf.addPage("letter", "portrait");
-          pdf.addImage(imgData, "PNG", 0, -yOffset, contentWidth, contentHeight);
-          yOffset += pdfHeight;
-          remainingHeight -= pdfHeight;
-        }
-      }
+      pdf.addImage(imgData, "PNG", xOffset, margin, contentWidth, contentHeight);
       pdf.save(`${fileName}.pdf`);
 
       toast({ title: "¡Descargado!", description: "La cotización se ha descargado como PDF" });
