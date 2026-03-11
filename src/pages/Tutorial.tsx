@@ -7,8 +7,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const tutorials = [
   { id: '1172031849', title: 'Bienvenida al Sistema', description: 'Introducción general a DecoControl' },
-  // Agrega más videos aquí con el mismo formato:
-  // { id: 'VIMEO_ID', title: 'Título', description: 'Descripción corta' },
+  { id: '1172401090', title: 'Materiales de Consumo', description: 'Cómo gestionar tus materiales de consumo' },
+  { id: '1172404208', title: 'Materiales Reutilizables', description: 'Cómo administrar materiales reutilizables' },
+  { id: '1172405295', title: 'Gastos del Mes', description: 'Registro y control de gastos mensuales' },
+  { id: '1172406005', title: 'Cotización', description: 'Cómo crear una cotización paso a paso' },
+  { id: '1172413251', title: 'Agendas y Pedidos', description: 'Gestión de agendas y pedidos de clientes' },
+  { id: '1172415053', title: 'Cotización en PDF', description: 'Cómo generar y enviar cotizaciones en PDF' },
+  { id: '1172419674', title: 'Resumen del Mes', description: 'Visualiza el resumen financiero mensual' },
 ];
 
 export default function Tutorial() {
