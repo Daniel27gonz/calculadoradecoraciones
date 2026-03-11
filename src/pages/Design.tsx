@@ -817,6 +817,99 @@ const Design = () => {
               </CardContent>
             </Card>
 
+            {/* Personalizar colores del PDF */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-medium text-primary flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  Personalizar colores del PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Estos colores solo se aplican al diseño del PDF de cotización.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Color del encabezado</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.header}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.header}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color de títulos</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.titles}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.titles}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color de líneas y separadores</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.lines}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.lines}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color del precio final</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.finalPrice}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.finalPrice}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateField("pdfColors", { ...defaultPdfColors })}
+                  className="text-xs"
+                >
+                  Restaurar colores predeterminados
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Total */}
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="pt-6">
