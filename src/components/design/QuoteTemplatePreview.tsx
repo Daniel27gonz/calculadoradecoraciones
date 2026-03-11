@@ -118,9 +118,9 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
         {/* Header */}
-        <div className="relative p-6 pb-4" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
+        <div className="relative px-6 pt-4 pb-2" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
           {/* Logo + Business Name centered */}
-          <div className="flex flex-col items-center gap-2 mb-3">
+          <div className="flex flex-col items-center gap-1 mb-2">
             <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
               {data.businessLogo ? (
                 <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
@@ -131,24 +131,14 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
             <span className="text-sm font-bold text-center" style={{ color: c.titles }}>{data.businessName}</span>
           </div>
 
-          {/* Title + Folio centered, Client data right */}
+          {/* Title centered, Client data right */}
           <div className="flex items-start">
-            {/* Spacer left for balance */}
             <div className="flex-1" />
-
-            {/* Center: Title */}
             <div className="flex flex-col items-center">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
-              {data.folio && (
-                <p className="text-sm font-semibold mt-1" style={{ color: c.titles }}>
-                  Folio: #{String(data.folio).padStart(4, '0')}
-                </p>
-              )}
             </div>
-
-            {/* Right side: Client data */}
             <div className="flex-1 flex justify-end">
-              <div className="text-right text-sm space-y-1">
+              <div className="text-right text-sm space-y-0.5">
                 <p className="font-semibold" style={{ color: c.titles }}>{data.clientName || "___"}</p>
                 <p className="text-gray-600">Tel: {data.clientPhone || "___"}</p>
                 <p className="text-gray-600">Fecha: {data.quoteDate}</p>
@@ -165,7 +155,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 bg-white">
+        <div className="px-6 pt-3 pb-6 space-y-3 bg-white">
 
           {/* Tabla de servicios cotizados */}
           {data.items && data.items.length > 0 && (
@@ -244,6 +234,12 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
               </svg>
             </div>
           </div>
+          {/* Folio footer */}
+          {data.folio && (
+            <div className="text-center pt-3">
+              <span className="text-xs text-gray-400">Folio: #{String(data.folio).padStart(4, '0')}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
