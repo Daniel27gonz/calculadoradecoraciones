@@ -234,6 +234,12 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
               </svg>
             </div>
           </div>
+          {/* Folio footer */}
+          {data.folio && (
+            <div className="text-center pt-3">
+              <span className="text-xs text-gray-400">Folio: #{String(data.folio).padStart(4, '0')}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
