@@ -115,6 +115,7 @@ const Design = () => {
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
     currencySymbol: "$",
     validUntil: "",
+    pdfColors: { ...defaultPdfColors },
   });
 
   // Load profile data and design config when available
