@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+const tutorials = [
+  { id: '1172031849', title: 'Bienvenida al Sistema', description: 'Introducción general a DecoControl' },
+  // Agrega más videos aquí con el mismo formato:
+  // { id: 'VIMEO_ID', title: 'Título', description: 'Descripción corta' },
+];
 
 export default function Tutorial() {
   const navigate = useNavigate();
+  const [openId, setOpenId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:pt-24">
@@ -15,28 +24,52 @@ export default function Tutorial() {
               <ArrowLeft className="w-4 h-4" />
               Volver
             </Button>
-            <h1 className="font-display text-xl font-semibold">Tutorial</h1>
+            <h1 className="font-display text-xl font-semibold">Tutoriales</h1>
             <div className="w-20" />
           </div>
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <h3 className="font-display text-lg font-semibold mb-3">🎬 Bienvenida al Sistema</h3>
-            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
-              <iframe
-                src="https://player.vimeo.com/video/1172031849?badge=0&autopause=0&player_id=0&app_id=58479"
-                className="absolute inset-0 w-full h-full rounded-lg"
-                frameBorder="0"
-                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                title="Bienvenida Sistema"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      <main className="container max-w-4xl mx-auto px-4 py-6">
+        <p className="text-sm text-muted-foreground mb-4">
+          Toca un video para reproducirlo. {tutorials.length} videos disponibles.
+        </p>
+        <div className="space-y-3">
+          {tutorials.map((video, index) => {
+            const isOpen = openId === video.id;
+            return (
+              <Collapsible key={video.id} open={isOpen} onOpenChange={(open) => setOpenId(open ? video.id : null)}>
+                <Card className="overflow-hidden">
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full text-left p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary shrink-0">
+                        {isOpen ? <ChevronDown className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{index + 1}. {video.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{video.description}</p>
+                      </div>
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="px-4 pb-4 pt-0">
+                      <div className="relative w-full rounded-lg overflow-hidden" style={{ paddingTop: '56.25%' }}>
+                        <iframe
+                          src={`https://player.vimeo.com/video/${video.id}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                          className="absolute inset-0 w-full h-full"
+                          frameBorder="0"
+                          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          title={video.title}
+                        />
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            );
+          })}
+        </div>
       </main>
     </div>
   );
