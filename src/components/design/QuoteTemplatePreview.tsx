@@ -154,7 +154,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           {/* Tabla de servicios cotizados */}
           {data.items && data.items.length > 0 && (
             <div className="pb-4" style={{ borderBottom: `1px solid ${c.lines}` }}>
-              <h3 className="text-lg font-semibold mb-3" style={{ color: c.titles }}>SERVICIOS COTIZADOS:</h3>
+              <h3 className="text-lg font-semibold mb-3 text-center" style={{ color: c.titles }}>SERVICIOS COTIZADOS</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${c.lines}` }}>
