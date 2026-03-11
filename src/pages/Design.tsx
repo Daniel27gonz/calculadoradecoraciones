@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save, Palette } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
