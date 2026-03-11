@@ -916,7 +916,7 @@ const Design = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold">Total de la cotización:</span>
                   <span className="text-2xl font-bold text-primary">
-                    ${calculateTotal().toLocaleString()}
+                    {templateData.currencySymbol}{(templateData.costSummary?.finalPrice ?? calculateTotal()).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </CardContent>
