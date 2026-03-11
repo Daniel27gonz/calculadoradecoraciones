@@ -148,6 +148,7 @@ const Design = () => {
           design_deposit_percentage: templateData.depositPercentage,
           design_deposit_message: templateData.depositMessage,
           design_additional_notes: templateData.customNote,
+          pdf_colors: templateData.pdfColors as any,
         })
         .eq("user_id", user.id);
 
