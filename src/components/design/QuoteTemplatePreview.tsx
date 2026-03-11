@@ -149,9 +149,8 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
                   {data.eventDate || "___"}, {data.eventLocation || "___"}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div>
                 <span className="text-gray-600">Tema o tipo de decoración:</span>
-                <Heart className="w-4 h-4" style={{ color: c.lines }} />
               </div>
               <div className="ml-4" style={{ color: c.titles }}>{data.decorationType || "___"}</div>
               <div className="flex flex-wrap gap-x-8">
