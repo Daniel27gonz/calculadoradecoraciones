@@ -78,7 +78,19 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
         format: "letter",
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      if (contentHeight <= pdfHeight) {
+        pdf.addImage(imgData, "PNG", 0, 0, contentWidth, contentHeight);
+      } else {
+        // Content taller than one page: split across pages
+        let remainingHeight = contentHeight;
+        let yOffset = 0;
+        while (remainingHeight > 0) {
+          if (yOffset > 0) pdf.addPage("letter", "portrait");
+          pdf.addImage(imgData, "PNG", 0, -yOffset, contentWidth, contentHeight);
+          yOffset += pdfHeight;
+          remainingHeight -= pdfHeight;
+        }
+      }
       pdf.save(`${fileName}.pdf`);
 
       toast({ title: "¡Descargado!", description: "La cotización se ha descargado como PDF" });
