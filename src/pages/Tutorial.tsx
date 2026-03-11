@@ -23,14 +23,18 @@ export default function Tutorial() {
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
         <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">🎓</div>
-            <h3 className="font-display text-xl font-semibold mb-2">
-              Próximamente
-            </h3>
-            <p className="text-muted-foreground">
-              Aquí encontrarás guías y tutoriales para aprovechar al máximo DecoControl.
-            </p>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="font-display text-lg font-semibold mb-3">🎬 Bienvenida al Sistema</h3>
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                src="https://player.vimeo.com/video/1172031849?badge=0&autopause=0&player_id=0&app_id=58479"
+                className="absolute inset-0 w-full h-full rounded-lg"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                title="Bienvenida Sistema"
+              />
+            </div>
           </CardContent>
         </Card>
       </main>
