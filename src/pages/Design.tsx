@@ -35,6 +35,20 @@ interface AdditionalService {
   price: number;
 }
 
+export interface PdfColors {
+  header: string;
+  titles: string;
+  lines: string;
+  finalPrice: string;
+}
+
+export const defaultPdfColors: PdfColors = {
+  header: "#fce4ec",
+  titles: "#db2777",
+  lines: "#f9a8d4",
+  finalPrice: "#db2777",
+};
+
 export interface QuoteTemplateData {
   folio?: number;
   businessName: string;
@@ -54,6 +68,7 @@ export interface QuoteTemplateData {
   customNote: string;
   currencySymbol: string;
   validUntil: string;
+  pdfColors: PdfColors;
   costSummary?: {
     totalMaterials: number;
     totalReusableMaterials: number;
