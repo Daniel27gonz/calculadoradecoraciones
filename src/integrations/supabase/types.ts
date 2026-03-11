@@ -151,6 +151,7 @@ export type Database = {
           logo_url: string | null
           mode: string | null
           name: string | null
+          pdf_colors: Json | null
           updated_at: string
           user_id: string
         }
@@ -168,6 +169,7 @@ export type Database = {
           logo_url?: string | null
           mode?: string | null
           name?: string | null
+          pdf_colors?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -185,6 +187,7 @@ export type Database = {
           logo_url?: string | null
           mode?: string | null
           name?: string | null
+          pdf_colors?: Json | null
           updated_at?: string
           user_id?: string
         }

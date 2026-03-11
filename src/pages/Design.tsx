@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save, Palette } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,20 @@ interface AdditionalService {
   price: number;
 }
 
+export interface PdfColors {
+  header: string;
+  titles: string;
+  lines: string;
+  finalPrice: string;
+}
+
+export const defaultPdfColors: PdfColors = {
+  header: "#fce4ec",
+  titles: "#db2777",
+  lines: "#f9a8d4",
+  finalPrice: "#db2777",
+};
+
 export interface QuoteTemplateData {
   folio?: number;
   businessName: string;
@@ -54,6 +68,7 @@ export interface QuoteTemplateData {
   customNote: string;
   currencySymbol: string;
   validUntil: string;
+  pdfColors: PdfColors;
   costSummary?: {
     totalMaterials: number;
     totalReusableMaterials: number;
@@ -100,12 +115,14 @@ const Design = () => {
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
     currencySymbol: "$",
     validUntil: "",
+    pdfColors: { ...defaultPdfColors },
   });
 
   // Load profile data and design config when available
   useEffect(() => {
     if (profile) {
       const currency = getCurrencyByCode(profile.currency || 'USD');
+      const savedColors = (profile as any).pdf_colors;
       setTemplateData(prev => ({
         ...prev,
         businessName: profile.business_name || prev.businessName,
@@ -114,6 +131,7 @@ const Design = () => {
         depositMessage: (profile as any).design_deposit_message || prev.depositMessage,
         customNote: (profile as any).design_additional_notes || prev.customNote,
         currencySymbol: currency?.symbol || '$',
+        pdfColors: savedColors ? { ...defaultPdfColors, ...savedColors } : prev.pdfColors,
       }));
     }
   }, [profile]);
@@ -130,6 +148,7 @@ const Design = () => {
           design_deposit_percentage: templateData.depositPercentage,
           design_deposit_message: templateData.depositMessage,
           design_additional_notes: templateData.customNote,
+          pdf_colors: templateData.pdfColors as any,
         })
         .eq("user_id", user.id);
 
@@ -795,6 +814,99 @@ const Design = () => {
                 <p className="text-xs text-muted-foreground text-center">
                   Los mensajes personalizados y el porcentaje de anticipo se guardarán en tu perfil
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* Personalizar colores del PDF */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-medium text-primary flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  Personalizar colores del PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Estos colores solo se aplican al diseño del PDF de cotización.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Color del encabezado</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.header}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.header}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color de títulos</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.titles}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.titles}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color de líneas y separadores</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.lines}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.lines}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Color del precio final</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={templateData.pdfColors.finalPrice}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
+                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <Input
+                        value={templateData.pdfColors.finalPrice}
+                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
+                        className="flex-1 font-mono text-sm"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateField("pdfColors", { ...defaultPdfColors })}
+                  className="text-xs"
+                >
+                  Restaurar colores predeterminados
+                </Button>
               </CardContent>
             </Card>
 

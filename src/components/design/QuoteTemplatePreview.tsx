@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { QuoteTemplateData } from "@/pages/Design";
+import { QuoteTemplateData, defaultPdfColors } from "@/pages/Design";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Heart, Download } from "lucide-react";
@@ -13,6 +13,14 @@ interface QuoteTemplatePreviewProps {
   total: number;
 }
 
+// Helper to lighten a hex color for backgrounds
+const lightenColor = (hex: string, amount: number = 0.85): string => {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.round((num >> 16) + (255 - (num >> 16)) * amount);
+  const g = Math.round(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount);
+  const b = Math.round((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount);
+  return `rgb(${r}, ${g}, ${b})`;
+};
 
 const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
   const depositAmount = (total * data.depositPercentage) / 100;
@@ -20,6 +28,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const cs = data.currencySymbol || '$';
   const s = data.costSummary;
+  const c = data.pdfColors || defaultPdfColors;
 
   const fmt = (amount: number) =>
     `${cs}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -79,6 +88,9 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
     }
   };
 
+  const headerBgLight = lightenColor(c.header, 0.5);
+  const headerBgLighter = lightenColor(c.header, 0.75);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-center">
@@ -90,27 +102,27 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-pink-100 to-pink-50 p-6">
+        <div className="relative p-6" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
           <div className="absolute top-2 right-4 flex gap-1">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full bg-pink-300" style={{ opacity: Math.random() * 0.5 + 0.3 }} />
+              <div key={i} className="w-1 h-1 rounded-full" style={{ backgroundColor: c.lines, opacity: Math.random() * 0.5 + 0.3 }} />
             ))}
           </div>
           <div className="flex items-start justify-between">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-200 to-pink-100 flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
                 {data.businessLogo ? (
                   <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-2xl">🎈</span>
                 )}
               </div>
-              <span className="text-lg font-bold text-pink-600 text-center">{data.businessName}</span>
+              <span className="text-lg font-bold text-center" style={{ color: c.titles }}>{data.businessName}</span>
             </div>
             <div className="text-right">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
               {data.folio && (
-                <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
+                <p className="text-sm font-semibold mt-1" style={{ color: c.titles }}>
                   Folio: #{String(data.folio).padStart(4, '0')}
                 </p>
               )}
@@ -121,28 +133,28 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
         {/* Client data */}
         <div className="p-6 space-y-4 bg-white">
-          <div className="border-b border-pink-100 pb-4">
-            <h3 className="text-lg font-semibold text-pink-500 mb-3">DATOS DEL CLIENTE:</h3>
+          <div className="pb-4" style={{ borderBottom: `1px solid ${c.lines}` }}>
+            <h3 className="text-lg font-semibold mb-3" style={{ color: c.titles }}>DATOS DEL CLIENTE:</h3>
             <div className="space-y-2 text-sm">
               <div className="flex flex-wrap gap-x-2">
                 <span className="text-gray-600">Fecha y lugar del evento:</span>
-                <span className="text-pink-500 underline decoration-pink-300">
+                <span style={{ color: c.titles, textDecoration: 'underline', textDecorationColor: c.lines }}>
                   {data.eventDate || "___"}, {data.eventLocation || "___"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Tema o tipo de decoración:</span>
-                <Heart className="w-4 h-4 text-pink-300" />
+                <Heart className="w-4 h-4" style={{ color: c.lines }} />
               </div>
-              <div className="text-pink-500 ml-4">{data.decorationType || "___"}</div>
+              <div className="ml-4" style={{ color: c.titles }}>{data.decorationType || "___"}</div>
               <div className="flex flex-wrap gap-x-8">
                 <div>
                   <span className="text-gray-600">Nombre:</span>
-                  <span className="text-pink-500 underline decoration-pink-300 ml-1">{data.clientName || "___"}</span>
+                  <span className="ml-1" style={{ color: c.titles, textDecoration: 'underline', textDecorationColor: c.lines }}>{data.clientName || "___"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Teléfono:</span>
-                  <span className="text-pink-500 underline decoration-pink-300 ml-1">{data.clientPhone || "___"}</span>
+                  <span className="ml-1" style={{ color: c.titles, textDecoration: 'underline', textDecorationColor: c.lines }}>{data.clientPhone || "___"}</span>
                 </div>
               </div>
             </div>
@@ -150,22 +162,22 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
           {/* Tabla de servicios cotizados */}
           {data.items && data.items.length > 0 && (
-            <div className="border-b border-pink-100 pb-4">
-              <h3 className="text-lg font-semibold text-pink-500 mb-3">SERVICIOS COTIZADOS:</h3>
+            <div className="pb-4" style={{ borderBottom: `1px solid ${c.lines}` }}>
+              <h3 className="text-lg font-semibold mb-3" style={{ color: c.titles }}>SERVICIOS COTIZADOS:</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #f9a8d4' }}>
-                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <tr style={{ borderBottom: `2px solid ${c.lines}` }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: c.titles, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Descripción
                     </th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: c.titles, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                       Cantidad
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.items.map((item, index) => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid #fce7f3', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fdf2f8' }}>
+                    <tr key={item.id} style={{ borderBottom: `1px solid ${lightenColor(c.lines, 0.5)}`, backgroundColor: index % 2 === 0 ? '#ffffff' : lightenColor(c.header, 0.85) }}>
                       <td style={{ padding: '8px 12px', color: '#555', lineHeight: 1.5 }}>
                         {item.description}
                       </td>
@@ -180,9 +192,9 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           )}
 
           {/* Precio Final */}
-          <div className="flex justify-end items-center gap-4 pt-2 pb-2 px-4 rounded-lg bg-gradient-to-r from-pink-100 to-pink-50">
+          <div className="flex justify-end items-center gap-4 pt-2 pb-2 px-4 rounded-lg" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
             <span className="text-xl font-bold text-gray-800">PRECIO FINAL:</span>
-            <span className="text-2xl font-bold text-pink-600">
+            <span className="text-2xl font-bold" style={{ color: c.finalPrice }}>
               {s ? fmt(s.finalPrice) : `${cs}${total.toLocaleString()}`}
             </span>
           </div>
@@ -195,7 +207,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
           {/* Valid until */}
           {data.validUntil && (
             <div className="text-center text-sm text-gray-500 -mt-2 pb-2">
-              Cotización válida hasta: <span className="font-semibold text-pink-600">
+              Cotización válida hasta: <span className="font-semibold" style={{ color: c.titles }}>
                 {(() => {
                   try {
                     return format(new Date(data.validUntil + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es });
@@ -209,18 +221,18 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
           {/* Custom note */}
           {data.customNote && (
-            <div className="text-center italic text-pink-500 text-sm py-2">{data.customNote}</div>
+            <div className="text-center italic text-sm py-2" style={{ color: c.titles }}>{data.customNote}</div>
           )}
 
           {/* Thank you message */}
-          <div className="relative bg-gradient-to-r from-pink-50 to-white p-6 text-center">
+          <div className="relative p-6 text-center" style={{ background: `linear-gradient(to right, ${lightenColor(c.header, 0.85)}, white)` }}>
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex gap-1">
-              <Heart className="w-4 h-4 text-pink-300 fill-pink-200" />
-              <Heart className="w-3 h-3 text-pink-200 fill-pink-100" />
+              <Heart className="w-4 h-4" style={{ color: c.lines, fill: lightenColor(c.lines, 0.5) }} />
+              <Heart className="w-3 h-3" style={{ color: lightenColor(c.lines, 0.3), fill: lightenColor(c.lines, 0.7) }} />
             </div>
             <p className="text-lg font-medium text-gray-700 italic">"{data.thankYouMessage}"</p>
             <div className="absolute right-4 bottom-2">
-              <svg width="40" height="20" viewBox="0 0 40 20" className="text-pink-300">
+              <svg width="40" height="20" viewBox="0 0 40 20" style={{ color: c.lines }}>
                 <path d="M0 10 Q10 0 20 10 Q30 20 40 10" fill="none" stroke="currentColor" strokeWidth="2" />
               </svg>
             </div>
