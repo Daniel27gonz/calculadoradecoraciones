@@ -118,38 +118,35 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
 
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
         {/* Header */}
-        <div className="relative px-6 pt-4 pb-2" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
-          {/* Logo + Business Name centered */}
-          <div className="flex flex-col items-center gap-1 mb-2">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
-              {data.businessLogo ? (
-                <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl">🎈</span>
-              )}
-            </div>
-            <span className="text-sm font-bold text-center" style={{ color: c.titles }}>{data.businessName}</span>
-          </div>
-
-          {/* Title centered, Client data right */}
-          <div className="flex items-start">
-            <div className="flex-1" />
-            <div className="flex flex-col items-center">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
-            </div>
-            <div className="flex-1 flex justify-end">
-              <div className="text-right text-sm space-y-0.5">
-                <p className="font-semibold" style={{ color: c.titles }}>{data.clientName || "___"}</p>
-                <p className="text-gray-600">Tel: {data.clientPhone || "___"}</p>
-                <p className="text-gray-600">Fecha: {data.quoteDate}</p>
-                <p className="text-gray-600">Evento: {data.eventDate || "___"}</p>
-                {data.eventLocation && (
-                  <p className="text-gray-600">Lugar: {data.eventLocation}</p>
-                )}
-                {data.decorationType && (
-                  <p className="text-gray-600">Tema: {data.decorationType}</p>
+        <div className="relative px-6 py-3" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Logo + Business Name */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
+                {data.businessLogo ? (
+                  <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl">🎈</span>
                 )}
               </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold" style={{ color: c.titles }}>{data.businessName}</span>
+                <h1 className="text-lg font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
+              </div>
+            </div>
+
+            {/* Right: Client data */}
+            <div className="text-right text-xs space-y-0.5 shrink-0">
+              <p className="font-semibold text-sm" style={{ color: c.titles }}>{data.clientName || "___"}</p>
+              <p className="text-gray-600">Tel: {data.clientPhone || "___"}</p>
+              <p className="text-gray-600">Fecha: {data.quoteDate}</p>
+              <p className="text-gray-600">Evento: {data.eventDate || "___"}</p>
+              {data.eventLocation && (
+                <p className="text-gray-600">Lugar: {data.eventLocation}</p>
+              )}
+              {data.decorationType && (
+                <p className="text-gray-600">Tema: {data.decorationType}</p>
+              )}
             </div>
           </div>
         </div>
