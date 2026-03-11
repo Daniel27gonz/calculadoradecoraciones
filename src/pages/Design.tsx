@@ -476,7 +476,7 @@ const Design = () => {
         </div>
 
         {showPreview ? (
-          <QuoteTemplatePreview data={templateData} total={calculateTotal()} />
+          <QuoteTemplatePreview data={templateData} total={templateData.costSummary?.finalPrice ?? calculateTotal()} />
         ) : (
           <div className="space-y-6">
             {/* Selector de Cotización */}
