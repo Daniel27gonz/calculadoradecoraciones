@@ -103,32 +103,23 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
         {/* Header */}
         <div className="relative p-6" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
-          <div className="absolute top-2 right-4 flex gap-1">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full" style={{ backgroundColor: c.lines, opacity: Math.random() * 0.5 + 0.3 }} />
-            ))}
-          </div>
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
-                {data.businessLogo ? (
-                  <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-2xl">🎈</span>
-                )}
-              </div>
-              <span className="text-lg font-bold text-center" style={{ color: c.titles }}>{data.businessName}</span>
-            </div>
-            <div className="text-right">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
-              {data.folio && (
-                <p className="text-sm font-semibold mt-1" style={{ color: c.titles }}>
-                  Folio: #{String(data.folio).padStart(4, '0')}
-                </p>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
+              {data.businessLogo ? (
+                <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl">🎈</span>
               )}
             </div>
+            <span className="text-lg font-bold text-center" style={{ color: c.titles }}>{data.businessName}</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
+            {data.folio && (
+              <p className="text-sm font-semibold" style={{ color: c.titles }}>
+                Folio: #{String(data.folio).padStart(4, '0')}
+              </p>
+            )}
+            <div className="text-sm text-gray-600">Fecha: {data.quoteDate}</div>
           </div>
-          <div className="text-right mt-4 text-gray-600">Fecha: {data.quoteDate}</div>
         </div>
 
         {/* Client data */}
