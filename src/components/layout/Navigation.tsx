@@ -37,11 +37,11 @@ const sidebarItems: SidebarItem[] = [
 { path: '/history', icon: History, label: 'Historial' },
 { path: '/finances', icon: Wallet, label: 'Mi Dinero' },
 { path: '/orders', icon: Calendar, label: 'Pedido y Agenda' },
+{ path: '/tutorial', icon: GraduationCap, label: 'Tutoriales' },
 { path: '/earn-more', icon: TrendingUp, label: 'Gana Más' }];
 
 
 const bottomItems = [
-{ path: '/tutorial', icon: GraduationCap, label: 'Tutorial' },
 { path: '/settings', icon: Settings, label: 'Configuración' }];
 
 
