@@ -108,8 +108,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
               <span className="text-lg font-bold text-pink-600 text-center">{data.businessName}</span>
             </div>
             <div className="text-right">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">COTIZACIÓN DE</h1>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">DECORACIÓN CON GLOBOS</h2>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
               {data.folio && (
                 <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
                   Folio: #{String(data.folio).padStart(4, '0')}
