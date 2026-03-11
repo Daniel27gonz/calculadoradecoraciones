@@ -122,6 +122,7 @@ const Design = () => {
   useEffect(() => {
     if (profile) {
       const currency = getCurrencyByCode(profile.currency || 'USD');
+      const savedColors = (profile as any).pdf_colors;
       setTemplateData(prev => ({
         ...prev,
         businessName: profile.business_name || prev.businessName,
@@ -130,6 +131,7 @@ const Design = () => {
         depositMessage: (profile as any).design_deposit_message || prev.depositMessage,
         customNote: (profile as any).design_additional_notes || prev.customNote,
         currencySymbol: currency?.symbol || '$',
+        pdfColors: savedColors ? { ...defaultPdfColors, ...savedColors } : prev.pdfColors,
       }));
     }
   }, [profile]);
