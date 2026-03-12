@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { PackageFormDialog } from '@/components/packages/PackageFormDialog';
 import { Package } from '@/types/quote';
@@ -13,7 +14,7 @@ import { Package } from '@/types/quote';
 export default function Packages() {
   const navigate = useNavigate();
   const { packages, savePackage, deletePackage } = useQuote();
-  const { user, isApproved, approvalStatus, isAdmin, loading } = useAuth();
+  const { user, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
@@ -40,6 +41,9 @@ export default function Packages() {
     return null;
   }
 
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuote } from '@/contexts/QuoteContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
@@ -19,7 +20,7 @@ const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'se
 export default function Finances() {
   const { quotes } = useQuote();
   const navigate = useNavigate();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading: authLoading } = useAuth();
 
   const { transactions: allTransactions, loading: loadingTransactions } = useFinancialData();
 
@@ -120,6 +121,9 @@ export default function Finances() {
     return null;
   }
 
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }

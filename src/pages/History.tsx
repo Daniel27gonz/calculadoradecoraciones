@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -22,7 +23,7 @@ import QuotePdfPreview from '@/components/QuotePdfPreview';
 export default function History() {
   const navigate = useNavigate();
   const { quotes, deleteQuote, duplicateQuote, calculateCosts, saveQuote, loadQuotes } = useQuote();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
@@ -112,6 +113,9 @@ export default function History() {
     return null;
   }
 
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;

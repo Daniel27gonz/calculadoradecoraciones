@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -33,7 +34,7 @@ interface QuotePayment {
 export default function Orders() {
   const navigate = useNavigate();
   const { quotes, calculateCosts, saveQuote, loadQuotes } = useQuote();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -397,6 +398,7 @@ export default function Orders() {
 
   if (loading) return null;
   if (!user) { navigate('/auth'); return null; }
+  if (!isAdmin && isCancelled) return <CancelledSubscription />;
   if (!isApproved && !isAdmin) return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
 
   return (

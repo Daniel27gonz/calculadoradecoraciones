@@ -20,6 +20,7 @@ import { LogoUploadSection } from '@/components/calculator/LogoUploadSection';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Quote, TimePhase } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
@@ -61,7 +62,7 @@ export default function Calculator() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin } = useAuth();
+  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin, isCancelled } = useAuth();
   const {
     quotes, 
     saveQuote, 
@@ -189,6 +190,10 @@ export default function Calculator() {
     return null;
   }
 
+  // Block cancelled users
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;

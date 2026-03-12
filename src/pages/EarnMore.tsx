@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import contratoImg from '@/assets/modelo-contrato.jpeg';
 
 export default function EarnMore() {
   const navigate = useNavigate();
-  const { user, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
+  const { user, isApproved, approvalStatus, isAdmin, isCancelled, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return (
@@ -29,6 +30,9 @@ export default function EarnMore() {
     return null;
   }
 
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useMemo } from 'react';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
@@ -16,7 +17,7 @@ import { useFinancialData, useMonthlyFinancials } from '@/hooks/useFinancialData
 export default function Home() {
   const navigate = useNavigate();
   const { quotes } = useQuote();
-  const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
+  const { user, profile, loading, isApproved, approvalStatus, isAdmin, isCancelled } = useAuth();
 
   const { transactions: allTransactions } = useFinancialData();
 
@@ -79,6 +80,10 @@ export default function Home() {
   if (!user) {
     navigate('/auth');
     return null;
+  }
+
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
   }
 
   if (!isAdmin && approvalStatus && !isApproved) {
