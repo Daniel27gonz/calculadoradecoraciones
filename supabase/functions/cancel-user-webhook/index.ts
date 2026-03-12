@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
     // Extract event type and email from Hotmart payload
     const event = body.event || body.status || body.type
-    const email = body.email || body.data?.buyer?.email || body.buyer?.email || body.customer?.email
+    const email = body.email || body.data?.subscriber?.email || body.data?.buyer?.email || body.buyer?.email || body.customer?.email
 
     console.log('Event:', event, '| Email:', email)
 
