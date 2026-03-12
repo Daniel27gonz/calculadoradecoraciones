@@ -26,6 +26,7 @@ interface AuthContextType {
   isAdmin: boolean;
   approvalStatus: ApprovalStatus;
   isApproved: boolean;
+  isCancelled: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
