@@ -84,6 +84,23 @@ Deno.serve(async (req) => {
     const userExists = existingUsers?.users?.find(u => u.email === email)
 
     if (userExists) {
+      // If action is update_password, update the user's password
+      if (body.action === 'update_password') {
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userExists.id, {
+          password: cleanPhone,
+        })
+        if (updateError) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to update password', details: updateError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        console.log('Password updated for user:', userExists.id)
+        return new Response(
+          JSON.stringify({ success: true, message: 'Password updated', user_id: userExists.id }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
       console.log('User already exists:', userExists.id)
       return new Response(
         JSON.stringify({ success: true, message: 'User already exists', user_id: userExists.id }),
