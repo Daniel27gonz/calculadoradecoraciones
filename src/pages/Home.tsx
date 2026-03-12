@@ -17,7 +17,7 @@ import { useFinancialData, useMonthlyFinancials } from '@/hooks/useFinancialData
 export default function Home() {
   const navigate = useNavigate();
   const { quotes } = useQuote();
-  const { user, profile, loading, isApproved, approvalStatus, isAdmin } = useAuth();
+  const { user, profile, loading, isApproved, approvalStatus, isAdmin, isCancelled } = useAuth();
 
   const { transactions: allTransactions } = useFinancialData();
 
