@@ -66,14 +66,10 @@ export default function Auth() {
 
     if (isLogin) {
       const { error } = await signIn(formData.email, formData.password);
-      if (!error) {
-        navigate('/');
-      }
+      // Navigation handled by useEffect when approved
     } else {
       const { error } = await signUp(formData.email, formData.password, formData.name);
-      if (!error) {
-        navigate('/');
-      }
+      // Navigation handled by useEffect when approved
     }
 
     setSubmitting(false);
