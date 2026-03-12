@@ -22,9 +22,11 @@ Deno.serve(async (req) => {
 
     console.log('Webhook payload received:', JSON.stringify(body, null, 2))
 
-    // Validate webhook token - support multiple locations where Hotmart sends it
+    // Validate webhook token - support multiple locations
     const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
+    const url = new URL(req.url)
     const receivedToken = 
+      url.searchParams.get('token') ||        // Token in URL query param
       body.hottok ||                          // Hotmart's standard token field
       body.token || 
       body.api_token || 
