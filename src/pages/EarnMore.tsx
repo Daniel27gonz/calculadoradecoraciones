@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
