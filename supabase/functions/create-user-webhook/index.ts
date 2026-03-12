@@ -101,7 +101,28 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      console.log('User already exists:', userExists.id)
+
+      // Re-approve user if they were cancelled/rejected (re-purchase scenario)
+      const { data: approvalData } = await supabaseAdmin
+        .from('user_approval_status')
+        .select('status')
+        .eq('user_id', userExists.id)
+        .maybeSingle()
+
+      if (approvalData && approvalData.status !== 'approved') {
+        await supabaseAdmin
+          .from('user_approval_status')
+          .update({ status: 'approved', cancelled_at: null })
+          .eq('user_id', userExists.id)
+        
+        console.log('User re-approved after re-purchase:', userExists.id)
+        return new Response(
+          JSON.stringify({ success: true, message: 'User re-approved', user_id: userExists.id }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('User already exists and is approved:', userExists.id)
       return new Response(
         JSON.stringify({ success: true, message: 'User already exists', user_id: userExists.id }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
