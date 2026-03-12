@@ -2,3 +2,9 @@ project_id = "gczvugjmqgomwiaireek"
 
 [functions.restore-user-data]
 verify_jwt = false
+
+[functions.create-user-webhook]
+verify_jwt = false
+
+[functions.cancel-user-webhook]
+verify_jwt = false

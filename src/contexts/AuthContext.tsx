@@ -16,6 +16,7 @@ interface Profile {
 }
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | null;
+type CancelledAt = string | null;
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,7 @@ interface AuthContextType {
   isAdmin: boolean;
   approvalStatus: ApprovalStatus;
   isApproved: boolean;
+  isCancelled: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -41,10 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(null);
+  const [cancelledAt, setCancelledAt] = useState<CancelledAt>(null);
   const { toast } = useToast();
   const restorationAttemptedRef = useRef<Set<string>>(new Set());
 
   const isApproved = approvalStatus === 'approved';
+  const isCancelled = approvalStatus === 'rejected' && cancelledAt !== null;
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -64,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
           setIsAdmin(false);
           setApprovalStatus(null);
+          setCancelledAt(null);
         }
       }
     );
@@ -171,17 +176,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchApprovalStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('user_approval_status')
-      .select('status')
+      .select('status, cancelled_at')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (error) {
       console.error('Error fetching approval status:', error);
       setApprovalStatus(null);
+      setCancelledAt(null);
       return;
     }
 
     setApprovalStatus(data?.status as ApprovalStatus || null);
+    setCancelledAt(data?.cancelled_at || null);
   };
 
   const refreshApprovalStatus = async () => {
@@ -277,6 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setIsAdmin(false);
       setApprovalStatus(null);
+      setCancelledAt(null);
       
       // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -338,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin,
       approvalStatus,
       isApproved,
+      isCancelled,
       signUp,
       signIn,
       signOut,

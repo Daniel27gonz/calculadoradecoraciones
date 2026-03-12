@@ -69,10 +69,12 @@ export interface ReusableMaterialUsed {
 
 export interface Quote {
   id: string;
+  folio?: number;
   clientName: string;
   clientPhone: string;
   eventDate: string;
   eventType: string;
+  decorationDescription: string;
   createdAt: string;
   updatedAt: string;
   balloons: Balloon[];
@@ -87,7 +89,9 @@ export interface Quote {
   marginPercentage: number;
   toolWearPercentage: number;
   wastagePercentage: number;
+  setupTime: string;
   notes: string;
+  status: 'pending' | 'approved' | 'delivered' | 'cancelled';
   // Legacy field for backwards compatibility
   transportCost?: number;
 }

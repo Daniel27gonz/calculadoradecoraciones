@@ -91,7 +91,7 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
               </div>
 
               {/* Price, Quantity, and Total row */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <NumericField
                   label="Precio/unidad"
                   prefix={currencySymbol}
@@ -107,7 +107,7 @@ export function ExtrasSection({ extras, onChange, currencySymbol = '$' }: Extras
                   value={extra.quantity || ''}
                   onChange={(e) => updateExtra(extra.id, { quantity: Number(e.target.value) || 0 })}
                 />
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                     Total
                   </label>

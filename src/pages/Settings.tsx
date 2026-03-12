@@ -1,34 +1,27 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, User, Globe, LogOut, Calendar } from 'lucide-react';
+import { ArrowLeft, User, Globe, LogOut, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useQuote } from '@/contexts/QuoteContext';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { getCurrencyByCode } from '@/lib/currencies';
-import { MaterialsManager } from '@/components/settings/MaterialsManager';
-import { IndirectExpensesManager } from '@/components/settings/IndirectExpensesManager';
-import { ReusableMaterialsManager } from '@/components/settings/ReusableMaterialsManager';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { defaultHourlyRate, setDefaultHourlyRate } = useQuote();
   const { user, profile, updateProfile, signOut } = useAuth();
-  const { toast } = useToast();
 
-  const handleRateChange = (value: number) => {
-    setDefaultHourlyRate(value);
-    if (user && profile) {
-      updateProfile({ default_hourly_rate: value });
-    } else {
-      toast({
-        title: "Guardado",
-        description: "Tu tarifa por hora ha sido actualizada",
-      });
-    }
-  };
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const handleCurrencyChange = (currencyCode: string) => {
     if (user && profile) {
@@ -36,11 +29,42 @@ export default function Settings() {
     }
   };
 
-  const handleEventsPerMonthChange = (value: number) => {
-    if (user && profile) {
-      updateProfile({ events_per_month: value });
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Completa todos los campos');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+    setChangingPassword(true);
+    // Verify current password by re-signing in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: currentPassword,
+    });
+    if (signInError) {
+      setChangingPassword(false);
+      toast.error('La contraseña actual es incorrecta');
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Contraseña actualizada correctamente');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     }
   };
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -66,20 +90,22 @@ export default function Settings() {
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main className="container max-w-4xl mx-auto px-3 sm:px-4 py-6 space-y-6 overflow-x-hidden">
         {/* User Profile */}
         {user && (
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
-                  <User className="w-5 h-5 text-rose-dark" />
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5 text-rose-dark" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg">Tu cuenta</CardTitle>
+                    <CardDescription className="truncate">{user.email}</CardDescription>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <CardTitle className="text-lg">Tu cuenta</CardTitle>
-                  <CardDescription>{user.email}</CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="shrink-0 self-start sm:self-center">
                   <LogOut className="w-4 h-4 mr-2" />
                   Cerrar sesión
                 </Button>
@@ -88,7 +114,95 @@ export default function Settings() {
           </Card>
         )}
 
-        {/* Currency Selection */}
+        {/* Change Password */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Cambiar contraseña</CardTitle>
+                  <CardDescription>Actualiza tu contraseña de acceso</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Contraseña actual</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrent ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Tu contraseña actual"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                  >
+                    {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Nueva contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNew ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowNew(!showNew)}
+                  >
+                    {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirm ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repite tu nueva contraseña"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                onClick={handleChangePassword}
+                disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+                className="w-full"
+              >
+                {changingPassword ? 'Actualizando...' : 'Actualizar contraseña'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -127,86 +241,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Default Hourly Rate */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-light flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-rose-dark" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Tarifa por hora</CardTitle>
-                <CardDescription>
-                  Tu tarifa predeterminada para nuevas cotizaciones
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <span className="text-2xl text-muted-foreground">
-                {currentCurrency?.symbol || '$'}
-              </span>
-              <Input
-                type="number"
-                min="0"
-                value={defaultHourlyRate ?? ''}
-                onChange={(e) => handleRateChange(e.target.value === '' ? 0 : Number(e.target.value))}
-                placeholder=""
-                className="text-2xl font-bold h-14 w-32"
-              />
-              <span className="text-muted-foreground">por hora</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Materials Manager */}
-        <MaterialsManager />
-
-        {/* Reusable Materials Manager */}
-        {user && (
-          <ReusableMaterialsManager currencySymbol={currentCurrency?.symbol || '$'} />
-        )}
-
-        {/* Events Per Month */}
-        {user && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-accent-foreground" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Eventos por mes</CardTitle>
-                  <CardDescription>
-                    ¿Cuántos eventos realizas en promedio al mes?
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Input
-                  type="number"
-                  min="1"
-                  value={profile?.events_per_month ?? 4}
-                  onChange={(e) => handleEventsPerMonthChange(e.target.value === '' ? 1 : Number(e.target.value))}
-                  placeholder="4"
-                  className="text-2xl font-bold h-14 w-32"
-                />
-                <span className="text-muted-foreground">eventos/mes</span>
-              </div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Este dato se usa para calcular el costo de gastos indirectos por evento.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Indirect Expenses - Global Settings */}
-        {user && (
-          <IndirectExpensesManager currencySymbol={currentCurrency?.symbol || '$'} />
-        )}
 
         {/* Login prompt for non-authenticated users */}
         {!user && (
@@ -227,8 +261,8 @@ export default function Settings() {
         )}
 
         {/* App Info */}
-        <div className="text-center text-sm text-muted-foreground py-8">
-          <p className="font-display text-lg font-semibold text-foreground mb-1">
+        <div className="text-center text-sm text-muted-foreground py-8 px-2">
+          <p className="font-display text-base sm:text-lg font-semibold text-foreground mb-1">
             Calculadora para Decoradoras
           </p>
           <p>Versión 1.0.0</p>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Plus, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { NumericField } from '@/components/ui/numeric-field';
 import { Worker, TimePhase } from '@/types/quote';
 import { useQuote } from '@/contexts/QuoteContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LaborSectionProps {
   workers: Worker[];
@@ -28,7 +30,21 @@ export function LaborSection({
   onTimePhasesChange,
   currencySymbol = '$',
 }: LaborSectionProps) {
-  const { defaultHourlyRate } = useQuote();
+  const { defaultHourlyRate, setDefaultHourlyRate } = useQuote();
+  const { profile, updateProfile } = useAuth();
+  const prevRateRef = useRef(defaultHourlyRate);
+
+  // Auto-fill time phase rates when defaultHourlyRate changes
+  useEffect(() => {
+    if (defaultHourlyRate !== prevRateRef.current && defaultHourlyRate > 0) {
+      const updated = timePhases.map(p => ({
+        ...p,
+        rate: (p.rate === 0 || p.rate === prevRateRef.current) ? defaultHourlyRate : p.rate,
+      }));
+      onTimePhasesChange(updated);
+      prevRateRef.current = defaultHourlyRate;
+    }
+  }, [defaultHourlyRate]);
 
   const addWorker = () => {
     onWorkersChange([
@@ -75,6 +91,35 @@ export function LaborSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Hourly Rate */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            💰 Tarifa por hora
+          </h4>
+          <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50 border border-border/50">
+            <span className="text-2xl text-muted-foreground">{currencySymbol}</span>
+            <Input
+              type="number"
+              min="0"
+              value={defaultHourlyRate ?? ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                setDefaultHourlyRate(value);
+                if (profile) {
+                  updateProfile({ default_hourly_rate: value });
+                }
+              }}
+              placeholder="0"
+              className="text-2xl font-bold h-14 w-32"
+            />
+            <span className="text-muted-foreground">por hora</span>
+          </div>
+          <p className="text-xs text-muted-foreground ml-4">
+            Se aplicará como tarifa predeterminada en las fases de tiempo.
+          </p>
+        </div>
+
         {/* Time phases */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
@@ -94,8 +139,8 @@ export function LaborSection({
                 </div>
                 
                 {/* Inputs row */}
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="flex-1 min-w-[70px] max-w-[90px]">
+                <div className="flex items-center gap-2 flex-1 flex-wrap">
+                  <div className="flex-1 min-w-[60px] max-w-[90px]">
                     <NumericField
                       min={0}
                       step={0.5}
@@ -107,7 +152,7 @@ export function LaborSection({
                     />
                   </div>
                   <span className="text-muted-foreground text-sm">×</span>
-                  <div className="flex-1 min-w-[70px] max-w-[90px]">
+                  <div className="flex-1 min-w-[60px] max-w-[90px]">
                     <NumericField
                       min={0}
                       prefix={currencySymbol}
@@ -170,7 +215,7 @@ export function LaborSection({
               </div>
 
               {/* Worker fields */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <NumericField
                   label="$/hora"
                   prefix={currencySymbol}
@@ -187,7 +232,7 @@ export function LaborSection({
                   onChange={(e) => updateWorker(worker.id, { hours: e.target.value === '' ? 0 : Number(e.target.value) })}
                   placeholder="0"
                 />
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
                   <label className="text-xs font-medium text-muted-foreground leading-none">Total</label>
                   <div className="h-11 flex items-center justify-end px-3 rounded-lg bg-primary/5 border border-primary/10">
                     <span className="font-bold text-primary tabular-nums">

@@ -50,6 +50,11 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
             <div className="text-right">
               <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">COTIZACIÓN DE</h1>
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">DECORACIÓN CON GLOBOS</h2>
+              {data.folio && (
+                <p className="text-sm font-semibold mt-1" style={{ color: '#db2777' }}>
+                  Folio: #{String(data.folio).padStart(4, '0')}
+                </p>
+              )}
             </div>
           </div>
           <div className="text-right mt-4 text-gray-600">Fecha: {data.quoteDate}</div>
@@ -90,31 +95,38 @@ const QuotePdfPreview = forwardRef<HTMLDivElement, QuotePdfPreviewProps>(
             </div>
           </div>
 
-          {/* Resumen de costos */}
-          <div className="border-b pb-4" style={{ borderColor: '#fce7f3' }}>
-            <h3 className="text-lg font-semibold mb-3" style={{ color: '#ec4899' }}>RESUMEN DE COTIZACIÓN:</h3>
-            <div className="space-y-1 text-sm">
-              <SummaryRow icon="🎀" label="Materiales no reutilizables" value={fmt(s.totalMaterials)} />
-              <SummaryRow icon="🧮" label="Materiales reutilizables" value={fmt(s.totalReusableMaterials)} />
-              <SummaryRow icon="📉" label={`Merma (${s.wastagePercentage}%)`} value={fmt(s.wastage)} />
-              <SummaryRow icon="👩‍🎨" label="Total mano de obra" value={fmt(s.totalLabor)} />
-              <SummaryRow icon="🚗" label="Total transporte" value={fmt(s.totalTransport)} />
-              <SummaryRow icon="✨" label="Total extras" value={fmt(s.totalExtras)} />
-              <SummaryRow icon="📊" label="Gastos indirectos" value={fmt(s.indirectExpenses)} />
 
-              {/* Total General */}
-              <div className="flex justify-between items-center pt-2 mt-2 border-t font-bold" style={{ borderColor: '#fce7f3' }}>
-                <span className="text-gray-800">Total General</span>
-                <span className="text-gray-800">{fmt(s.totalCost)}</span>
-              </div>
 
-              {/* Margen */}
-              <div className="flex justify-between items-center text-gray-600">
-                <span>Margen de ganancia ({s.marginPercentage}%)</span>
-                <span>{fmt(s.finalPrice - s.totalCost)}</span>
-              </div>
+          {/* Tabla de servicios cotizados */}
+          {data.items && data.items.length > 0 && (
+            <div className="border-b pb-4" style={{ borderColor: '#fce7f3' }}>
+              <h3 className="text-lg font-semibold mb-3" style={{ color: '#ec4899' }}>SERVICIOS COTIZADOS:</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f9a8d4' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Descripción
+                    </th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: '#db2777', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                      Cantidad
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item, index) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #fce7f3', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fdf2f8' }}>
+                      <td style={{ padding: '8px 12px', color: '#555', lineHeight: 1.5 }}>
+                        {item.description}
+                      </td>
+                      <td style={{ padding: '8px 12px', color: '#333', fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          )}
 
           {/* Precio Final */}
           <div 

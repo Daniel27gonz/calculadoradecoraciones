@@ -1,173 +1,109 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuote } from '@/contexts/QuoteContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, Pencil, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { toast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
-import { TransactionFormDialog } from '@/components/finances/TransactionFormDialog';
-import { MonthlyCharts } from '@/components/finances/MonthlyCharts';
+import { FinancialSummary } from '@/components/finances/FinancialSummary';
 import { TransactionFilters } from '@/components/finances/TransactionFilters';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useFinancialData, useMonthlyFinancials } from '@/hooks/useFinancialData';
 
-interface Transaction {
-  id: string;
-  type: 'income' | 'expense';
-  amount: number;
-  description: string;
-  category: string | null;
-  transaction_date: string;
-  created_at: string;
-}
-
-interface Filters {
-  day: string;
-  month: string;
-  year: string;
-  category: string;
-  type: string;
-}
+const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 export default function Finances() {
+  const { quotes } = useQuote();
   const navigate = useNavigate();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Filters>({
-    day: '',
-    month: '',
-    year: '',
-    category: '',
-    type: '',
-  });
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading: authLoading } = useAuth();
+
+  const { transactions: allTransactions, loading: loadingTransactions } = useFinancialData();
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(selectedYear);
+
+  // Independent month/year for transaction history
+  const [txMonth, setTxMonth] = useState(new Date().getMonth());
+  const [txYear, setTxYear] = useState(new Date().getFullYear());
+  const [txPickerOpen, setTxPickerOpen] = useState(false);
+  const [txPickerYear, setTxPickerYear] = useState(txYear);
+
+  const [filterType, setFilterType] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
 
   const currencySymbol = getCurrencyByCode(profile?.currency || 'USD')?.symbol || '$';
 
-  // Filter transactions based on active filters
+  // Summary cards use unified source
+  const { totalIncome, totalExpenses, balance, monthTransactions: summaryMonthTx } = useMonthlyFinancials(allTransactions, selectedMonth, selectedYear);
+
+  // Transaction history uses its own independent month
+  const { monthTransactions } = useMonthlyFinancials(allTransactions, txMonth, txYear);
+
+  // Adapt to legacy Transaction interface for TransactionFilters
+  const legacyMonthTx = useMemo(() => monthTransactions.map(t => ({
+    ...t,
+    created_at: t.transaction_date,
+  })), [monthTransactions]);
+
+  // Further filter by type and category
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => {
-      const [year, month, day] = t.transaction_date.split('-');
-      
-      if (filters.day && parseInt(day) !== parseInt(filters.day)) return false;
-      if (filters.month && month !== filters.month) return false;
-      if (filters.year && year !== filters.year) return false;
-      if (filters.category && t.category !== filters.category) return false;
-      if (filters.type && t.type !== filters.type) return false;
-      
+    return legacyMonthTx.filter(t => {
+      if (filterType !== 'all' && t.type !== filterType) return false;
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
       return true;
     });
-  }, [transactions, filters]);
+  }, [legacyMonthTx, filterType, filterCategory]);
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+  const filteredIncome = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
+    [filteredTransactions]
+  );
+  const filteredExpense = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
+    [filteredTransactions]
+  );
+  const filteredBalance = filteredIncome - filteredExpense;
 
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
-  }, [user]);
+  // Compute quote stats
+  const quoteStats = useMemo(() => {
+    const monthStr = String(selectedMonth + 1).padStart(2, '0');
+    const prefix = `${selectedYear}-${monthStr}`;
+    const totalQuotes = quotes.filter(q => q.createdAt?.startsWith(prefix)).length;
+    const paidQuotes = quotes.filter(q =>
+      q.status === 'delivered' && q.eventDate?.startsWith(prefix)
+    ).length;
+    return { totalQuotes, paidQuotes };
+  }, [quotes, selectedMonth, selectedYear]);
 
-  const fetchTransactions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('transaction_date', { ascending: false });
-
-      if (error) throw error;
-      setTransactions((data || []).map(t => ({
-        ...t,
-        type: t.type as 'income' | 'expense',
-        category: t.category ?? null,
-      })));
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las transacciones",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingTransactions(false);
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+      setPickerYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', deleteId);
-
-      if (error) throw error;
-
-      setTransactions(transactions.filter(t => t.id !== deleteId));
-      toast({
-        title: "Transacción eliminada",
-        description: "La transacción se eliminó correctamente",
-      });
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la transacción",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleteId(null);
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+      setPickerYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
     }
   };
 
-  const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-    setIsDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingTransaction(null);
-  };
-
-  const handleTransactionSaved = () => {
-    fetchTransactions();
-    handleDialogClose();
-  };
-
-  // Calculate totals
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  
-  const balance = totalIncome - totalExpenses;
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+  const txMonthLabel = format(new Date(txYear, txMonth, 1), "MMMM yyyy", { locale: es });
 
   if (authLoading) {
     return (
@@ -185,14 +121,16 @@ export default function Finances() {
     return null;
   }
 
-  // Block non-approved users (admins bypass)
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-24 md:pb-8">
-      <div className="container max-w-4xl space-y-6">
+    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8">
+      <div className="container max-w-4xl px-3 sm:px-4 md:px-6 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -200,26 +138,67 @@ export default function Finances() {
               Finanzas del Negocio
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Registra tus ingresos y gastos
+              Resumen financiero del mes seleccionado
             </p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Transacción
+        </div>
+
+        {/* Month Selector */}
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handlePrevMonth}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted hover:bg-accent transition-colors cursor-pointer">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium capitalize text-sm">{selectedMonthLabel}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="center">
+              <div className="flex items-center justify-between mb-3">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="font-semibold text-sm">{pickerYear}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {MONTH_NAMES.map((name, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                    className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                      idx === selectedMonth && pickerYear === selectedYear
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-accent text-foreground'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleNextMonth}>
+            <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <Card className="bg-green-50 border-green-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-green-100 rounded-full shrink-0">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Ingresos</p>
-                  <p className="text-xl font-bold text-green-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-green-600 font-medium">Ingresos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-green-700 truncate">
                     {currencySymbol}{totalIncome.toFixed(2)}
                   </p>
                 </div>
@@ -228,14 +207,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-full">
-                  <TrendingDown className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-red-100 rounded-full shrink-0">
+                  <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Gastos</p>
-                  <p className="text-xl font-bold text-red-700">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">Gastos del mes</p>
+                  <p className="text-lg sm:text-xl font-bold text-red-700 truncate">
                     {currencySymbol}{totalExpenses.toFixed(2)}
                   </p>
                 </div>
@@ -244,16 +223,16 @@ export default function Finances() {
           </Card>
 
           <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                  <DollarSign className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                <div className={`p-2 rounded-full shrink-0 ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                  <DollarSign className={`w-4 h-4 sm:w-5 sm:h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
                 </div>
-                <div>
-                  <p className={`text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                    Balance
+                <div className="min-w-0">
+                  <p className={`text-xs sm:text-sm font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {balance >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
                   </p>
-                  <p className={`text-xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                  <p className={`text-lg sm:text-xl font-bold truncate ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
                   </p>
                 </div>
@@ -262,136 +241,220 @@ export default function Finances() {
           </Card>
         </div>
 
+        {/* Quote Stats */}
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <Card className="bg-purple-50 border-purple-200">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-full shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                   <p className="text-xs sm:text-sm text-purple-600 font-medium">Cotizaciones</p>
+                   <p className="text-xl sm:text-2xl font-bold text-purple-700">{quoteStats.totalQuotes}</p>
+                   <p className="text-[10px] sm:text-xs text-purple-500">este mes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-emerald-50 border-emerald-200">
+            <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-full shrink-0">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                   <p className="text-xs sm:text-sm text-emerald-600 font-medium">Decoraciones realizadas</p>
+                   <p className="text-xl sm:text-2xl font-bold text-emerald-700">{quoteStats.paidQuotes}</p>
+                   <p className="text-[10px] sm:text-xs text-emerald-500">este mes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Financial Summary */}
+        <FinancialSummary transactions={summaryMonthTx} loading={loadingTransactions} />
+
         {/* Transactions List */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Historial de Transacciones</CardTitle>
-              <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Filter className="w-4 h-4" />
-                    Filtros
-                    {hasActiveFilters && (
-                      <span className="w-2 h-2 bg-primary rounded-full" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </Collapsible>
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-bold">Historial de Transacciones</CardTitle>
+              <Popover open={txPickerOpen} onOpenChange={setTxPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer self-start">
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium capitalize">{txMonthLabel}</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3" align="end">
+                  <div className="flex items-center justify-between mb-3">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTxPickerYear(y => y - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="font-semibold text-sm">{txPickerYear}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setTxPickerYear(y => y + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {MONTH_NAMES.map((name, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => { setTxMonth(idx); setTxYear(txPickerYear); setTxPickerOpen(false); setFilterType('all'); setFilterCategory('all'); }}
+                        className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                          idx === txMonth && txPickerYear === txYear
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-accent text-foreground'
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Inline Summary Cards */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+              <div className="rounded-lg bg-green-50 border border-green-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-green-600 font-medium">Ingresos</p>
+                <p className="text-sm sm:text-base font-bold text-green-600 truncate">{currencySymbol}{filteredIncome.toFixed(2)}</p>
+              </div>
+              <div className="rounded-lg bg-red-50 border border-red-200 px-2 sm:px-3 py-2">
+                <p className="text-[10px] sm:text-xs text-red-600 font-medium">Gastos</p>
+                <p className="text-sm sm:text-base font-bold text-red-600 truncate">{currencySymbol}{filteredExpense.toFixed(2)}</p>
+              </div>
+              <div className={`rounded-lg px-2 sm:px-3 py-2 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <p className={`text-[10px] sm:text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
+                <p className={`text-sm sm:text-base font-bold truncate ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="mt-3">
+              <TransactionFilters
+                transactions={legacyMonthTx}
+                filterType={filterType}
+                filterCategory={filterCategory}
+                onTypeChange={setFilterType}
+                onCategoryChange={setFilterCategory}
+              />
             </div>
           </CardHeader>
-          <CardContent>
-            <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-              <CollapsibleContent className="pb-4">
-                <TransactionFilters
-                  transactions={transactions}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-            
+          <CardContent className="px-0 pb-0">
             {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...
               </div>
             ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {transactions.length === 0 
-                  ? "No hay transacciones registradas. ¡Agrega tu primera transacción!"
-                  : "No hay transacciones que coincidan con los filtros seleccionados."
+                {allTransactions.length === 0 
+                  ? "No hay transacciones registradas."
+                  : "No hay transacciones que coincidan con los filtros."
                 }
               </div>
             ) : (
-              <div className="space-y-3">
+              <>
+              {/* Mobile: card layout */}
+              <div className="sm:hidden space-y-2 px-4 pb-4">
                 {filteredTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        transaction.type === 'income' 
-                          ? 'bg-green-100' 
-                          : 'bg-red-100'
-                      }`}>
-                        {transaction.type === 'income' ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
+                  <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                          transaction.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yy")}
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(transaction.transaction_date), "d 'de' MMMM, yyyy", { locale: es })}
-                          {transaction.category && ` • ${transaction.category}`}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium truncate">{transaction.description}</p>
+                      {transaction.category && (
+                        <p className="text-[10px] text-muted-foreground truncate">{transaction.category}</p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-semibold ${
-                        transaction.type === 'income' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {transaction.type === 'income' ? '+' : '-'}
-                        {currencySymbol}{Number(transaction.amount).toFixed(2)}
-                      </span>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(transaction)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(transaction.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <p className={`text-sm font-bold ml-3 shrink-0 ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
+                    </p>
                   </div>
                 ))}
+                <div className="flex justify-between pt-2 border-t border-border text-sm font-medium px-1">
+                  <span className="text-muted-foreground">Total ({filteredTransactions.length})</span>
+                  <span className="font-bold">
+                    {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                  </span>
+                </div>
               </div>
+
+              {/* Desktop: table layout */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left font-medium text-muted-foreground px-4 md:px-6 py-2.5">Fecha</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Tipo</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Categoría</th>
+                      <th className="text-left font-medium text-muted-foreground px-3 py-2.5">Descripción</th>
+                      <th className="text-right font-medium text-muted-foreground px-4 md:px-6 py-2.5">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
+                        <td className="px-4 md:px-6 py-3 whitespace-nowrap">
+                          {format(new Date(transaction.transaction_date + 'T12:00:00'), "dd/MM/yyyy")}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                            transaction.type === 'income'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {transaction.type === 'income' ? (
+                              <TrendingUp className="w-3 h-3" />
+                            ) : (
+                              <TrendingDown className="w-3 h-3" />
+                            )}
+                            {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">{transaction.category || '—'}</td>
+                        <td className="px-3 py-3">{transaction.description}</td>
+                        <td className={`px-4 md:px-6 py-3 text-right font-semibold whitespace-nowrap ${
+                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'income' ? '' : '-'}{currencySymbol}{transaction.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-border">
+                      <td colSpan={4} className="px-4 md:px-6 py-3 font-medium text-muted-foreground">
+                        Total ({filteredTransactions.length} registros)
+                      </td>
+                      <td className="px-4 md:px-6 py-3 text-right font-bold">
+                        {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              </>
             )}
           </CardContent>
         </Card>
-
-        {/* Monthly Charts */}
-        <MonthlyCharts transactions={transactions} currencySymbol={currencySymbol} />
-
-        {/* Transaction Form Dialog */}
-        <TransactionFormDialog
-          open={isDialogOpen}
-          onOpenChange={handleDialogClose}
-          transaction={editingTransaction}
-          onSaved={handleTransactionSaved}
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar transacción?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción no se puede deshacer. La transacción será eliminada permanentemente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Eliminar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );

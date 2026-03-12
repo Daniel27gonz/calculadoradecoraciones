@@ -1,492 +1,976 @@
-import { useState, useEffect } from 'react';
-import { Package, Plus, Trash2, Pencil, X, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Package, Plus, Trash2, Pencil, ShoppingCart, AlertTriangle, CheckCircle2, Search, ClipboardList, ChevronLeft, ChevronRight, CalendarIcon, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
-const PURCHASE_UNITS = [
-  { value: 'bolsa', label: 'Bolsa' },
-  { value: 'paquete', label: 'Paquete' },
-  { value: 'caja', label: 'Caja' },
-  { value: 'rollo', label: 'Rollo' },
+const UNITS = [
   { value: 'pieza', label: 'Pieza' },
   { value: 'metro', label: 'Metro' },
+  { value: 'paquete', label: 'Paquete' },
+  { value: 'rollo', label: 'Rollo' },
+  { value: 'bolsa', label: 'Bolsa' },
+  { value: 'caja', label: 'Caja' },
   { value: 'litro', label: 'Litro' },
   { value: 'kilo', label: 'Kilo' },
+];
+
+const CATEGORIES = [
+  { value: 'globos', label: 'Globos' },
+  { value: 'flores', label: 'Flores' },
+  { value: 'telas', label: 'Telas y Manteles' },
+  { value: 'velas', label: 'Velas e Iluminación' },
+  { value: 'adhesivos', label: 'Adhesivos' },
+  { value: 'cintas', label: 'Cintas y Listones' },
+  { value: 'vinil', label: 'Vinil' },
+  { value: 'otros', label: 'Otros' },
 ];
 
 interface Material {
   id: string;
   name: string;
+  category: string;
   purchase_unit: string;
-  presentation_price: number | null;
-  quantity_per_presentation: number | null;
-  cost_per_unit: number | null;
+  stock_minimum: number;
+  total_purchased: number; // calculated from purchases
+}
+
+interface Purchase {
+  id: string;
+  material_id: string;
+  material_name?: string;
+  purchase_date: string;
+  quantity_presentations: number;
+  units_added: number;
+  total_paid: number;
+  cost_per_unit: number;
+  provider: string | null;
 }
 
 export function MaterialsManager() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stockSearchQuery, setStockSearchQuery] = useState('');
+
+  // Month selector state
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
+
+  // New material form
+  const [newMaterial, setNewMaterial] = useState({ name: '', category: '', purchase_unit: '', stock_minimum: 0 });
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [newMaterial, setNewMaterial] = useState<Omit<Material, 'id' | 'cost_per_unit'>>({
-    name: '',
+
+  // Purchase form
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const [newPurchase, setNewPurchase] = useState({
+    material_id: '',
+    purchase_date: format(new Date(), 'yyyy-MM-dd'),
     purchase_unit: '',
-    presentation_price: null,
-    quantity_per_presentation: null,
+    presentation_price: '',
+    quantity: '',
+    quantity_bought: '',
+    provider: '',
   });
 
-  const currentCurrency = getCurrencyByCode(profile?.currency || 'USD');
+  // Quick purchase from material card
+  const [quickPurchaseDialogOpen, setQuickPurchaseDialogOpen] = useState(false);
+  const [quickPurchaseMaterial, setQuickPurchaseMaterial] = useState<Material | null>(null);
+  const [quickPurchase, setQuickPurchase] = useState({ price: '', quantity: '' });
+
+  // Create new material inline from purchases tab
+  const [isCreatingNewMaterial, setIsCreatingNewMaterial] = useState(false);
+  const [newMatInline, setNewMatInline] = useState({ name: '', category: 'otros', purchase_unit: 'pieza' });
+  const [purchaseMaterialSearch, setPurchaseMaterialSearch] = useState('');
+
+  const [deductions, setDeductions] = useState<Record<string, number>>({});
+
+  const currency = getCurrencyByCode(profile?.currency || 'USD');
+  const fmt = (v: number | null) => v === null ? '-' : `${currency?.symbol || '$'}${v.toFixed(2)}`;
 
   useEffect(() => {
-    if (user) {
-      loadMaterials();
-    }
+    if (user) loadAll();
   }, [user]);
 
-  const loadMaterials = async () => {
+  const loadAll = async () => {
     if (!user) return;
-    
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('user_materials')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const [matRes, purRes, dedRes] = await Promise.all([
+        supabase.from('user_materials').select('id, name, category, purchase_unit, stock_minimum, presentation_price').eq('user_id', user.id).order('name'),
+        supabase.from('material_purchases').select('*').eq('user_id', user.id).order('purchase_date', { ascending: false }),
+        supabase.from('stock_deductions').select('material_id, quantity_deducted').eq('user_id', user.id),
+      ]);
 
-      if (error) throw error;
+      if (matRes.error) throw matRes.error;
+      if (purRes.error) throw purRes.error;
 
-      setMaterials(data?.map(m => ({
+      // Calculate deductions per material
+      const deductionsByMaterial: Record<string, number> = {};
+      (dedRes.data || []).forEach(d => {
+        deductionsByMaterial[d.material_id] = (deductionsByMaterial[d.material_id] || 0) + Number(d.quantity_deducted);
+      });
+      setDeductions(deductionsByMaterial);
+
+      // Calculate total purchased per material from purchases
+      const purchasesByMaterial: Record<string, number> = {};
+      (purRes.data || []).forEach(p => {
+        purchasesByMaterial[p.material_id] = (purchasesByMaterial[p.material_id] || 0) + p.units_added;
+      });
+
+      setMaterials((matRes.data || []).map(m => ({
         id: m.id,
         name: m.name,
-        purchase_unit: m.purchase_unit || '',
-        presentation_price: m.presentation_price,
-        quantity_per_presentation: m.quantity_per_presentation,
-        cost_per_unit: m.cost_per_unit,
-      })) || []);
-    } catch (error) {
-      console.error('Error loading materials:', error);
+        category: m.category || 'otros',
+        purchase_unit: m.purchase_unit || 'pieza',
+        stock_minimum: m.stock_minimum || 0,
+        total_purchased: purchasesByMaterial[m.id] || 0,
+      })));
+
+      setPurchases((purRes.data || []).map(p => ({
+        id: p.id,
+        material_id: p.material_id,
+        purchase_date: p.purchase_date,
+        quantity_presentations: p.quantity_presentations,
+        units_added: p.units_added,
+        total_paid: p.total_paid,
+        cost_per_unit: p.units_added > 0 ? p.total_paid / p.units_added : 0,
+        provider: p.provider,
+      })));
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateCostPerUnit = (price: number | null, quantity: number | null): number | null => {
-    if (price === null || quantity === null || quantity === 0) return null;
-    return price / quantity;
+  // Material name lookup
+  const materialMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    materials.forEach(m => { map[m.id] = m.name; });
+    return map;
+  }, [materials]);
+
+  // Material presentation_price lookup
+  const materialPriceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    materials.forEach(m => { map[m.id] = (m as any).presentation_price || 0; });
+    return map;
+  }, [materials]);
+
+  const filteredMaterials = useMemo(() => {
+    if (!searchQuery.trim()) return materials;
+    const q = searchQuery.toLowerCase();
+    return materials.filter(m => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q));
+  }, [materials, searchQuery]);
+
+  // Filter purchases by selected month/year
+  const filteredPurchases = useMemo(() => {
+    const byMonth = purchases.filter(p => {
+      const d = new Date(p.purchase_date + 'T12:00:00');
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+    if (!searchQuery.trim()) return byMonth;
+    const q = searchQuery.toLowerCase();
+    return byMonth.filter(p => (materialMap[p.material_id] || '').toLowerCase().includes(q));
+  }, [purchases, selectedMonth, selectedYear, searchQuery, materialMap]);
+
+  // Helper: get default date for selected month
+  const getDefaultDateForMonth = () => {
+    const today = new Date();
+    if (today.getMonth() === selectedMonth && today.getFullYear() === selectedYear) {
+      return format(today, 'yyyy-MM-dd');
+    }
+    return format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
   };
 
+  const selectedMonthLabel = format(new Date(selectedYear, selectedMonth, 1), "MMMM yyyy", { locale: es });
+
+  const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+  // ---- Material CRUD ----
   const handleAddMaterial = async () => {
-    if (!user) {
-      toast({
-        title: "Inicia sesión",
-        description: "Necesitas iniciar sesión para guardar materiales",
-        variant: "destructive",
-      });
+    if (!user || !newMaterial.name.trim()) {
+      toast({ title: 'Error', description: 'El nombre es requerido', variant: 'destructive' });
       return;
     }
-
-    if (!newMaterial.name.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre del material es requerido",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase.from('user_materials').insert({
         user_id: user.id,
         name: newMaterial.name.trim(),
-        purchase_unit: newMaterial.purchase_unit.trim() || null,
-        presentation_price: newMaterial.presentation_price,
-        quantity_per_presentation: newMaterial.quantity_per_presentation,
-        category: 'general',
+        category: newMaterial.category || 'otros',
+        purchase_unit: newMaterial.purchase_unit || 'pieza',
+        stock_minimum: newMaterial.stock_minimum || 0,
+        stock_current: 0,
       });
-
       if (error) throw error;
+      toast({ title: 'Material creado' });
+      setNewMaterial({ name: '', category: '', purchase_unit: '', stock_minimum: 0 });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
 
-      toast({
-        title: "Material guardado",
-        description: "El material se ha agregado correctamente",
-      });
-
-      setNewMaterial({
-        name: '',
-        purchase_unit: '',
-        presentation_price: null,
-        quantity_per_presentation: null,
-      });
-
-      loadMaterials();
-    } catch (error) {
-      console.error('Error saving material:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo guardar el material",
-        variant: "destructive",
-      });
+  const handleUpdateMaterial = async () => {
+    if (!editingMaterial || !user) return;
+    try {
+      const { error } = await supabase.from('user_materials').update({
+        name: editingMaterial.name.trim(),
+        category: editingMaterial.category || 'otros',
+        purchase_unit: editingMaterial.purchase_unit || 'pieza',
+        stock_minimum: editingMaterial.stock_minimum || 0,
+      }).eq('id', editingMaterial.id);
+      if (error) throw error;
+      toast({ title: 'Material actualizado' });
+      setEditDialogOpen(false);
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
   const handleDeleteMaterial = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('user_materials')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('user_materials').delete().eq('id', id);
       if (error) throw error;
-
-      setMaterials(prev => prev.filter(m => m.id !== id));
-      toast({
-        title: "Material eliminado",
-        description: "El material se ha eliminado correctamente",
-      });
-    } catch (error) {
-      console.error('Error deleting material:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el material",
-        variant: "destructive",
-      });
+      toast({ title: 'Material eliminado' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
-  const handleEditMaterial = (material: Material) => {
-    setEditingMaterial({ ...material });
-    setEditDialogOpen(true);
-  };
-
-  const handleUpdateMaterial = async () => {
-    if (!editingMaterial || !user) return;
-
-    if (!editingMaterial.name.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre del material es requerido",
-        variant: "destructive",
-      });
+  // ---- Purchase CRUD ----
+  const handleAddPurchase = async () => {
+    if (!user || !newPurchase.material_id) {
+      toast({ title: 'Error', description: 'Selecciona un material', variant: 'destructive' });
       return;
     }
-
+    const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
+    const presPrice = Number(newPurchase.presentation_price);
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
+    if (!qty || qty <= 0) {
+      toast({ title: 'Error', description: 'La cantidad debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
     try {
-      const { error } = await supabase
-        .from('user_materials')
-        .update({
-          name: editingMaterial.name.trim(),
-          purchase_unit: editingMaterial.purchase_unit.trim() || null,
-          presentation_price: editingMaterial.presentation_price,
-          quantity_per_presentation: editingMaterial.quantity_per_presentation,
-        })
-        .eq('id', editingMaterial.id);
+      // Insert purchase
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
+        user_id: user.id,
+        material_id: newPurchase.material_id,
+        purchase_date: newPurchase.purchase_date,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
+        total_paid: paid,
+        provider: newPurchase.provider.trim() || null,
+      }).select('id').single();
+      if (pErr) throw pErr;
 
-      if (error) throw error;
+      // Update stock_current on user_materials (increment)
+      const mat = materials.find(m => m.id === newPurchase.material_id);
+      if (mat) {
+        const newStock = mat.total_purchased + totalUnits;
+        const costPerUnit = totalUnits > 0 ? paid / totalUnits : 0;
+        await supabase.from('user_materials').update({ stock_current: newStock, cost_per_unit: costPerUnit }).eq('id', mat.id);
+      }
 
-      toast({
-        title: "Material actualizado",
-        description: "El material se ha actualizado correctamente",
+      // Register expense in finances
+      const matName = mat?.name || materialMap[newPurchase.material_id] || 'Material';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${matName}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
       });
 
-      setEditDialogOpen(false);
-      setEditingMaterial(null);
-      loadMaterials();
-    } catch (error) {
-      console.error('Error updating material:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el material",
-        variant: "destructive",
-      });
+      toast({ title: 'Compra registrada', description: `Stock actualizado (+${qty}) y gasto registrado` });
+      setPurchaseDialogOpen(false);
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
-  const editCostPerUnit = editingMaterial 
-    ? calculateCostPerUnit(editingMaterial.presentation_price, editingMaterial.quantity_per_presentation)
-    : null;
+  const handleDeletePurchase = async (purchase: Purchase) => {
+    try {
+      const { error } = await supabase.from('material_purchases').delete().eq('id', purchase.id);
+      if (error) throw error;
 
-  const formatCurrency = (value: number | null): string => {
-    if (value === null) return '-';
-    return `${currentCurrency?.symbol || '$'}${value.toFixed(2)}`;
+      // Decrement stock
+      const mat = materials.find(m => m.id === purchase.material_id);
+      if (mat) {
+        const newStock = Math.max(0, mat.total_purchased - purchase.quantity_presentations);
+        await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', mat.id);
+      }
+
+      // Delete corresponding expense from finances
+      await supabase.from('transactions').delete()
+        .eq('user_id', user!.id)
+        .eq('reference_id', `purchase_${purchase.id}`);
+
+      toast({ title: 'Compra eliminada', description: 'Gasto eliminado de finanzas' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
   };
 
-  const displayCostPerUnit = calculateCostPerUnit(
-    newMaterial.presentation_price,
-    newMaterial.quantity_per_presentation
-  );
+  const handleEditPurchase = (purchase: Purchase) => {
+    setEditingPurchase(purchase);
+    const mat = materials.find(m => m.id === purchase.material_id);
+    setNewPurchase({
+      material_id: purchase.material_id,
+      purchase_date: purchase.purchase_date,
+      purchase_unit: mat?.purchase_unit || '',
+      presentation_price: String(materialPriceMap[purchase.material_id] || (purchase.quantity_presentations > 0 ? purchase.total_paid / purchase.quantity_presentations : 0)),
+      quantity: String(purchase.quantity_presentations > 0 ? purchase.units_added / purchase.quantity_presentations : 0),
+      quantity_bought: String(purchase.quantity_presentations),
+      provider: purchase.provider || '',
+    });
+    setNewMatInline(p => ({ ...p, name: mat?.name || '', category: mat?.category || 'otros' }));
+    setPurchaseMaterialSearch('');
+    setPurchaseDialogOpen(true);
+  };
+
+  const handleUpdatePurchase = async () => {
+    if (!user || !editingPurchase) return;
+    const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought);
+    const presPrice = Number(newPurchase.presentation_price);
+    if (!qtyBought || qtyBought <= 0) {
+      toast({ title: 'Error', description: 'El campo "¿Cuánto compraste?" es obligatorio', variant: 'destructive' });
+      return;
+    }
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
+    if (!qty || qty <= 0) {
+      toast({ title: 'Error', description: 'La cantidad de piezas debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('material_purchases').update({
+        material_id: newPurchase.material_id,
+        purchase_date: newPurchase.purchase_date,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
+        total_paid: paid,
+        provider: newPurchase.provider.trim() || null,
+      }).eq('id', editingPurchase.id);
+      if (error) throw error;
+
+      // Update corresponding expense using reference_id
+      await supabase.from('transactions').delete()
+        .eq('user_id', user.id)
+        .eq('reference_id', `purchase_${editingPurchase.id}`);
+
+      const newMatName = materialMap[newPurchase.material_id] || 'Material';
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${newMatName}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${editingPurchase.id}`,
+      });
+
+      toast({ title: 'Compra actualizada', description: 'Gasto actualizado en finanzas' });
+      setPurchaseDialogOpen(false);
+      setEditingPurchase(null);
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  const purchaseTotalPaid = useMemo(() => {
+    const qtyBought = Number(newPurchase.quantity_bought) || 1;
+    const presPrice = Number(newPurchase.presentation_price);
+    if (!presPrice || presPrice <= 0) return null;
+    return presPrice * qtyBought;
+  }, [newPurchase.quantity_bought, newPurchase.presentation_price]);
+
+  const purchaseCostPerUnit = useMemo(() => {
+    const presPrice = Number(newPurchase.presentation_price);
+    const qty = Number(newPurchase.quantity);
+    if (!presPrice || presPrice <= 0 || !qty || qty <= 0) return null;
+    return presPrice / qty;
+  }, [newPurchase.presentation_price, newPurchase.quantity]);
+
+  // Filtered materials for purchase dialog search
+  const filteredPurchaseMaterials = useMemo(() => {
+    if (!purchaseMaterialSearch.trim()) return materials;
+    const q = purchaseMaterialSearch.toLowerCase();
+    return materials.filter(m => m.name.toLowerCase().includes(q));
+  }, [materials, purchaseMaterialSearch]);
+
+  const materialExistsForSearch = useMemo(() => {
+    if (!purchaseMaterialSearch.trim()) return true;
+    const q = purchaseMaterialSearch.toLowerCase().trim();
+    return materials.some(m => m.name.toLowerCase() === q);
+  }, [materials, purchaseMaterialSearch]);
+
+  // Quick purchase total
+  const quickPurchaseTotal = useMemo(() => {
+    const qty = Number(quickPurchase.quantity);
+    const price = Number(quickPurchase.price);
+    if (!qty || qty <= 0 || !price) return null;
+    return price * qty;
+  }, [quickPurchase.quantity, quickPurchase.price]);
+
+  // ---- Quick purchase from material card ----
+  const openQuickPurchase = (mat: Material) => {
+    setQuickPurchaseMaterial(mat);
+    setQuickPurchase({ price: '', quantity: '' });
+    setQuickPurchaseDialogOpen(true);
+  };
+
+  const handleQuickPurchase = async () => {
+    if (!user || !quickPurchaseMaterial) return;
+    const qty = Number(quickPurchase.quantity);
+    const price = Number(quickPurchase.price);
+    const total = price * qty;
+    if (!qty || qty <= 0 || !price || price <= 0) {
+      toast({ title: 'Error', description: 'Completa precio y cantidad', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { data: purchaseData, error: pErr } = await supabase.from('material_purchases').insert({
+        user_id: user.id,
+        material_id: quickPurchaseMaterial.id,
+        purchase_date: getDefaultDateForMonth(),
+        quantity_presentations: qty,
+        units_added: qty,
+        total_paid: total,
+      }).select('id').single();
+      if (pErr) throw pErr;
+      const newStock = quickPurchaseMaterial.total_purchased + qty;
+      await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', quickPurchaseMaterial.id);
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: total,
+        description: `Compra material: ${quickPurchaseMaterial.name}`,
+        category: 'Materiales',
+        transaction_date: getDefaultDateForMonth(),
+        reference_id: `purchase_${purchaseData.id}`,
+      });
+      toast({ title: 'Compra registrada ✅', description: `+${qty} ${quickPurchaseMaterial.name} · Gasto registrado` });
+      setQuickPurchaseDialogOpen(false);
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  // ---- Create material (or reuse existing) + purchase in one action ----
+  const handleCreateMaterialAndPurchase = async () => {
+    if (!user) return;
+    const name = newMatInline.name.trim();
+    if (!name) {
+      toast({ title: 'Error', description: 'El nombre del material es requerido', variant: 'destructive' });
+      return;
+    }
+    const qty = Number(newPurchase.quantity);
+    const qtyBought = Number(newPurchase.quantity_bought);
+    const presPrice = Number(newPurchase.presentation_price);
+    if (!qtyBought || qtyBought <= 0) {
+      toast({ title: 'Error', description: 'El campo "¿Cuánto compraste?" es obligatorio', variant: 'destructive' });
+      return;
+    }
+    const paid = presPrice * qtyBought;
+    const totalUnits = qty * qtyBought;
+    if (!qty || qty <= 0) {
+      toast({ title: 'Error', description: 'La cantidad de piezas debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+    try {
+      // Check if material already exists
+      const existing = materials.find(m => m.name.toLowerCase() === name.toLowerCase());
+      let materialId: string;
+      let isNew = false;
+
+      if (existing) {
+        materialId = existing.id;
+        // Update stock
+        const newStock = existing.total_purchased + totalUnits;
+        await supabase.from('user_materials').update({ stock_current: newStock }).eq('id', materialId);
+      } else {
+        // Create material
+        const { data: matData, error: matErr } = await supabase.from('user_materials').insert({
+          user_id: user.id,
+          name,
+          category: newMatInline.category,
+          purchase_unit: newPurchase.purchase_unit || newMatInline.purchase_unit,
+          stock_minimum: 0,
+          stock_current: totalUnits,
+        }).select('id').single();
+        if (matErr) throw matErr;
+        materialId = matData.id;
+        isNew = true;
+      }
+
+      // Register purchase
+      const { data: purchaseData, error: purchaseErr } = await supabase.from('material_purchases').insert({
+        user_id: user.id,
+        material_id: materialId,
+        purchase_date: newPurchase.purchase_date,
+        quantity_presentations: qtyBought,
+        units_added: totalUnits,
+        total_paid: paid,
+        provider: newPurchase.provider.trim() || null,
+      }).select('id').single();
+      if (purchaseErr) throw purchaseErr;
+
+      // Register expense
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: paid,
+        description: `Compra material: ${name}`,
+        category: 'Materiales',
+        transaction_date: newPurchase.purchase_date,
+        reference_id: `purchase_${purchaseData.id}`,
+      });
+
+      toast({ title: isNew ? 'Material creado y compra registrada ✅' : 'Compra registrada ✅', description: `${name} · ${totalUnits} unidades · Gasto registrado` });
+      setPurchaseDialogOpen(false);
+      setIsCreatingNewMaterial(false);
+      setNewMatInline({ name: '', category: 'otros', purchase_unit: 'pieza' });
+      setPurchaseMaterialSearch('');
+      setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' });
+      loadAll();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+  };
 
   if (!user) {
     return (
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-              <Package className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Materiales</CardTitle>
-              <CardDescription>
-                Gestiona tu catálogo de materiales
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">
-            <p className="text-muted-foreground text-sm">
-              Inicia sesión para gestionar tus materiales
-            </p>
-          </div>
+        <CardContent className="py-8 text-center text-muted-foreground text-sm">
+          Inicia sesión para gestionar tu inventario
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-            <Package className="w-5 h-5 text-accent-foreground" />
-          </div>
-          <div>
-            <CardTitle className="text-lg">Materiales</CardTitle>
-            <CardDescription>
-              Registra tus materiales para calcular costos automáticamente
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Form to add new material */}
-        <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-          <div className="space-y-2">
-            <Label>Nombre del material</Label>
-            <Input
-              value={newMaterial.name}
-              onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
-            />
-          </div>
+    <div className="space-y-4">
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <Package className="w-6 h-6 text-primary" />
+        Materiales
+      </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Unidad de compra</Label>
-              <Select
-                value={newMaterial.purchase_unit}
-                onValueChange={(value) => setNewMaterial(prev => ({ ...prev, purchase_unit: value }))}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecciona una opción" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  {PURCHASE_UNITS.map((unit) => (
-                    <SelectItem key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Precio de la presentación</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={newMaterial.presentation_price ?? ''}
-                onChange={(e) => setNewMaterial(prev => ({ 
-                  ...prev, 
-                  presentation_price: e.target.value === '' ? null : Number(e.target.value)
-                }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Cantidad de la presentación</Label>
-              <Input
-                type="number"
-                min="0"
-                step="1"
-                value={newMaterial.quantity_per_presentation ?? ''}
-                onChange={(e) => setNewMaterial(prev => ({ 
-                  ...prev, 
-                  quantity_per_presentation: e.target.value === '' ? null : Number(e.target.value)
-                }))}
-              />
-            </div>
-          </div>
-
-          {/* Calculated cost per unit */}
-          <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-            <span className="text-sm font-medium">
-              Costo por {['bolsa', 'paquete', 'caja'].includes(newMaterial.purchase_unit) ? 'pieza' : 'unidad'}:
+      {/* Month selector with calendar icon */}
+      <Popover open={monthPickerOpen} onOpenChange={(open) => { setMonthPickerOpen(open); if (open) setPickerYear(selectedYear); }}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-between capitalize font-semibold h-11">
+            <span className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              {selectedMonthLabel}
             </span>
-            <span className="text-lg font-bold text-primary">
-              {displayCostPerUnit !== null ? formatCurrency(displayCostPerUnit) : '-'}
-            </span>
-          </div>
-
-          <Button onClick={handleAddMaterial} className="w-full" variant="gradient">
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar material
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </Button>
-        </div>
-
-        {/* List of saved materials */}
-        {loading ? (
-          <div className="text-center py-4 text-muted-foreground">
-            Cargando materiales...
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3 bg-background" align="start">
+          <div className="flex items-center justify-between mb-3">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y - 1)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="font-semibold text-sm">{pickerYear}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPickerYear(y => y + 1)}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
-        ) : materials.length > 0 ? (
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground">
-              Materiales guardados ({materials.length})
-            </h4>
-            <div className="space-y-2">
-              {materials.map((material) => (
-                <div
-                  key={material.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg bg-card hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{material.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {material.purchase_unit && `Compra: ${material.purchase_unit}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right mr-1">
-                      <p className="text-sm font-medium text-primary">
-                        {formatCurrency(material.cost_per_unit)}/{['bolsa', 'paquete', 'caja'].includes(material.purchase_unit) ? 'pieza' : 'unidad'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatCurrency(material.presentation_price)} × {material.quantity_per_presentation ?? '-'}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditMaterial(material)}
-                      className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteMaterial(material.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {MONTH_NAMES.map((name, idx) => (
+              <button
+                key={idx}
+                onClick={() => { setSelectedMonth(idx); setSelectedYear(pickerYear); setMonthPickerOpen(false); }}
+                className={`px-2 py-1.5 text-xs font-medium rounded-md capitalize transition-colors ${
+                  idx === selectedMonth && pickerYear === selectedYear
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
           </div>
-        ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No tienes materiales guardados</p>
-          </div>
-        )}
+        </PopoverContent>
+      </Popover>
 
-        {/* Edit Material Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="bg-background">
-            <DialogHeader>
-              <DialogTitle>Editar Material</DialogTitle>
-            </DialogHeader>
-            {editingMaterial && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Nombre del material</Label>
-                  <Input
-                    value={editingMaterial.name}
-                    onChange={(e) => setEditingMaterial(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  />
-                </div>
+    <Tabs defaultValue="purchases" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="purchases" className="gap-1 text-xs sm:text-sm justify-start">
+          <ShoppingCart className="w-4 h-4 shrink-0" />
+          Compras
+        </TabsTrigger>
+        <TabsTrigger value="stock" className="gap-1 text-xs sm:text-sm justify-start">
+          <ClipboardList className="w-4 h-4 shrink-0" />
+          Existencias
+        </TabsTrigger>
+      </TabsList>
 
-                <div className="space-y-2">
-                  <Label>Unidad de compra</Label>
-                  <Select
-                    value={editingMaterial.purchase_unit}
-                    onValueChange={(value) => setEditingMaterial(prev => prev ? { ...prev, purchase_unit: value } : null)}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Selecciona una opción" />
-                    </SelectTrigger>
+      {/* Edit material dialog (kept for editing from other places) */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-background">
+          <DialogHeader><DialogTitle>Editar Material</DialogTitle></DialogHeader>
+          {editingMaterial && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Nombre</Label>
+                <Input value={editingMaterial.name} onChange={(e) => setEditingMaterial(p => p ? { ...p, name: e.target.value } : null)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Categoría</Label>
+                <Select value={editingMaterial.category} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, category: v } : null)}>
+                  <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Unidad</Label>
+                  <Select value={editingMaterial.purchase_unit} onValueChange={(v) => setEditingMaterial(p => p ? { ...p, purchase_unit: v } : null)}>
+                    <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-background z-50">
-                      {PURCHASE_UNITS.map((unit) => (
-                        <SelectItem key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </SelectItem>
-                      ))}
+                      {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Precio de la presentación</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editingMaterial.presentation_price ?? ''}
-                      onChange={(e) => setEditingMaterial(prev => prev ? { 
-                        ...prev, 
-                        presentation_price: e.target.value === '' ? null : Number(e.target.value)
-                      } : null)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Cantidad</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={editingMaterial.quantity_per_presentation ?? ''}
-                      onChange={(e) => setEditingMaterial(prev => prev ? { 
-                        ...prev, 
-                        quantity_per_presentation: e.target.value === '' ? null : Number(e.target.value)
-                      } : null)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
-                  <span className="text-sm font-medium">
-                    Costo por {['bolsa', 'paquete', 'caja'].includes(editingMaterial.purchase_unit) ? 'pieza' : 'unidad'}:
-                  </span>
-                  <span className="text-lg font-bold text-primary">
-                    {editCostPerUnit !== null ? formatCurrency(editCostPerUnit) : '-'}
-                  </span>
+                <div className="space-y-1">
+                  <Label className="text-xs">Stock mínimo</Label>
+                  <Input type="number" min="0" value={editingMaterial.stock_minimum || ''} onChange={(e) => setEditingMaterial(p => p ? { ...p, stock_minimum: Number(e.target.value) || 0 } : null)} />
                 </div>
               </div>
-            )}
+              <div className="p-3 rounded-lg bg-muted text-sm">
+                <span className="text-muted-foreground">Stock actual (automático): </span>
+                <span className="font-bold">{editingMaterial.total_purchased}</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button variant="gradient" onClick={handleUpdateMaterial}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== TAB COMPRAS ===== */}
+      <TabsContent value="purchases" className="space-y-4 mt-4">
+        {/* Total del mes */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
+          <span className="text-sm font-medium text-foreground">Total compras del mes</span>
+          <span className="text-lg font-bold text-primary">
+            {fmt(filteredPurchases.reduce((sum, p) => sum + p.total_paid, 0))}
+          </span>
+        </div>
+
+        <Button onClick={() => { setEditingPurchase(null); setNewPurchase({ material_id: '', purchase_date: getDefaultDateForMonth(), purchase_unit: '', presentation_price: '', quantity: '', quantity_bought: '', provider: '' }); setPurchaseDialogOpen(true); }} className="w-full" variant="gradient">
+          <Plus className="w-4 h-4 mr-1" /> Registrar Compra
+        </Button>
+
+        {/* Search bar for purchases */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar compra por material..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-9 text-sm"
+          />
+        </div>
+
+        {filteredPurchases.length > 0 ? (
+          <div className="space-y-2">
+            {filteredPurchases.map(p => (
+              <Card key={p.id} className="overflow-hidden">
+                <div className="flex items-center p-3 gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{materialMap[p.material_id] || 'Material eliminado'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(p.purchase_date + 'T12:00:00'), 'dd/MM/yyyy')}
+                      {p.provider && ` · ${p.provider}`}
+                    </p>
+                    <div className="flex gap-3 mt-1 text-xs">
+                      <span>Cant: <strong>{p.quantity_presentations}</strong></span>
+                      <span>Total: <strong>{fmt(p.total_paid)}</strong></span>
+                      <span>Costo/presentación: <strong>{fmt(p.cost_per_unit)}</strong></span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditPurchase(p)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeletePurchase(p)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No hay compras en {selectedMonthLabel}</p>
+          </div>
+        )}
+
+        {/* New purchase dialog */}
+        <Dialog open={purchaseDialogOpen} onOpenChange={(open) => { setPurchaseDialogOpen(open); if (!open) { setIsCreatingNewMaterial(false); setPurchaseMaterialSearch(''); } }}>
+          <DialogContent className="bg-background max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{editingPurchase ? 'Editar Compra' : 'Registrar Compra'}</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              {/* Material name input with search */}
+              <div className="space-y-1">
+                <Label className="text-xs">Material</Label>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar o escribir nombre del material"
+                    value={newMatInline.name}
+                    onChange={(e) => {
+                      setNewMatInline(p => ({ ...p, name: e.target.value }));
+                      setPurchaseMaterialSearch(e.target.value);
+                    }}
+                    className="pl-8"
+                  />
+                </div>
+                {/* Suggestions dropdown */}
+                {newMatInline.name.trim() && filteredPurchaseMaterials.length > 0 && !materials.some(m => m.name.toLowerCase() === newMatInline.name.toLowerCase().trim()) && (
+                  <div className="border rounded-md bg-background max-h-32 overflow-y-auto shadow-sm">
+                    {filteredPurchaseMaterials.slice(0, 5).map(m => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between"
+                        onClick={() => {
+                          setNewMatInline(p => ({ ...p, name: m.name, category: m.category }));
+                          setNewPurchase(p => ({ ...p, material_id: m.id, purchase_unit: m.purchase_unit }));
+                          setPurchaseMaterialSearch('');
+                        }}
+                      >
+                        <span>{m.name}</span>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{CATEGORIES.find(c => c.value === m.category)?.label || m.category}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {newMatInline.name.trim() && materials.some(m => m.name.toLowerCase() === newMatInline.name.toLowerCase().trim()) && (
+                  <p className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Material encontrado, se actualizará su stock</p>
+                )}
+                {newMatInline.name.trim() && !materials.some(m => m.name.toLowerCase().includes(newMatInline.name.toLowerCase().trim())) && (
+                  <p className="text-xs text-muted-foreground">Material nuevo, se creará automáticamente</p>
+                )}
+                <Label className="text-xs">Categoría</Label>
+                <Select value={newMatInline.category} onValueChange={(v) => setNewMatInline(p => ({ ...p, category: v }))}>
+                  <SelectTrigger className="bg-background"><SelectValue placeholder="Categoría" /></SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Fecha de compra</Label>
+                <Input type="date" value={newPurchase.purchase_date} onChange={(e) => setNewPurchase(p => ({ ...p, purchase_date: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cómo lo compraste?</Label>
+                  <Select value={newPurchase.purchase_unit || (isCreatingNewMaterial ? newMatInline.purchase_unit : '')} onValueChange={(v) => { setNewPurchase(p => ({ ...p, purchase_unit: v })); if (isCreatingNewMaterial) setNewMatInline(p => ({ ...p, purchase_unit: v })); }}>
+                    <SelectTrigger className="bg-background"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cuánto compraste?</Label>
+                  <Input type="number" min="1" placeholder="0" value={newPurchase.quantity_bought} onChange={(e) => setNewPurchase(p => ({ ...p, quantity_bought: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cuánto te costó?</Label>
+                  <Input type="number" min="0" step="0.01" placeholder="0.00" value={newPurchase.presentation_price} onChange={(e) => setNewPurchase(p => ({ ...p, presentation_price: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">¿Cuántas piezas trae la presentación?</Label>
+                  <Input type="number" min="1" placeholder="0" value={newPurchase.quantity} onChange={(e) => setNewPurchase(p => ({ ...p, quantity: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Total Pagado</Label>
+                  <div className="h-9 flex items-center px-3 rounded-md border bg-muted text-sm font-semibold">
+                    {purchaseTotalPaid !== null ? fmt(purchaseTotalPaid) : '-'}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Proveedor (opcional)</Label>
+                <Input placeholder="Nombre del proveedor" value={newPurchase.provider} onChange={(e) => setNewPurchase(p => ({ ...p, provider: e.target.value }))} />
+              </div>
+
+              {/* Auto cost per unit */}
+              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                <span className="text-sm">Costo por presentación:</span>
+                <span className="text-lg font-bold text-primary">
+                  {purchaseCostPerUnit !== null ? fmt(purchaseCostPerUnit) : '-'}
+                </span>
+              </div>
+            </div>
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button variant="gradient" onClick={handleUpdateMaterial}>
-                <Check className="w-4 h-4 mr-2" />
-                Guardar cambios
-              </Button>
+              <Button variant="outline" onClick={() => setPurchaseDialogOpen(false)}>Cancelar</Button>
+              {editingPurchase ? (
+                <Button variant="gradient" onClick={handleUpdatePurchase} disabled={!Number(newPurchase.quantity_bought)}>Guardar</Button>
+              ) : (
+                <Button variant="gradient" onClick={handleCreateMaterialAndPurchase} disabled={!newMatInline.name.trim() || !Number(newPurchase.quantity_bought)}>Registrar</Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </CardContent>
-    </Card>
+
+        {/* Quick purchase dialog (from material card) */}
+        <Dialog open={quickPurchaseDialogOpen} onOpenChange={setQuickPurchaseDialogOpen}>
+          <DialogContent className="bg-background">
+            <DialogHeader>
+              <DialogTitle>Registrar Compra</DialogTitle>
+              {quickPurchaseMaterial && (
+                <p className="text-sm text-muted-foreground mt-1">{quickPurchaseMaterial.name}</p>
+              )}
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Precio pagado (por unidad)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0.00" value={quickPurchase.price} onChange={(e) => setQuickPurchase(p => ({ ...p, price: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cantidad comprada</Label>
+                <Input type="number" min="1" placeholder="0" value={quickPurchase.quantity} onChange={(e) => setQuickPurchase(p => ({ ...p, quantity: e.target.value }))} />
+              </div>
+              {quickPurchaseTotal !== null && (
+                <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                  <span className="text-sm">Total a registrar:</span>
+                  <span className="text-lg font-bold text-primary">{fmt(quickPurchaseTotal)}</span>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setQuickPurchaseDialogOpen(false)}>Cancelar</Button>
+              <Button variant="gradient" onClick={handleQuickPurchase}>Registrar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </TabsContent>
+
+      {/* ===== TAB CONTROL DE EXISTENCIA ===== */}
+      <TabsContent value="stock" className="space-y-4 mt-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ClipboardList className="w-5 h-5" />
+              Control de Existencia
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Stock real = Total comprado − Usado en pedidos confirmados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Search bar for stock */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar material..."
+                value={stockSearchQuery}
+                onChange={(e) => setStockSearchQuery(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            {materials.length > 0 ? (
+              <div className="divide-y border rounded-md">
+                {materials.filter(m => !stockSearchQuery.trim() || m.name.toLowerCase().includes(stockSearchQuery.toLowerCase())).map((m, index) => {
+                  const totalDeducted = deductions[m.id] || 0;
+                  const stockReal = m.total_purchased - totalDeducted;
+                  const isLow = stockReal <= m.stock_minimum;
+                  const unitLabel = UNITS.find(u => u.value === m.purchase_unit)?.label || m.purchase_unit;
+
+                  return (
+                    <div key={m.id} className="p-3 hover:bg-muted/30">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm">{index + 1}. {m.name}</p>
+                          <p className="text-xs text-muted-foreground">{unitLabel}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Badge variant={isLow ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                            {isLow ? (
+                              <><AlertTriangle className="w-3 h-3 mr-0.5" /> Bajo</>
+                            ) : (
+                              <><CheckCircle2 className="w-3 h-3 mr-0.5" /> OK</>
+                            )}
+                          </Badge>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingMaterial(m); setEditDialogOpen(true); }}>
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteMaterial(m.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex gap-4 mt-1.5 text-xs">
+                        <span className="text-green-600 font-semibold">Entrada: {m.total_purchased} pzas</span>
+                        <span className="text-orange-600 font-semibold">Salida: {totalDeducted} pzas</span>
+                        <span className={`font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
+                          Existencia: {stockReal} pzas
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No hay materiales registrados</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+    </div>
   );
 }

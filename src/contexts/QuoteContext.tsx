@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Quote, Package, Balloon, Material, Worker, TimePhase, Extra, FurnitureItem, CostSummary, TransportItem, IndirectExpense, ReusableMaterialUsed } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -129,8 +129,58 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [packages, setPackages] = useState<Package[]>(defaultPackages);
   const [defaultHourlyRate, setDefaultHourlyRate] = useState<number>(25);
+  const [indirectExpensesMonthlyTotal, setIndirectExpensesMonthlyTotal] = useState<number>(0);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+
+  // Load indirect expenses from database (latest month with data, excluding current month)
+  const loadIndirectExpenses = useCallback(async () => {
+    if (!user) {
+      setIndirectExpensesMonthlyTotal(0);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('indirect_expenses')
+        .select('monthly_amount, payment_date')
+        .eq('user_id', user.id);
+      if (error) throw error;
+
+      const now = new Date();
+      const currentY = now.getFullYear();
+      const currentM = now.getMonth() + 1;
+
+      // Exclude current month
+      const withDates = (data || []).filter(e => {
+        if (!e.payment_date) return false;
+        const [y, m] = e.payment_date.split('-');
+        return !(parseInt(y) === currentY && parseInt(m) === currentM);
+      });
+
+      if (withDates.length === 0) {
+        setIndirectExpensesMonthlyTotal(0);
+        return;
+      }
+      let latestY = 0, latestM = 0;
+      withDates.forEach(e => {
+        const [y, m] = e.payment_date!.split('-');
+        const yr = parseInt(y), mo = parseInt(m);
+        if (yr > latestY || (yr === latestY && mo > latestM)) {
+          latestY = yr;
+          latestM = mo;
+        }
+      });
+      const total = withDates
+        .filter(e => {
+          const [y, m] = e.payment_date!.split('-');
+          return parseInt(y) === latestY && parseInt(m) === latestM;
+        })
+        .reduce((sum, e) => sum + (Number(e.monthly_amount) || 0), 0);
+      setIndirectExpensesMonthlyTotal(total);
+    } catch (err) {
+      console.error('Error loading indirect expenses:', err);
+    }
+  }, [user]);
 
   // Load quotes from Supabase when user logs in
   const loadQuotes = async () => {
@@ -151,10 +201,13 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       if (data) {
         const loadedQuotes: Quote[] = data.map((q: any) => ({
           id: q.id,
+          folio: q.folio || undefined,
           clientName: q.client_name || '',
           clientPhone: q.client_phone || '',
           eventDate: q.event_date || '',
           eventType: q.event_type || '',
+          setupTime: q.setup_time || '',
+          decorationDescription: q.decoration_description || '',
           createdAt: q.created_at,
           updatedAt: q.updated_at,
           // Use safe parsing for JSONB fields to handle malformed data
@@ -171,6 +224,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           toolWearPercentage: typeof q.tool_wear_percentage === 'number' ? q.tool_wear_percentage : 7,
           wastagePercentage: typeof q.wastage_percentage === 'number' ? q.wastage_percentage : 5,
           notes: q.notes || '',
+          status: (q.status === 'approved' ? 'approved' : q.status === 'delivered' ? 'delivered' : q.status === 'cancelled' ? 'cancelled' : 'pending') as 'pending' | 'approved' | 'delivered' | 'cancelled',
         }));
         setQuotes(loadedQuotes);
       }
@@ -182,8 +236,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       loadQuotes();
+      loadIndirectExpenses();
     }
-  }, [user]);
+  }, [user, loadIndirectExpenses]);
 
   // Use profile's hourly rate if available
   useEffect(() => {
@@ -191,6 +246,53 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       setDefaultHourlyRate(profile.default_hourly_rate);
     }
   }, [profile]);
+
+  // Recalculate stock deductions for an order (delete old, insert new)
+  const recalculateStockDeductions = async (quote: Quote) => {
+    if (!user) return;
+    try {
+      // Get user materials to match by name
+      const { data: userMaterials } = await supabase
+        .from('user_materials')
+        .select('id, name')
+        .eq('user_id', user.id);
+
+      if (!userMaterials) return;
+
+      // Delete existing deductions for this quote
+      await supabase.from('stock_deductions').delete().eq('quote_id', quote.id).eq('user_id', user.id);
+
+      // Aggregate quantities by material_id
+      const aggregated: Record<string, number> = {};
+
+      for (const qMat of quote.materials) {
+        const match = userMaterials.find(m => m.name.toLowerCase() === qMat.name.toLowerCase());
+        if (match && qMat.quantity > 0) {
+          aggregated[match.id] = (aggregated[match.id] || 0) + qMat.quantity;
+        }
+      }
+
+      for (const balloon of quote.balloons) {
+        const match = userMaterials.find(m => m.name.toLowerCase() === balloon.description.toLowerCase());
+        if (match && balloon.quantity > 0) {
+          aggregated[match.id] = (aggregated[match.id] || 0) + balloon.quantity;
+        }
+      }
+
+      const deductions = Object.entries(aggregated).map(([material_id, quantity_deducted]) => ({
+        material_id,
+        quantity_deducted,
+        quote_id: quote.id,
+        user_id: user.id,
+      }));
+
+      if (deductions.length > 0) {
+        await supabase.from('stock_deductions').insert(deductions);
+      }
+    } catch (err) {
+      console.error('Error recalculating stock deductions:', err);
+    }
+  };
 
   const saveQuote = async (quote: Quote) => {
     if (!user) {
@@ -241,6 +343,8 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         client_phone: quote.clientPhone || null,
         event_date: validatedData.eventDate || null,
         event_type: quote.eventType || null,
+        setup_time: quote.setupTime || null,
+        decoration_description: quote.decorationDescription || null,
         balloons: validatedData.balloons,
         materials: validatedData.materials,
         workers: validatedData.workers,
@@ -254,6 +358,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         tool_wear_percentage: validatedData.toolWearPercentage,
         wastage_percentage: validatedData.wastagePercentage,
         notes: validatedData.notes,
+        status: quote.status || 'pending',
         updated_at: new Date().toISOString(),
       };
 
@@ -273,6 +378,14 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         }
         return [quote, ...prev];
       });
+
+      // If this quote is an active order (approved/delivered), recalculate stock deductions
+      if (quote.status === 'approved' || quote.status === 'delivered') {
+        await recalculateStockDeductions(quote);
+      } else if (quote.status === 'cancelled' || quote.status === 'pending') {
+        // If cancelled or reverted to pending, remove all stock deductions
+        await supabase.from('stock_deductions').delete().eq('quote_id', quote.id).eq('user_id', user.id);
+      }
     } catch (error) {
       console.error('Error saving quote:', error);
       toast({
@@ -287,6 +400,12 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
+      // If this was an order, remove stock deductions first
+      const quoteToDelete = quotes.find(q => q.id === id);
+      if (quoteToDelete && (quoteToDelete.status === 'approved' || quoteToDelete.status === 'delivered')) {
+        await supabase.from('stock_deductions').delete().eq('quote_id', id).eq('user_id', user.id);
+      }
+
       const { error } = await supabase
         .from('quotes')
         .delete()
@@ -313,7 +432,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     const newQuote: Quote = {
       ...original,
       id: crypto.randomUUID(),
+      folio: undefined,
       clientName: `${original.clientName} (copia)`,
+      status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -365,17 +486,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     // Desgaste de herramientas: deshabilitado (ya no se usa)
     const toolWear = 0;
     
-    // Gastos indirectos: cargar desde localStorage y dividir entre eventos por mes
-    let indirectExpenses = 0;
-    if (user) {
-      const stored = localStorage.getItem(`indirect_expenses_${user.id}`);
-      if (stored) {
-        const expenses = JSON.parse(stored);
-        const totalMonthly = expenses.reduce((sum: number, e: { monthlyAmount: number }) => sum + (e.monthlyAmount || 0), 0);
-        const eventsPerMonth = profile?.events_per_month || 4;
-        indirectExpenses = eventsPerMonth > 0 ? totalMonthly / eventsPerMonth : 0;
-      }
-    }
+    // Gastos indirectos: cargar desde base de datos y dividir entre eventos por mes
+    const eventsPerMonth = profile?.events_per_month || 4;
+    const indirectExpenses = eventsPerMonth > 0 ? indirectExpensesMonthlyTotal / eventsPerMonth : 0;
     
     // Total = suma de todos los conceptos que se muestran en la hoja de cotización
     // (Materiales no reutilizables + Materiales reutilizables + Merma + Mano de obra + Transporte + Extras + Gastos indirectos)

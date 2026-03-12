@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
 
 export interface QuotePdfData {
+  folio?: number;
   businessName: string;
   logoUrl: string | null;
   quoteDate: string;
@@ -16,7 +17,8 @@ export interface QuotePdfData {
   eventDate: string;
   eventLocation: string;
   decorationType: string;
-  items: Array<{ id: string; description: string; quantity: number; price: number }>;
+  decorationDescription: string;
+  items: Array<{ id: string; description: string; quantity: number | string; price: number }>;
   additionalServices: Array<{ id: string; description: string; price: number }>;
   depositPercentage: number;
   depositMessage: string;
@@ -45,45 +47,112 @@ export function useQuotePdfDownload() {
   const { profile } = useAuth();
 
   const convertQuoteToTemplateData = (quote: Quote, summary: CostSummary): QuotePdfData => {
-    // Convert materials to items format
-    const items = quote.materials.map((mat) => ({
-      id: mat.id,
-      description: mat.name,
-      quantity: mat.quantity,
-      price: mat.costPerUnit * mat.quantity,
-    }));
+    const items: Array<{ id: string; description: string; quantity: number | string; price: number }> = [];
 
-    // Add balloons as items
+    // Descripción de la decoración como primera fila
+    if (quote.decorationDescription) {
+      items.push({ id: 'decoration-desc', description: quote.decorationDescription, quantity: '—', price: 0 });
+    }
+
+
+    // Balloons (solo si tienen cantidad > 0)
     quote.balloons.forEach((balloon) => {
-      items.push({
-        id: balloon.id,
-        description: balloon.description,
-        quantity: balloon.quantity,
-        price: balloon.pricePerUnit * balloon.quantity,
-      });
+      if (balloon.quantity > 0 && balloon.pricePerUnit > 0) {
+        items.push({
+          id: balloon.id,
+          description: balloon.description,
+          quantity: balloon.quantity,
+          price: balloon.pricePerUnit * balloon.quantity,
+        });
+      }
     });
 
-    // Convert extras to additional services
-    const additionalServices = quote.extras.map((extra) => ({
-      id: extra.id,
-      description: extra.name,
-      price: extra.pricePerUnit * extra.quantity,
-    }));
-
-    // Add transport as additional service if any
-    quote.transportItems.forEach((transport) => {
-      additionalServices.push({
-        id: transport.id,
-        description: transport.concept || 'Compra del material',
-        price: (transport.amountIda || 0) + (transport.amountRegreso || 0),
-      });
+    // Furniture (solo si tienen cantidad > 0)
+    quote.furnitureItems.forEach((item) => {
+      if (item.quantity > 0 && item.pricePerUnit > 0) {
+        items.push({
+          id: item.id,
+          description: item.name,
+          quantity: item.quantity,
+          price: item.pricePerUnit * item.quantity,
+        });
+      }
     });
+
+    // Reusable materials used (solo si tienen cantidad > 0)
+    quote.reusableMaterialsUsed.forEach((item) => {
+      if (item.quantity > 0) {
+        items.push({
+          id: item.id,
+          description: item.name,
+          quantity: item.quantity,
+          price: item.costPerUse * item.quantity,
+        });
+      }
+    });
+
+    // Ayudante (solo si hay trabajadores con horas > 0)
+    if (quote.workers.length > 0) {
+      const activeWorkers = quote.workers.filter(w => w.hours > 0 && w.hourlyRate > 0);
+      if (activeWorkers.length > 0) {
+        const totalWorkerPrice = activeWorkers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
+        items.push({
+          id: 'ayudante',
+          description: 'Ayudante',
+          quantity: activeWorkers.length,
+          price: totalWorkerPrice,
+        });
+      }
+    }
+
+    // Adicionales del cliente (solo si tienen cantidad > 0)
+    quote.extras.forEach((extra) => {
+      if (extra.quantity > 0 && extra.pricePerUnit > 0) {
+        items.push({
+          id: extra.id,
+          description: extra.name,
+          quantity: extra.quantity,
+          price: extra.pricePerUnit * extra.quantity,
+        });
+      }
+    });
+
+    // Transporte (solo si el total es > 0)
+    if (quote.transportItems.length > 0) {
+      const totalTransportPrice = quote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
+      if (totalTransportPrice > 0) {
+        items.push({
+          id: 'transporte',
+          description: 'Transporte',
+          quantity: '—',
+          price: totalTransportPrice,
+        });
+      }
+    }
+
+    // Montaje y Desmontaje (solo si horas > 0 y tarifa > 0)
+    const setupPhase = quote.timePhases.find(p => p.phase === 'setup');
+    const teardownPhase = quote.timePhases.find(p => p.phase === 'teardown');
+    if (setupPhase && setupPhase.hours > 0 && setupPhase.rate > 0) {
+      items.push({ id: 'montaje', description: 'Montaje', quantity: '—', price: setupPhase.hours * setupPhase.rate });
+    }
+    if (teardownPhase && teardownPhase.hours > 0 && teardownPhase.rate > 0) {
+      items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: '—', price: teardownPhase.hours * teardownPhase.rate });
+    }
+
+    // Gastos indirectos (solo si > 0)
+    if (summary.indirectExpenses > 0) {
+      items.push({ id: 'gastos-indirectos', description: 'Gastos indirectos', quantity: '—', price: summary.indirectExpenses });
+    }
+
+    const additionalServices: Array<{ id: string; description: string; price: number }> = [];
 
     const currencyCode = profile?.currency || 'USD';
     const currency = getCurrencyByCode(currencyCode);
     const currencySymbol = currency?.symbol || '$';
 
     return {
+      folio: quote.folio,
       businessName: profile?.business_name || 'Mi Negocio',
       logoUrl: profile?.logo_url || null,
       quoteDate: format(new Date(quote.createdAt), "d 'de' MMMM 'de' yyyy", { locale: es }),
@@ -94,6 +163,7 @@ export function useQuotePdfDownload() {
         : '',
       eventLocation: '',
       decorationType: '',
+      decorationDescription: quote.decorationDescription || '',
       items: items.length > 0 ? items : [{ id: '1', description: 'Decoración con globos', quantity: 1, price: summary.finalPrice }],
       additionalServices,
       depositPercentage: 50,
