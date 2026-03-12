@@ -121,6 +121,9 @@ export default function Finances() {
     return null;
   }
 
+  if (!isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }

@@ -398,6 +398,7 @@ export default function Orders() {
 
   if (loading) return null;
   if (!user) { navigate('/auth'); return null; }
+  if (!isAdmin && isCancelled) return <CancelledSubscription />;
   if (!isApproved && !isAdmin) return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
 
   return (
