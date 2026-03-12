@@ -175,17 +175,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchApprovalStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('user_approval_status')
-      .select('status')
+      .select('status, cancelled_at')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (error) {
       console.error('Error fetching approval status:', error);
       setApprovalStatus(null);
+      setCancelledAt(null);
       return;
     }
 
     setApprovalStatus(data?.status as ApprovalStatus || null);
+    setCancelledAt(data?.cancelled_at || null);
   };
 
   const refreshApprovalStatus = async () => {
