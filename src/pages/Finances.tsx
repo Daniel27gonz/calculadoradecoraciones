@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuote } from '@/contexts/QuoteContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
