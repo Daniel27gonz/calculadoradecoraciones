@@ -20,6 +20,7 @@ import { LogoUploadSection } from '@/components/calculator/LogoUploadSection';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Quote, TimePhase } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
