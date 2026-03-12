@@ -14,7 +14,7 @@ import { Package } from '@/types/quote';
 export default function Packages() {
   const navigate = useNavigate();
   const { packages, savePackage, deletePackage } = useQuote();
-  const { user, isApproved, approvalStatus, isAdmin, loading } = useAuth();
+  const { user, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
