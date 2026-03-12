@@ -344,6 +344,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin,
       approvalStatus,
       isApproved,
+      isCancelled,
       signUp,
       signIn,
       signOut,
