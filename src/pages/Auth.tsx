@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
+import { PendingApproval } from '@/components/PendingApproval';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -23,7 +25,7 @@ const signupSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signIn, signUp, loading, isCancelled, isApproved, approvalStatus, isAdmin } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -35,12 +37,12 @@ export default function Auth() {
     password: ''
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in and approved
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !loading && isApproved) {
       navigate('/');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isApproved, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,14 +66,10 @@ export default function Auth() {
 
     if (isLogin) {
       const { error } = await signIn(formData.email, formData.password);
-      if (!error) {
-        navigate('/');
-      }
+      // Navigation handled by useEffect when approved
     } else {
       const { error } = await signUp(formData.email, formData.password, formData.name);
-      if (!error) {
-        navigate('/');
-      }
+      // Navigation handled by useEffect when approved
     }
 
     setSubmitting(false);
@@ -82,7 +80,16 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center gradient-hero">
         <div className="animate-pulse text-primary">Cargando...</div>
       </div>);
+  }
 
+  // Show cancelled subscription screen at auth level
+  if (user && !isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
+
+  // Show pending approval screen at auth level
+  if (user && !isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (
