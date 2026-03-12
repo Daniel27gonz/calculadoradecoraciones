@@ -34,7 +34,7 @@ interface QuotePayment {
 export default function Orders() {
   const navigate = useNavigate();
   const { quotes, calculateCosts, saveQuote, loadQuotes } = useQuote();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
