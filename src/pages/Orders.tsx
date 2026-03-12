@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
