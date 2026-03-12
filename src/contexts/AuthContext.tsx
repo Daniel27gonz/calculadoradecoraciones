@@ -16,6 +16,7 @@ interface Profile {
 }
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | null;
+type CancelledAt = string | null;
 
 interface AuthContextType {
   user: User | null;
