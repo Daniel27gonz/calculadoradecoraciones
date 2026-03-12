@@ -20,7 +20,7 @@ const MONTH_NAMES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'se
 export default function Finances() {
   const { quotes } = useQuote();
   const navigate = useNavigate();
-  const { user, profile, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading: authLoading } = useAuth();
 
   const { transactions: allTransactions, loading: loadingTransactions } = useFinancialData();
 
