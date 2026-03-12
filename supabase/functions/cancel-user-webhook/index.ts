@@ -36,9 +36,17 @@ Deno.serve(async (req) => {
 
     // Validate webhook token
     const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
-    const token = body.token || body.api_token || body.secret || body.webhook_token
-    const tokenFromHeader = req.headers.get('x-webhook-token') || req.headers.get('authorization')
-    const receivedToken = token || tokenFromHeader
+    const url = new URL(req.url)
+    const receivedToken = 
+      url.searchParams.get('token') ||
+      body.hottok ||
+      body.token || 
+      body.api_token || 
+      body.secret || 
+      body.webhook_token ||
+      req.headers.get('x-hotmart-hottok') ||
+      req.headers.get('x-webhook-token') || 
+      req.headers.get('authorization')
 
     console.log('Token validation:', { receivedToken: receivedToken ? 'present' : 'missing', matches: receivedToken === webhookSecret })
 
