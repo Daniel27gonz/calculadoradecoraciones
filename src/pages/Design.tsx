@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save, Palette } from "lucide-react";
+import { Plus, Trash2, Download, Eye, Upload, X, Image, Info, Save } from "lucide-react";
 import QuoteTemplatePreview from "@/components/design/QuoteTemplatePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +13,6 @@ import { useQuote } from "@/contexts/QuoteContext";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { getCurrencyByCode } from "@/lib/currencies";
 import {
   Select,
   SelectContent,
@@ -35,22 +34,7 @@ interface AdditionalService {
   price: number;
 }
 
-export interface PdfColors {
-  header: string;
-  titles: string;
-  lines: string;
-  finalPrice: string;
-}
-
-export const defaultPdfColors: PdfColors = {
-  header: "#fce4ec",
-  titles: "#db2777",
-  lines: "#f9a8d4",
-  finalPrice: "#db2777",
-};
-
 export interface QuoteTemplateData {
-  folio?: number;
   businessName: string;
   businessLogo: string;
   quoteDate: string;
@@ -59,29 +43,12 @@ export interface QuoteTemplateData {
   eventDate: string;
   eventLocation: string;
   decorationType: string;
-  decorationDescription?: string;
   items: QuoteItem[];
   additionalServices: AdditionalService[];
   depositPercentage: number;
   depositMessage: string;
   thankYouMessage: string;
   customNote: string;
-  currencySymbol: string;
-  validUntil: string;
-  pdfColors: PdfColors;
-  costSummary?: {
-    totalMaterials: number;
-    totalReusableMaterials: number;
-    wastage: number;
-    wastagePercentage: number;
-    totalLabor: number;
-    totalTransport: number;
-    totalExtras: number;
-    indirectExpenses: number;
-    totalCost: number;
-    marginPercentage: number;
-    finalPrice: number;
-  };
 }
 
 const Design = () => {
@@ -113,16 +80,11 @@ const Design = () => {
     depositMessage: "Se solicita un anticipo del {percentage}% para confirmar la fecha",
     thankYouMessage: "¡Gracias por confiar en mí para hacer tu evento especial!",
     customNote: "Esta cotización está cuidadosamente diseñada para adaptarse a tus necesidades y brindarte la mejor decoración que siempre soñaste.",
-    currencySymbol: "$",
-    validUntil: "",
-    pdfColors: { ...defaultPdfColors },
   });
 
   // Load profile data and design config when available
   useEffect(() => {
     if (profile) {
-      const currency = getCurrencyByCode(profile.currency || 'USD');
-      const savedColors = (profile as any).pdf_colors;
       setTemplateData(prev => ({
         ...prev,
         businessName: profile.business_name || prev.businessName,
@@ -130,8 +92,6 @@ const Design = () => {
         depositPercentage: (profile as any).design_deposit_percentage ?? prev.depositPercentage,
         depositMessage: (profile as any).design_deposit_message || prev.depositMessage,
         customNote: (profile as any).design_additional_notes || prev.customNote,
-        currencySymbol: currency?.symbol || '$',
-        pdfColors: savedColors ? { ...defaultPdfColors, ...savedColors } : prev.pdfColors,
       }));
     }
   }, [profile]);
@@ -148,7 +108,6 @@ const Design = () => {
           design_deposit_percentage: templateData.depositPercentage,
           design_deposit_message: templateData.depositMessage,
           design_additional_notes: templateData.customNote,
-          pdf_colors: templateData.pdfColors as any,
         })
         .eq("user_id", user.id);
 
@@ -194,79 +153,28 @@ const Design = () => {
         const costs = calculateCosts(selectedQuote);
         const finalPrice = costs.finalPrice;
 
-        // Build service items list matching the image quote format
-        const items: QuoteItem[] = [];
+        // Create a single service item with the event type and final price
+        const serviceDescription = selectedQuote.eventType 
+          ? `Servicio de decoración - ${selectedQuote.eventType}`
+          : "Servicio de decoración con globos";
 
-        // Descripción de la decoración como primera fila
-        if (selectedQuote.decorationDescription) {
-          items.push({ id: 'decoration-desc', description: selectedQuote.decorationDescription, quantity: 0, price: 0 });
-        }
-
-        // Balloons
-        selectedQuote.balloons.forEach((b) => {
-          items.push({ id: b.id, description: b.description, quantity: b.quantity, price: b.pricePerUnit * b.quantity });
-        });
-
-        // Furniture
-        selectedQuote.furnitureItems.forEach((f) => {
-          items.push({ id: f.id, description: f.name, quantity: f.quantity, price: f.pricePerUnit * f.quantity });
-        });
-
-        // Reusable materials
-        selectedQuote.reusableMaterialsUsed.forEach((r) => {
-          items.push({ id: r.id, description: r.name, quantity: r.quantity, price: r.costPerUse * r.quantity });
-        });
-
-        // Ayudante (agrupado)
-        if (selectedQuote.workers.length > 0) {
-          const totalWorkerPrice = selectedQuote.workers.reduce((sum, w) => sum + w.hourlyRate * w.hours, 0);
-          items.push({ id: 'ayudante', description: 'Ayudante', quantity: selectedQuote.workers.length, price: totalWorkerPrice });
-        }
-
-        // Extras
-        selectedQuote.extras.forEach((e) => {
-          items.push({ id: e.id, description: e.name, quantity: e.quantity, price: e.pricePerUnit * e.quantity });
-        });
-
-        // Transporte
-        if (selectedQuote.transportItems.length > 0) {
-          const totalTransport = selectedQuote.transportItems.reduce((sum, t) => sum + (t.amountIda || 0) + (t.amountRegreso || 0), 0);
-          items.push({ id: 'transporte', description: 'Transporte', quantity: 0, price: totalTransport });
-        }
-
-        // Montaje y Desmontaje
-        const setupPhase = selectedQuote.timePhases.find(p => p.phase === 'setup');
-        const teardownPhase = selectedQuote.timePhases.find(p => p.phase === 'teardown');
-        if (setupPhase && setupPhase.hours > 0) {
-          items.push({ id: 'montaje', description: 'Montaje', quantity: 0, price: setupPhase.hours * setupPhase.rate });
-        }
-        if (teardownPhase && teardownPhase.hours > 0) {
-          items.push({ id: 'desmontaje', description: 'Desmontaje', quantity: 0, price: teardownPhase.hours * teardownPhase.rate });
-        }
+        const items: QuoteItem[] = [
+          {
+            id: "service-1",
+            description: serviceDescription,
+            quantity: 1,
+            price: finalPrice,
+          }
+        ];
 
         setTemplateData(prev => ({
           ...prev,
-          folio: selectedQuote.folio,
           clientName: selectedQuote.clientName,
           clientPhone: selectedQuote.clientPhone || "",
           eventDate: formattedEventDate,
           decorationType: selectedQuote.eventType || "",
-          decorationDescription: selectedQuote.decorationDescription || "",
           items,
           additionalServices: [],
-          costSummary: {
-            totalMaterials: costs.totalMaterials,
-            totalReusableMaterials: costs.totalReusableMaterials,
-            wastage: costs.wastage,
-            wastagePercentage: selectedQuote.wastagePercentage || 0,
-            totalLabor: costs.totalLabor,
-            totalTransport: costs.totalTransport,
-            totalExtras: costs.totalExtras,
-            indirectExpenses: costs.indirectExpenses,
-            totalCost: costs.totalCost,
-            marginPercentage: selectedQuote.marginPercentage || 0,
-            finalPrice: costs.finalPrice,
-          },
         }));
 
         toast({
@@ -454,21 +362,21 @@ const Design = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 pt-16 md:pt-20">
-      <div className="container mx-auto px-3 sm:px-4 py-4 md:py-6 max-w-4xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
+    <div className="min-h-screen bg-background pb-24 pt-20">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">
+            <h1 className="text-2xl font-display font-bold text-foreground">
               Diseñador de Cotización
             </h1>
-            <p className="text-muted-foreground text-xs sm:text-sm">
+            <p className="text-muted-foreground text-sm">
               Personaliza tu plantilla de cotización profesional
             </p>
           </div>
           <Button
             onClick={() => setShowPreview(!showPreview)}
             variant="outline"
-            className="gap-2 self-start sm:self-center"
+            className="gap-2"
           >
             <Eye className="w-4 h-4" />
             {showPreview ? "Editar" : "Vista previa"}
@@ -476,7 +384,7 @@ const Design = () => {
         </div>
 
         {showPreview ? (
-          <QuoteTemplatePreview data={templateData} total={templateData.costSummary?.finalPrice ?? calculateTotal()} />
+          <QuoteTemplatePreview data={templateData} total={calculateTotal()} />
         ) : (
           <div className="space-y-6">
             {/* Selector de Cotización */}
@@ -662,6 +570,79 @@ const Design = () => {
               </CardContent>
             </Card>
 
+            {/* Items de la Cotización */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-medium text-primary">
+                  Servicios
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {templateData.items.map((item, index) => (
+                  <div key={item.id} className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Item {index + 1}
+                      </span>
+                      {templateData.items.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeItem(item.id)}
+                          className="h-8 w-8 text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-1 space-y-2">
+                        <Label>Descripción</Label>
+                        <Input
+                          value={item.description}
+                          onChange={(e) =>
+                            updateItem(item.id, "description", e.target.value)
+                          }
+                          placeholder="Ej: Arreglo de globos básico"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cantidad</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={item.quantity || ""}
+                          onChange={(e) =>
+                            updateItem(item.id, "quantity", parseInt(e.target.value) || 0)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Precio</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={item.price || ""}
+                          onChange={(e) =>
+                            updateItem(item.id, "price", parseFloat(e.target.value) || 0)
+                          }
+                          placeholder="$0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  onClick={addItem}
+                  className="w-full gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Agregar item
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Servicios Adicionales */}
             <Card>
               <CardHeader className="pb-4">
@@ -775,17 +756,6 @@ const Design = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Válido hasta</Label>
-                  <Input
-                    type="date"
-                    value={templateData.validUntil}
-                    onChange={(e) => updateField("validUntil", e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Fecha límite de validez de la cotización
-                  </p>
-                </div>
-                <div className="space-y-2">
                   <Label>Mensaje de agradecimiento</Label>
                   <Input
                     value={templateData.thankYouMessage}
@@ -817,106 +787,13 @@ const Design = () => {
               </CardContent>
             </Card>
 
-            {/* Personalizar colores del PDF */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium text-primary flex items-center gap-2">
-                  <Palette className="w-5 h-5" />
-                  Personalizar colores del PDF
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-xs text-muted-foreground">
-                  Estos colores solo se aplican al diseño del PDF de cotización.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Color del encabezado</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={templateData.pdfColors.header}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
-                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
-                      />
-                      <Input
-                        value={templateData.pdfColors.header}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, header: e.target.value })}
-                        className="flex-1 font-mono text-sm"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Color de títulos</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={templateData.pdfColors.titles}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
-                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
-                      />
-                      <Input
-                        value={templateData.pdfColors.titles}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, titles: e.target.value })}
-                        className="flex-1 font-mono text-sm"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Color de líneas y separadores</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={templateData.pdfColors.lines}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
-                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
-                      />
-                      <Input
-                        value={templateData.pdfColors.lines}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, lines: e.target.value })}
-                        className="flex-1 font-mono text-sm"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Color del precio final</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={templateData.pdfColors.finalPrice}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
-                        className="w-10 h-10 rounded-lg border border-border cursor-pointer"
-                      />
-                      <Input
-                        value={templateData.pdfColors.finalPrice}
-                        onChange={(e) => updateField("pdfColors", { ...templateData.pdfColors, finalPrice: e.target.value })}
-                        className="flex-1 font-mono text-sm"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateField("pdfColors", { ...defaultPdfColors })}
-                  className="text-xs"
-                >
-                  Restaurar colores predeterminados
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Total */}
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold">Total de la cotización:</span>
                   <span className="text-2xl font-bold text-primary">
-                    {templateData.currencySymbol}{(templateData.costSummary?.finalPrice ?? calculateTotal()).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${calculateTotal().toLocaleString()}
                   </span>
                 </div>
               </CardContent>

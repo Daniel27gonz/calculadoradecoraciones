@@ -29,7 +29,7 @@ export function WastageSection({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <span className="text-xl sm:text-2xl">📉</span>
-          <span>Desperdicio</span>
+          <span>Merma</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -40,7 +40,7 @@ export function WastageSection({
         {/* Slider */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Porcentaje de desperdicio</span>
+            <span className="text-sm font-medium">Porcentaje de merma</span>
             <div className="flex items-center gap-2">
               <NumericField
                 min={1}
@@ -74,7 +74,7 @@ export function WastageSection({
             <span className="font-medium">{formatCurrency(totalMaterials)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Desperdicio ({wastagePercentage}%):</span>
+            <span className="text-muted-foreground">Merma ({wastagePercentage}%):</span>
             <span className="font-bold text-primary">{formatCurrency(wastageAmount)}</span>
           </div>
         </div>

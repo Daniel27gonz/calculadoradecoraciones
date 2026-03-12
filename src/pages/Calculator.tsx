@@ -20,7 +20,6 @@ import { LogoUploadSection } from '@/components/calculator/LogoUploadSection';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
-import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Quote, TimePhase } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrencyByCode } from '@/lib/currencies';
@@ -37,9 +36,7 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   clientName: '',
   clientPhone: '',
   eventDate: '',
-  setupTime: '',
   eventType: '',
-  decorationDescription: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   balloons: [],
@@ -55,14 +52,13 @@ const createEmptyQuote = (hourlyRate: number): Quote => ({
   toolWearPercentage: 7,
   wastagePercentage: 5,
   notes: '',
-  status: 'pending',
 });
 
 export default function Calculator() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin, isCancelled } = useAuth();
+  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin } = useAuth();
   const {
     quotes, 
     saveQuote, 
@@ -129,18 +125,6 @@ export default function Calculator() {
     return newQuote;
   });
 
-  // When quotes load asynchronously, update the quote if we're editing
-  const hasLoadedEditQuote = useRef(false);
-  useEffect(() => {
-    if (editId && quotes.length > 0 && !hasLoadedEditQuote.current) {
-      const existing = quotes.find(q => q.id === editId);
-      if (existing) {
-        setQuote(existing);
-        hasLoadedEditQuote.current = true;
-      }
-    }
-  }, [editId, quotes]);
-
   const summary = calculateCosts(quote);
 
   const handleSave = async () => {
@@ -148,14 +132,6 @@ export default function Calculator() {
       toast({
         title: "Falta información",
         description: "Por favor ingresa el nombre del cliente",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!quote.eventDate) {
-      toast({
-        title: "Falta información",
-        description: "Por favor ingresa la fecha del evento para poder agregarlo a la agenda",
         variant: "destructive",
       });
       return;
@@ -190,10 +166,6 @@ export default function Calculator() {
     return null;
   }
 
-  // Block cancelled users
-  if (!isAdmin && isCancelled) {
-    return <CancelledSubscription />;
-  }
   // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
@@ -204,23 +176,23 @@ export default function Calculator() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border md:relative md:bg-transparent md:border-0">
         <div className="container max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-1">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 px-2 sm:px-3">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Volver</span>
+              Volver
             </Button>
-            <h1 className="font-display text-base sm:text-xl font-semibold truncate text-center">
+            <h1 className="font-display text-xl font-semibold">
               {editId ? 'Editar Cotización' : 'Nueva Cotización'}
             </h1>
-            <Button variant="default" size="sm" onClick={handleSave} className="shrink-0 px-2 sm:px-3">
+            <Button variant="default" size="sm" onClick={handleSave}>
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">Guardar</span>
+              Guardar
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-3 sm:px-4 py-6 space-y-6 overflow-x-hidden">
+      <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Logo Upload */}
         <LogoUploadSection />
 
@@ -264,21 +236,13 @@ export default function Calculator() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha del evento <span className="text-destructive">*</span></label>
+                <label className="text-sm font-medium">Fecha del evento</label>
                 <Input
                   type="date"
                   value={quote.eventDate}
                   onChange={(e) => updateQuote({ eventDate: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Hora del montaje</label>
-                <Input
-                  type="time"
-                  value={quote.setupTime}
-                  onChange={(e) => updateQuote({ setupTime: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -289,15 +253,6 @@ export default function Calculator() {
                   placeholder="Ej: Cumpleaños infantil, Boda, XV años"
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descripción completa de la decoración</label>
-              <Textarea
-                value={quote.decorationDescription}
-                onChange={(e) => updateQuote({ decorationDescription: e.target.value })}
-                placeholder="Describe los elementos, colores, temática y detalles de la decoración..."
-                rows={4}
-              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Notas</label>

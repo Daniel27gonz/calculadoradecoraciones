@@ -1,1 +1,0 @@
-UPDATE user_approval_status SET status = 'approved', cancelled_at = NULL WHERE user_id = '2cd1e82d-177a-4699-ac5a-1a2feab34382';

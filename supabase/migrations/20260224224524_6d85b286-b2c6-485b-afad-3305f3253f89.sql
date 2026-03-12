@@ -1,1 +1,0 @@
-ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS decoration_description TEXT;

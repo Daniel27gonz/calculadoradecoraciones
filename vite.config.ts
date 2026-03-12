@@ -15,14 +15,14 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["app-icon.png", "robots.txt"],
+      includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png", "robots.txt"],
       devOptions: {
         enabled: true,
       },
       manifest: {
         id: "/",
-        name: "DecoControl",
-        short_name: "DecoControl",
+        name: "Calculadora para Decoradoras de Globos",
+        short_name: "Calc Globos",
         description: "Calcula precios, costos y ganancias de tus eventos de decoración con globos. App para decoradoras emprendedoras.",
         theme_color: "#f9a8d4",
         background_color: "#fdf2f8",
@@ -35,13 +35,19 @@ export default defineConfig(({ mode }) => ({
         dir: "ltr",
         icons: [
           {
-            src: "/app-icon.png",
+            src: "/pwa-icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "/pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/app-icon.png",
+            src: "/pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -49,7 +55,7 @@ export default defineConfig(({ mode }) => ({
         ],
         screenshots: [
           {
-            src: "/app-icon.png",
+            src: "/pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
             form_factor: "narrow",

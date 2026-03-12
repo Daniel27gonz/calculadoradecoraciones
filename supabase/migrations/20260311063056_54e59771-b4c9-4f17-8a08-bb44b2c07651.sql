@@ -1,1 +1,0 @@
-ALTER TABLE public.profiles ADD COLUMN pdf_colors jsonb DEFAULT '{"header": "#fce4ec", "titles": "#db2777", "lines": "#f9a8d4", "finalPrice": "#db2777"}'::jsonb;

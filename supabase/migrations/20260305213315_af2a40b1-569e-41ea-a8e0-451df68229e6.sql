@@ -1,1 +1,0 @@
-ALTER TABLE public.user_approval_status ADD COLUMN cancelled_at timestamp with time zone DEFAULT NULL;

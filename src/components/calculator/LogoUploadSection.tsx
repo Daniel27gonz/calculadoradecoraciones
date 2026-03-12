@@ -14,7 +14,7 @@ export function LogoUploadSection() {
   const [uploading, setUploading] = useState(false);
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local state when profile loads
   useEffect(() => {

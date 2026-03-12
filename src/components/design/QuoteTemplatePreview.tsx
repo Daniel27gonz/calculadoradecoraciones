@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
-import { QuoteTemplateData, defaultPdfColors } from "@/pages/Design";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { QuoteTemplateData } from "@/pages/Design";
 import { Heart, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
@@ -13,32 +11,19 @@ interface QuoteTemplatePreviewProps {
   total: number;
 }
 
-// Helper to lighten a hex color for backgrounds
-const lightenColor = (hex: string, amount: number = 0.85): string => {
-  const num = parseInt(hex.replace('#', ''), 16);
-  const r = Math.round((num >> 16) + (255 - (num >> 16)) * amount);
-  const g = Math.round(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount);
-  const b = Math.round((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount);
-  return `rgb(${r}, ${g}, ${b})`;
-};
-
 const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
   const depositAmount = (total * data.depositPercentage) / 100;
   const templateRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const cs = data.currencySymbol || '$';
-  const s = data.costSummary;
-  const c = data.pdfColors || defaultPdfColors;
-
-  const fmt = (amount: number) =>
-    `${cs}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const handleDownload = async () => {
     if (!templateRef.current) return;
 
     setIsDownloading(true);
+    console.log("Descarga PDF iniciada");
 
     try {
+      // Clone the element to avoid modifying the original
       const clone = templateRef.current.cloneNode(true) as HTMLElement;
       clone.style.position = "fixed";
       clone.style.top = "0";
@@ -49,6 +34,7 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
       clone.style.visibility = "visible";
       document.body.appendChild(clone);
 
+      // Wait for rendering
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(clone, {
@@ -58,186 +44,238 @@ const QuoteTemplatePreview = ({ data, total }: QuoteTemplatePreviewProps) => {
         backgroundColor: "#ffffff",
       });
 
+      // Remove clone
       document.body.removeChild(clone);
 
+      // Generate filename
       const clientName = data.clientName || "cotizacion";
       const sanitizedName = clientName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "").replace(/\s+/g, "-");
       const fileName = `cotizacion-${sanitizedName}-${new Date().toISOString().split("T")[0]}`;
 
+      // Create PDF from canvas
       const imgData = canvas.toDataURL("image/png", 1.0);
-      // Letter size: 215.9mm x 279.4mm with margins
-      const margin = 10; // 10mm margins
-      const pdfWidth = 215.9;
-      const pdfHeight = 279.4;
-      const printableWidth = pdfWidth - margin * 2;
-      const printableHeight = pdfHeight - margin * 2;
-      const imgRatio = canvas.width / canvas.height;
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
       
-      // Fit content within printable area preserving aspect ratio
-      let contentWidth = printableWidth;
-      let contentHeight = contentWidth / imgRatio;
+      // Calculate PDF dimensions (A4 in mm: 210 x 297)
+      const pdfWidth = 210;
+      const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
       
-      // If content is taller than printable area, scale down to fit
-      if (contentHeight > printableHeight) {
-        contentHeight = printableHeight;
-        contentWidth = contentHeight * imgRatio;
-      }
-      
-      // Center horizontally
-      const xOffset = (pdfWidth - contentWidth) / 2;
-
       const pdf = new jsPDF({
-        orientation: "portrait",
+        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
         unit: "mm",
-        format: "letter",
+        format: [pdfWidth, pdfHeight],
       });
 
-      pdf.addImage(imgData, "PNG", xOffset, margin, contentWidth, contentHeight);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${fileName}.pdf`);
 
-      toast({ title: "¡Descargado!", description: "La cotización se ha descargado como PDF" });
+      console.log("Descarga PDF completada");
+      toast({
+        title: "¡Descargado!",
+        description: "La cotización se ha descargado como PDF",
+      });
     } catch (error) {
       console.error("Error en la descarga:", error);
-      toast({ title: "Error", description: "No se pudo descargar la cotización", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "No se pudo descargar la cotización",
+        variant: "destructive",
+      });
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const headerBgLight = lightenColor(c.header, 0.5);
-  const headerBgLighter = lightenColor(c.header, 0.75);
-
   return (
     <div className="space-y-4">
+      {/* Download Button */}
       <div className="flex justify-center">
-        <Button onClick={handleDownload} disabled={isDownloading} className="gap-2 bg-primary hover:bg-primary/90">
+        <Button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="gap-2 bg-primary hover:bg-primary/90"
+        >
           <Download className="w-4 h-4" />
           {isDownloading ? "Descargando..." : "Descargar PDF"}
         </Button>
       </div>
 
+      {/* Template Content */}
       <div ref={templateRef} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="relative px-6 py-3" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: Logo + Business Name */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${headerBgLight}, ${lightenColor(c.header, 0.65)})` }}>
-                {data.businessLogo ? (
-                  <img src={data.businessLogo} alt={data.businessName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl">🎈</span>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold" style={{ color: c.titles }}>{data.businessName}</span>
-                <h1 className="text-lg font-bold text-gray-800 tracking-widest uppercase">Cotización</h1>
-              </div>
-            </div>
-
-            {/* Right: Client data */}
-            <div className="text-right text-xs space-y-0.5 shrink-0">
-              <p className="font-semibold text-sm" style={{ color: c.titles }}>{data.clientName || "___"}</p>
-              <p className="text-gray-600">Tel: {data.clientPhone || "___"}</p>
-              <p className="text-gray-600">Fecha: {data.quoteDate}</p>
-              <p className="text-gray-600">Evento: {data.eventDate || "___"}</p>
-              {data.eventLocation && (
-                <p className="text-gray-600">Lugar: {data.eventLocation}</p>
-              )}
-              {data.decorationType && (
-                <p className="text-gray-600">Tema: {data.decorationType}</p>
-              )}
-            </div>
-          </div>
+      {/* Header con fondo rosa */}
+      <div className="relative bg-gradient-to-r from-pink-100 to-pink-50 p-6">
+        {/* Decoraciones de puntos */}
+        <div className="absolute top-2 right-4 flex gap-1">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="w-1 h-1 rounded-full bg-pink-300"
+              style={{ opacity: Math.random() * 0.5 + 0.3 }}
+            />
+          ))}
         </div>
 
-        {/* Content */}
-        <div className="px-6 pt-3 pb-6 space-y-3 bg-white">
-
-          {/* Tabla de servicios cotizados */}
-          {data.items && data.items.length > 0 && (
-            <div className="pb-4" style={{ borderBottom: `1px solid ${c.lines}` }}>
-              <h3 className="text-lg font-semibold mb-3 text-center" style={{ color: c.titles }}>SERVICIOS COTIZADOS</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${c.lines}` }}>
-                    <th style={{ textAlign: 'left', padding: '8px 12px', color: c.titles, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Descripción
-                    </th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px', color: c.titles, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                      Cantidad
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((item, index) => (
-                    <tr key={item.id} style={{ borderBottom: `1px solid ${lightenColor(c.lines, 0.5)}`, backgroundColor: index % 2 === 0 ? '#ffffff' : lightenColor(c.header, 0.85) }}>
-                      <td style={{ padding: '8px 12px', color: '#555', lineHeight: 1.5 }}>
-                        {item.description}
-                      </td>
-                      <td style={{ padding: '8px 12px', color: '#333', fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
-                        {item.quantity === 0 ? '—' : item.quantity}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="flex items-start justify-between">
+          {/* Logo y nombre del negocio */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-200 to-pink-100 flex items-center justify-center overflow-hidden">
+              {data.businessLogo ? (
+                <img
+                  src={data.businessLogo}
+                  alt={data.businessName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl">🎈</span>
+              )}
             </div>
-          )}
-
-          {/* Precio Final */}
-          <div className="flex justify-end items-center gap-4 pt-2 pb-2 px-4 rounded-lg" style={{ background: `linear-gradient(to right, ${headerBgLight}, ${headerBgLighter})` }}>
-            <span className="text-xl font-bold text-gray-800">PRECIO FINAL:</span>
-            <span className="text-2xl font-bold" style={{ color: c.finalPrice }}>
-              {s ? fmt(s.finalPrice) : `${cs}${total.toLocaleString()}`}
+            <span className="text-lg font-bold text-pink-600 text-center">
+              {data.businessName}
             </span>
           </div>
 
-          {/* Deposit message */}
-          <div className="text-center text-gray-600 py-4">
-            {data.depositMessage.replace("{percentage}", data.depositPercentage.toString())}
+          {/* Título */}
+          <div className="text-right">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">
+              COTIZACIÓN DE
+            </h1>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 tracking-wide">
+              DECORACIÓN CON GLOBOS
+            </h2>
           </div>
+        </div>
 
-          {/* Valid until */}
-          {data.validUntil && (
-            <div className="text-center text-sm text-gray-500 -mt-2 pb-2">
-              Cotización válida hasta: <span className="font-semibold" style={{ color: c.titles }}>
-                {(() => {
-                  try {
-                    return format(new Date(data.validUntil + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es });
-                  } catch {
-                    return data.validUntil;
-                  }
-                })()}
+        {/* Fecha de cotización */}
+        <div className="text-right mt-4 text-gray-600">
+          Fecha: {data.quoteDate}
+        </div>
+      </div>
+
+      {/* Datos del cliente */}
+      <div className="p-6 space-y-4 bg-white">
+        <div className="border-b border-pink-100 pb-4">
+          <h3 className="text-lg font-semibold text-pink-500 mb-3">
+            DATOS DEL CLIENTE:
+          </h3>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex flex-wrap gap-x-2">
+              <span className="text-gray-600">Fecha y lugar del evento:</span>
+              <span className="text-pink-500 underline decoration-pink-300">
+                {data.eventDate || "___"}, {data.eventLocation || "___"}
               </span>
             </div>
-          )}
-
-          {/* Custom note */}
-          {data.customNote && (
-            <div className="text-center italic text-sm py-2" style={{ color: c.titles }}>{data.customNote}</div>
-          )}
-
-          {/* Thank you message */}
-          <div className="relative p-6 text-center" style={{ background: `linear-gradient(to right, ${lightenColor(c.header, 0.85)}, white)` }}>
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex gap-1">
-              <Heart className="w-4 h-4" style={{ color: c.lines, fill: lightenColor(c.lines, 0.5) }} />
-              <Heart className="w-3 h-3" style={{ color: lightenColor(c.lines, 0.3), fill: lightenColor(c.lines, 0.7) }} />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Tema o tipo de decoración:</span>
+              <Heart className="w-4 h-4 text-pink-300" />
             </div>
-            <p className="text-lg font-medium text-gray-700 italic">"{data.thankYouMessage}"</p>
-            <div className="absolute right-4 bottom-2">
-              <svg width="40" height="20" viewBox="0 0 40 20" style={{ color: c.lines }}>
-                <path d="M0 10 Q10 0 20 10 Q30 20 40 10" fill="none" stroke="currentColor" strokeWidth="2" />
-              </svg>
+            <div className="text-pink-500 ml-4">
+              {data.decorationType || "___"}
+            </div>
+            
+            <div className="flex flex-wrap gap-x-8">
+              <div>
+                <span className="text-gray-600">Nombre:</span>
+                <span className="text-pink-500 underline decoration-pink-300 ml-1">
+                  {data.clientName || "___"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Teléfono:</span>
+                <span className="text-pink-500 underline decoration-pink-300 ml-1">
+                  {data.clientPhone || "___"}
+                </span>
+              </div>
             </div>
           </div>
-          {/* Folio footer */}
-          {data.folio && (
-            <div className="text-center pt-3">
-              <span className="text-xs text-gray-400">Folio: #{String(data.folio).padStart(4, '0')}</span>
-            </div>
+        </div>
+
+        {/* Concepto de servicio simplificado para el cliente */}
+        <div className="relative">
+          {/* Borde decorativo */}
+          <div className="absolute -left-2 top-0 bottom-0 w-1 border-l-2 border-dashed border-pink-200" />
+          <div className="absolute -right-2 top-0 bottom-0 w-1 border-r-2 border-dashed border-pink-200" />
+          
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gradient-to-r from-pink-100 to-pink-50">
+                <th className="text-left py-3 px-4 text-pink-500 font-semibold">
+                  SERVICIO
+                </th>
+                <th className="text-right py-3 px-4 text-pink-500 font-semibold">
+                  PRECIO
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-pink-50">
+                <td className="py-4 px-4 text-gray-700">
+                  <div className="font-medium">Servicio de decoración con globos</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {data.decorationType || "Decoración personalizada"}
+                  </div>
+                </td>
+                <td className="py-4 px-4 text-right text-gray-700 font-medium">
+                  ${total.toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex justify-end items-center gap-4 pt-4 border-t-2 border-pink-200">
+          <span className="text-xl font-bold text-gray-800">TOTAL:</span>
+          <span className="text-2xl font-bold text-gray-900">
+            ${total.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Mensaje de anticipo */}
+        <div className="text-center text-gray-600 py-4">
+          {data.depositMessage.replace(
+            "{percentage}",
+            data.depositPercentage.toString()
           )}
         </div>
+
+        {/* Nota personalizada */}
+        {data.customNote && (
+          <div className="text-center italic text-pink-500 text-sm py-2">
+            {data.customNote}
+          </div>
+        )}
+
+        {/* Mensaje de agradecimiento */}
+        <div className="relative bg-gradient-to-r from-pink-50 to-white p-6 text-center">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex gap-1">
+            <Heart className="w-4 h-4 text-pink-300 fill-pink-200" />
+            <Heart className="w-3 h-3 text-pink-200 fill-pink-100" />
+          </div>
+          
+          <p className="text-lg font-medium text-gray-700 italic">
+            "{data.thankYouMessage}"
+          </p>
+          
+          {/* Decoración de línea ondulada */}
+          <div className="absolute right-4 bottom-2">
+            <svg
+              width="40"
+              height="20"
+              viewBox="0 0 40 20"
+              className="text-pink-300"
+            >
+              <path
+                d="M0 10 Q10 0 20 10 Q30 20 40 10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

@@ -14,86 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      indirect_expenses: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          monthly_amount: number
-          payment_date: string | null
-          registered_in_finances: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string
-          id?: string
-          monthly_amount?: number
-          payment_date?: string | null
-          registered_in_finances?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          monthly_amount?: number
-          payment_date?: string | null
-          registered_in_finances?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      material_purchases: {
-        Row: {
-          created_at: string
-          id: string
-          material_id: string
-          notes: string | null
-          provider: string | null
-          purchase_date: string
-          quantity_presentations: number
-          total_paid: number
-          units_added: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          material_id: string
-          notes?: string | null
-          provider?: string | null
-          purchase_date?: string
-          quantity_presentations?: number
-          total_paid?: number
-          units_added?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          material_id?: string
-          notes?: string | null
-          provider?: string | null
-          purchase_date?: string
-          quantity_presentations?: number
-          total_paid?: number
-          units_added?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "material_purchases_material_id_fkey"
-            columns: ["material_id"]
-            isOneToOne: false
-            referencedRelation: "user_materials"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       packages: {
         Row: {
           created_at: string
@@ -151,7 +71,6 @@ export type Database = {
           logo_url: string | null
           mode: string | null
           name: string | null
-          pdf_colors: Json | null
           updated_at: string
           user_id: string
         }
@@ -169,7 +88,6 @@ export type Database = {
           logo_url?: string | null
           mode?: string | null
           name?: string | null
-          pdf_colors?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -187,52 +105,10 @@ export type Database = {
           logo_url?: string | null
           mode?: string | null
           name?: string | null
-          pdf_colors?: Json | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
-      }
-      quote_payments: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          is_paid: boolean
-          notes: string | null
-          payment_date: string
-          quote_id: string
-          user_id: string
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          id?: string
-          is_paid?: boolean
-          notes?: string | null
-          payment_date?: string
-          quote_id: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          is_paid?: boolean
-          notes?: string | null
-          payment_date?: string
-          quote_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quote_payments_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       quotes: {
         Row: {
@@ -240,19 +116,15 @@ export type Database = {
           client_name: string
           client_phone: string | null
           created_at: string
-          decoration_description: string | null
           event_date: string | null
           event_type: string | null
           extras: Json | null
-          folio: number | null
           furniture_items: Json | null
           id: string
           margin_percentage: number | null
           materials: Json | null
           notes: string | null
           reusable_materials_used: Json | null
-          setup_time: string | null
-          status: string
           time_phases: Json | null
           tool_wear_percentage: number | null
           transport_items: Json | null
@@ -266,19 +138,15 @@ export type Database = {
           client_name: string
           client_phone?: string | null
           created_at?: string
-          decoration_description?: string | null
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
-          folio?: number | null
           furniture_items?: Json | null
           id?: string
           margin_percentage?: number | null
           materials?: Json | null
           notes?: string | null
           reusable_materials_used?: Json | null
-          setup_time?: string | null
-          status?: string
           time_phases?: Json | null
           tool_wear_percentage?: number | null
           transport_items?: Json | null
@@ -292,19 +160,15 @@ export type Database = {
           client_name?: string
           client_phone?: string | null
           created_at?: string
-          decoration_description?: string | null
           event_date?: string | null
           event_type?: string | null
           extras?: Json | null
-          folio?: number | null
           furniture_items?: Json | null
           id?: string
           margin_percentage?: number | null
           materials?: Json | null
           notes?: string | null
           reusable_materials_used?: Json | null
-          setup_time?: string | null
-          status?: string
           time_phases?: Json | null
           tool_wear_percentage?: number | null
           transport_items?: Json | null
@@ -345,48 +209,6 @@ export type Database = {
         }
         Relationships: []
       }
-      stock_deductions: {
-        Row: {
-          created_at: string
-          id: string
-          material_id: string
-          quantity_deducted: number
-          quote_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          material_id: string
-          quantity_deducted?: number
-          quote_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          material_id?: string
-          quantity_deducted?: number
-          quote_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_deductions_material_id_fkey"
-            columns: ["material_id"]
-            isOneToOne: false
-            referencedRelation: "user_materials"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_deductions_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       transactions: {
         Row: {
           amount: number
@@ -394,7 +216,6 @@ export type Database = {
           created_at: string
           description: string
           id: string
-          reference_id: string | null
           transaction_date: string
           type: string
           updated_at: string
@@ -406,7 +227,6 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
-          reference_id?: string | null
           transaction_date?: string
           type: string
           updated_at?: string
@@ -418,7 +238,6 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          reference_id?: string | null
           transaction_date?: string
           type?: string
           updated_at?: string
@@ -428,7 +247,6 @@ export type Database = {
       }
       user_approval_status: {
         Row: {
-          cancelled_at: string | null
           created_at: string
           id: string
           status: Database["public"]["Enums"]["approval_status"]
@@ -436,7 +254,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          cancelled_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["approval_status"]
@@ -444,7 +261,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          cancelled_at?: string | null
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["approval_status"]
@@ -466,8 +282,6 @@ export type Database = {
           price: number | null
           purchase_unit: string | null
           quantity_per_presentation: number | null
-          stock_current: number
-          stock_minimum: number
           updated_at: string
           user_id: string
         }
@@ -483,8 +297,6 @@ export type Database = {
           price?: number | null
           purchase_unit?: string | null
           quantity_per_presentation?: number | null
-          stock_current?: number
-          stock_minimum?: number
           updated_at?: string
           user_id: string
         }
@@ -500,8 +312,6 @@ export type Database = {
           price?: number | null
           purchase_unit?: string | null
           quantity_per_presentation?: number | null
-          stock_current?: number
-          stock_minimum?: number
           updated_at?: string
           user_id?: string
         }
@@ -549,7 +359,6 @@ export type Database = {
         Args: { p_email: string; p_new_user_id: string }
         Returns: Json
       }
-      resync_all_transactions: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"

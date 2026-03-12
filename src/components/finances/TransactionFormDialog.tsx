@@ -83,7 +83,7 @@ export function TransactionFormDialog({
       setAmount(transaction.amount.toString());
       setDescription(transaction.description);
       setCategory(transaction.category || '');
-      setDate(new Date(transaction.transaction_date + 'T12:00:00'));
+      setDate(new Date(transaction.transaction_date));
     } else {
       setType('income');
       setAmount('');

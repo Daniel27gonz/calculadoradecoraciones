@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Edit2, Copy, Trash2, Calendar, Eye, Share2, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useQuote } from '@/contexts/QuoteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PendingApproval } from '@/components/PendingApproval';
-import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,7 +20,7 @@ import QuotePdfPreview from '@/components/QuotePdfPreview';
 export default function History() {
   const navigate = useNavigate();
   const { quotes, deleteQuote, duplicateQuote, calculateCosts, saveQuote, loadQuotes } = useQuote();
-  const { user, profile, isApproved, approvalStatus, isAdmin, isCancelled, loading } = useAuth();
+  const { user, profile, isApproved, approvalStatus, isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
@@ -61,7 +58,6 @@ export default function History() {
   const handleDuplicate = async (id: string) => {
     const newQuote = duplicateQuote(id);
     await saveQuote(newQuote);
-    await loadQuotes();
     toast({
       title: "Cotización duplicada",
       description: "Se ha creado una copia de la cotización",
@@ -97,7 +93,6 @@ export default function History() {
     }
   };
 
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,9 +108,6 @@ export default function History() {
     return null;
   }
 
-  if (!isAdmin && isCancelled) {
-    return <CancelledSubscription />;
-  }
   // Block non-approved users (admins bypass)
   if (!isAdmin && approvalStatus && !isApproved) {
     return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
@@ -138,6 +130,13 @@ export default function History() {
       </header>
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Projected Income Section */}
+        <ProjectedIncomeSection
+          quotes={quotes}
+          calculateCosts={calculateCosts}
+          currencySymbol={currencySymbol}
+        />
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -184,23 +183,11 @@ export default function History() {
                   <CardContent className="p-0">
                     <div className="p-4 space-y-4">
                       {/* Header */}
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-display text-base sm:text-lg font-semibold truncate">
-                              {quote.clientName}
-                            </h3>
-                            {(quote.status === 'approved' || quote.status === 'delivered') && (
-                              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">
-                                Cotización aprobada
-                              </Badge>
-                            )}
-                            {quote.status === 'cancelled' && (
-                              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-xs">
-                                Cancelada
-                              </Badge>
-                            )}
-                          </div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-display text-lg font-semibold">
+                            {quote.clientName}
+                          </h3>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
@@ -213,16 +200,24 @@ export default function History() {
                             )}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xl sm:text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
-                          <p className={`text-xs sm:text-sm font-medium ${profitColor}`}>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">{currencySymbol}{summary.finalPrice.toFixed(2)}</p>
+                          <p className={`text-sm font-medium ${profitColor}`}>
                             +{currencySymbol}{summary.netProfit.toFixed(2)} ({summary.profitPercentage.toFixed(0)}%)
                           </p>
                         </div>
                       </div>
 
                       {/* Stats */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="text-center p-2 rounded-lg bg-rose-light/30">
+                          <p className="text-sm font-semibold">{quote.balloons.reduce((s, b) => s + (b.quantity || 0), 0)}</p>
+                          <p className="text-xs text-muted-foreground">Globos</p>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-lavender-light/30">
+                          <p className="text-sm font-semibold">{quote.materials.length}</p>
+                          <p className="text-xs text-muted-foreground">Materiales</p>
+                        </div>
                         <div className="text-center p-2 rounded-lg bg-secondary/50">
                           <p className="text-sm font-semibold">
                             {quote.timePhases.reduce((s, t) => s + (t.hours || 0), 0)}h

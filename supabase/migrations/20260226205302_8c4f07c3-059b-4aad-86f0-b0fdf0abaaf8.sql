@@ -1,1 +1,0 @@
-ALTER TABLE public.quotes ADD COLUMN setup_time text DEFAULT NULL;
