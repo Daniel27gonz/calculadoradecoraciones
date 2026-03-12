@@ -84,7 +84,16 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center gradient-hero">
         <div className="animate-pulse text-primary">Cargando...</div>
       </div>);
+  }
 
+  // Show cancelled subscription screen at auth level
+  if (user && !isAdmin && isCancelled) {
+    return <CancelledSubscription />;
+  }
+
+  // Show pending approval screen at auth level
+  if (user && !isAdmin && approvalStatus && !isApproved) {
+    return <PendingApproval status={approvalStatus as 'pending' | 'rejected'} />;
   }
 
   return (
