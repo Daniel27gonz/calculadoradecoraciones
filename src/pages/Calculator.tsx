@@ -62,7 +62,7 @@ export default function Calculator() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin } = useAuth();
+  const { user, profile, updateProfile, isApproved, approvalStatus, isAdmin, isCancelled } = useAuth();
   const {
     quotes, 
     saveQuote, 
