@@ -43,10 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>(null);
+  const [cancelledAt, setCancelledAt] = useState<CancelledAt>(null);
   const { toast } = useToast();
   const restorationAttemptedRef = useRef<Set<string>>(new Set());
 
   const isApproved = approvalStatus === 'approved';
+  const isCancelled = approvalStatus === 'rejected' && cancelledAt !== null;
 
   useEffect(() => {
     // Set up auth state listener FIRST
