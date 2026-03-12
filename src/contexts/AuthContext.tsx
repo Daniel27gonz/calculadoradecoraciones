@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
           setIsAdmin(false);
           setApprovalStatus(null);
+          setCancelledAt(null);
         }
       }
     );
