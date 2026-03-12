@@ -12,7 +12,7 @@ import contratoImg from '@/assets/modelo-contrato.jpeg';
 
 export default function EarnMore() {
   const navigate = useNavigate();
-  const { user, isApproved, approvalStatus, isAdmin, loading: authLoading } = useAuth();
+  const { user, isApproved, approvalStatus, isAdmin, isCancelled, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return (
