@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import InstallPrompt from '@/components/InstallPrompt';
 import FirstLoginInstallPrompt from '@/components/FirstLoginInstallPrompt';
 import { PendingApproval } from '@/components/PendingApproval';
+import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { useMemo } from 'react';
 import { getCurrencyByCode } from '@/lib/currencies';
 import { format } from 'date-fns';
