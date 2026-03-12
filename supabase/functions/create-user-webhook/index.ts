@@ -20,16 +20,26 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json()
 
-    // Log the full payload for debugging
     console.log('Webhook payload received:', JSON.stringify(body, null, 2))
 
-    // Validate webhook token
+    // Validate webhook token - support multiple locations
     const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
-    const token = body.token || body.api_token || body.secret || body.webhook_token
-    const tokenFromHeader = req.headers.get('x-webhook-token') || req.headers.get('authorization')
+    const url = new URL(req.url)
+    const receivedToken = 
+      url.searchParams.get('token') ||        // Token in URL query param
+      body.hottok ||                          // Hotmart's standard token field
+      body.token || 
+      body.api_token || 
+      body.secret || 
+      body.webhook_token ||
+      req.headers.get('x-hotmart-hottok') ||  // Hotmart header
+      req.headers.get('x-webhook-token') || 
+      req.headers.get('authorization')
 
-    const receivedToken = token || tokenFromHeader
-    console.log('Token validation:', { receivedToken: receivedToken ? 'present' : 'missing', matches: receivedToken === webhookSecret })
+    console.log('Token validation:', { 
+      receivedToken: receivedToken ? 'present' : 'missing', 
+      matches: receivedToken === webhookSecret 
+    })
 
     if (!webhookSecret || receivedToken !== webhookSecret) {
       return new Response(
@@ -38,9 +48,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Extract email and phone from webhook payload
-    const email = body.email || body.customer?.email
-    const phone = body.phone || body.telephone || body.cel || body.customer?.phone || body.customer?.telephone || body.customer?.cel
+    // Extract email and phone from Hotmart's nested payload structure
+    // Hotmart v2 format: data.buyer.email, data.buyer.checkout_phone
+    const buyer = body.data?.buyer || body.buyer || {}
+    const email = buyer.email || body.email || body.customer?.email
+    const phone = buyer.checkout_phone || buyer.phone || buyer.telephone || buyer.cel ||
+                  body.phone || body.telephone || body.cel || 
+                  body.customer?.phone || body.customer?.telephone || body.customer?.cel
+
+    console.log('Extracted data:', { email, phone: phone ? 'present' : 'missing' })
 
     if (!email) {
       return new Response(
