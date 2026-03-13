@@ -129,8 +129,8 @@ export default function Finances() {
   }
 
   return (
-    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8 overflow-x-hidden">
-      <div className="w-full max-w-4xl mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
+    <div className="min-h-screen w-full max-w-full pt-16 md:pt-24 pb-24 md:pb-8 overflow-x-hidden">
+      <div className="w-full max-w-4xl min-w-0 mx-auto px-4 md:px-6 space-y-4 md:space-y-6 overflow-x-hidden">
         {/* Header */}
         <div>
           <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">
@@ -269,7 +269,7 @@ export default function Finances() {
         <FinancialSummary transactions={summaryMonthTx} loading={loadingTransactions} />
 
         {/* Transactions List */}
-        <Card>
+        <Card className="w-full max-w-full overflow-hidden">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-base sm:text-lg font-bold">Historial de Transacciones</CardTitle>
@@ -311,16 +311,16 @@ export default function Finances() {
             </div>
 
             {/* Inline Summary Cards */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
-              <div className="rounded-lg bg-green-50 border border-green-200 px-2 sm:px-3 py-2">
+            <div className="grid gap-2 sm:gap-3 mt-4 w-full max-w-full [&>*]:min-w-0" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 110px), 1fr))' }}>
+              <div className="rounded-lg bg-green-50 border border-green-200 px-2 sm:px-3 py-2 min-w-0">
                 <p className="text-[10px] sm:text-xs text-green-600 font-medium">Ingresos</p>
                 <p className="text-sm sm:text-base font-bold text-green-600 truncate">{currencySymbol}{filteredIncome.toFixed(2)}</p>
               </div>
-              <div className="rounded-lg bg-red-50 border border-red-200 px-2 sm:px-3 py-2">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-2 sm:px-3 py-2 min-w-0">
                 <p className="text-[10px] sm:text-xs text-red-600 font-medium">Gastos</p>
                 <p className="text-sm sm:text-base font-bold text-red-600 truncate">{currencySymbol}{filteredExpense.toFixed(2)}</p>
               </div>
-              <div className={`rounded-lg px-2 sm:px-3 py-2 border ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+              <div className={`rounded-lg px-2 sm:px-3 py-2 border min-w-0 ${filteredBalance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
                 <p className={`text-[10px] sm:text-xs font-medium ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Balance</p>
                 <p className={`text-sm sm:text-base font-bold truncate ${filteredBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                   {filteredBalance < 0 ? '-' : ''}{currencySymbol}{Math.abs(filteredBalance).toFixed(2)}
@@ -339,7 +339,7 @@ export default function Finances() {
               />
             </div>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-0 pb-0 w-full max-w-full overflow-x-hidden">
             {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...

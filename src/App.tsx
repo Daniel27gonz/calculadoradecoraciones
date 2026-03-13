@@ -34,9 +34,9 @@ function AppLayout() {
   const isAuth = location.pathname === '/auth';
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full overflow-x-hidden">
       <Navigation />
-      <main className={isAuth ? "flex-1" : isMobile ? "flex-1 pt-14" : "flex-1 ml-60"}>
+      <main className={isAuth ? "flex-1 min-w-0 max-w-full overflow-x-hidden" : isMobile ? "flex-1 min-w-0 max-w-full overflow-x-hidden pt-14" : "flex-1 min-w-0 max-w-full overflow-x-hidden ml-60"}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
