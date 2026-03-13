@@ -144,8 +144,8 @@ export function useFinancialData(): FinancialData {
             id: `rm_${r.id}`,
             type: 'expense',
             amount: Number(r.material_cost),
-            description: `Inversión: ${r.name || 'Material reutilizable'}`,
-            category: 'Inversiones',
+            description: `Inversión en equipo: ${r.name || 'Material reutilizable'}`,
+            category: 'Inversión en equipo',
             transaction_date: r.purchase_date,
             source: 'material_purchase',
           });

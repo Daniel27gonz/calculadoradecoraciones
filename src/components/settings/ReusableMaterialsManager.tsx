@@ -273,8 +273,8 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
             user_id: user.id,
             type: 'expense',
             amount: formData.material_cost,
-            description: `Inversión: ${formData.name.trim()}`,
-            category: 'Inversiones',
+            description: `Inversión en equipo: ${formData.name.trim()}`,
+            category: 'Inversión en equipo',
             transaction_date: purchaseDateStr,
             reference_id: `reusable_${inserted.id}`,
           });
