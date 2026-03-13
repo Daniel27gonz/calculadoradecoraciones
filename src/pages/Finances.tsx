@@ -214,6 +214,19 @@ export default function Finances() {
             </CardContent>
           </Card>
 
+          {/* Compras de materiales */}
+          <Card className="bg-orange-50/80 border-orange-200">
+            <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">
+              <div className="p-1.5 bg-orange-100 rounded-full mb-1.5">
+                <TrendingDown className="w-4 h-4 text-orange-600" />
+              </div>
+              <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Compras</p>
+              <p className="text-sm sm:text-base font-bold text-orange-700 truncate w-full">
+                {currencySymbol}{totalMaterialPurchases.toFixed(2)}
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Inversión equipo */}
           <Card className="bg-purple-50/80 border-purple-200">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">
