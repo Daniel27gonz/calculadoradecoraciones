@@ -180,7 +180,7 @@ export default function Home() {
                 {formatMoney(balance)}
               </p>
             </div>
-            {/* Income / Expenses */}
+            {/* Expense breakdown + Income */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-profit-high/10 rounded-xl p-3 border border-profit-high/20">
                 <div className="flex items-center gap-1.5 mb-0.5">
@@ -191,10 +191,24 @@ export default function Home() {
               </div>
               <div className="bg-destructive/10 rounded-xl p-3 border border-destructive/20">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <CreditCard className="w-3.5 h-3.5 text-destructive" />
-                  <span className="text-[10px] font-semibold text-destructive">Gastos</span>
+                  <Receipt className="w-3.5 h-3.5 text-destructive" />
+                  <span className="text-[10px] font-semibold text-destructive">Gastos del mes</span>
                 </div>
-                <p className="text-base font-bold text-destructive">{formatMoney(totalExpenses)}</p>
+                <p className="text-base font-bold text-destructive">{formatMoney(totalIndirectExpenses)}</p>
+              </div>
+              <div className="bg-orange-50/80 rounded-xl p-3 border border-orange-200">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <ShoppingBag className="w-3.5 h-3.5 text-orange-600" />
+                  <span className="text-[10px] font-semibold text-orange-600">Compras</span>
+                </div>
+                <p className="text-base font-bold text-orange-700">{formatMoney(totalMaterialPurchases)}</p>
+              </div>
+              <div className="bg-purple-50/80 rounded-xl p-3 border border-purple-200">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Package className="w-3.5 h-3.5 text-purple-600" />
+                  <span className="text-[10px] font-semibold text-purple-600">Inversión en equipo</span>
+                </div>
+                <p className="text-base font-bold text-purple-700">{formatMoney(totalInvestments)}</p>
               </div>
             </div>
           </CardContent>
