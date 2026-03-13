@@ -38,8 +38,7 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'paid' | 'cancelled'>('all');
-  const [monthFilter, setMonthFilter] = useState<string>('all'); // 'all' or 'YYYY-MM'
+  const [statusFilter, setStatusFilter] = useState<'all' | 'delivered' | 'paid' | 'cancelled'>('all');
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
