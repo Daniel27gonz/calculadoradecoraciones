@@ -224,3 +224,12 @@
 .animate-slide-in-left {
   animation: slide-in-left 0.25s ease-out forwards;
 }
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
