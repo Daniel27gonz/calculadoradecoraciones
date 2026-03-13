@@ -36,7 +36,7 @@ export function useFinancialData(): FinancialData {
 
     setLoading(true);
     try {
-      const [paymentsRes, purchasesRes, expensesRes] = await Promise.all([
+      const [paymentsRes, purchasesRes, expensesRes, reusablesRes] = await Promise.all([
         supabase
           .from('quote_payments')
           .select('id, quote_id, amount, payment_date, is_paid')
@@ -49,6 +49,11 @@ export function useFinancialData(): FinancialData {
           .from('indirect_expenses')
           .select('id, monthly_amount, payment_date, description')
           .eq('user_id', user.id),
+        supabase
+          .from('reusable_materials')
+          .select('id, name, material_cost, purchase_date')
+          .eq('user_id', user.id)
+          .not('purchase_date', 'is', null),
       ]);
 
       const allTx: FinancialTransaction[] = [];
