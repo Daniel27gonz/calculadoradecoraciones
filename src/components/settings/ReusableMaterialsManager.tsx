@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Package, Info, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, Info, TrendingUp, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +20,7 @@ interface ReusableMaterial {
   name: string;
   material_cost: number;
   cost_per_use: number;
+  purchase_date: string | null;
 }
 
 interface RecoveryEvent {
@@ -45,6 +51,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
     name: '',
     material_cost: 0,
     cost_per_use: 0,
+    purchase_date: null as Date | null,
   });
   const [usagePercentage, setUsagePercentage] = useState<number | ''>('');
   const [isManualCostOverride, setIsManualCostOverride] = useState(false);
@@ -139,7 +146,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
 
   const openAddDialog = () => {
     setEditingMaterial(null);
-    setFormData({ name: '', material_cost: 0, cost_per_use: 0 });
+    setFormData({ name: '', material_cost: 0, cost_per_use: 0, purchase_date: null });
     setUsagePercentage('');
     setIsManualCostOverride(false);
     setUsefulLife('');
@@ -152,6 +159,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
       name: material.name,
       material_cost: material.material_cost,
       cost_per_use: material.cost_per_use,
+      purchase_date: material.purchase_date ? new Date(material.purchase_date + 'T12:00:00') : null,
     });
     // Try to reverse-calculate percentage
     if (material.material_cost > 0) {
@@ -205,6 +213,10 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
   const handleSave = async () => {
     if (!user || !formData.name.trim()) return;
 
+    const purchaseDateStr = formData.purchase_date
+      ? format(formData.purchase_date, 'yyyy-MM-dd')
+      : null;
+
     try {
       if (editingMaterial) {
         const { error } = await supabase
@@ -213,22 +225,61 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
             name: formData.name.trim(),
             material_cost: formData.material_cost,
             cost_per_use: formData.cost_per_use,
+            purchase_date: purchaseDateStr,
           })
           .eq('id', editingMaterial.id);
 
         if (error) throw error;
+
+        // Update transaction if purchase_date and cost exist
+        if (purchaseDateStr && formData.material_cost > 0) {
+          const refId = `reusable_${editingMaterial.id}`;
+          // Delete old transaction first, then re-insert
+          await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            type: 'expense',
+            amount: formData.material_cost,
+            description: `Inversión: ${formData.name.trim()}`,
+            category: 'Inversiones',
+            transaction_date: purchaseDateStr,
+            reference_id: refId,
+          });
+        } else {
+          // Remove transaction if no date
+          const refId = `reusable_${editingMaterial.id}`;
+          await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
+        }
+
         toast({ title: 'Guardado', description: 'Material actualizado correctamente' });
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('reusable_materials')
           .insert({
             user_id: user.id,
             name: formData.name.trim(),
             material_cost: formData.material_cost,
             cost_per_use: formData.cost_per_use,
-          });
+            purchase_date: purchaseDateStr,
+          })
+          .select('id')
+          .single();
 
         if (error) throw error;
+
+        // Create transaction for investment
+        if (inserted && purchaseDateStr && formData.material_cost > 0) {
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            type: 'expense',
+            amount: formData.material_cost,
+            description: `Inversión: ${formData.name.trim()}`,
+            category: 'Inversiones',
+            transaction_date: purchaseDateStr,
+            reference_id: `reusable_${inserted.id}`,
+          });
+        }
+
         toast({ title: 'Guardado', description: 'Material agregado correctamente' });
       }
 
@@ -246,6 +297,9 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
 
   const handleDelete = async (id: string) => {
     try {
+      // Delete associated transaction
+      await supabase.from('transactions').delete().eq('reference_id', `reusable_${id}`).eq('user_id', user!.id);
+
       const { error } = await supabase
         .from('reusable_materials')
         .delete()
@@ -443,6 +497,39 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Precio de compra original del material
+                </p>
+              </div>
+
+              {/* Purchase date */}
+              <div className="space-y-2">
+                <Label>Fecha de compra</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.purchase_date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.purchase_date
+                        ? format(formData.purchase_date, "PPP", { locale: es })
+                        : "Selecciona una fecha"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.purchase_date || undefined}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, purchase_date: date || null }))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Al registrar la fecha, el importe se enviará a Mi Dinero como inversión
                 </p>
               </div>
 

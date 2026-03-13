@@ -1,0 +1,1 @@
+ALTER TABLE public.reusable_materials ADD COLUMN purchase_date date DEFAULT NULL;

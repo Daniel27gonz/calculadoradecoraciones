@@ -322,6 +322,7 @@ export type Database = {
           id: string
           material_cost: number
           name: string
+          purchase_date: string | null
           updated_at: string
           user_id: string
         }
@@ -331,6 +332,7 @@ export type Database = {
           id?: string
           material_cost?: number
           name: string
+          purchase_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -340,6 +342,7 @@ export type Database = {
           id?: string
           material_cost?: number
           name?: string
+          purchase_date?: string | null
           updated_at?: string
           user_id?: string
         }
