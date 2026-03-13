@@ -129,18 +129,16 @@ export default function Finances() {
   }
 
   return (
-    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8">
-      <div className="container max-w-4xl px-3 sm:px-4 md:px-6 space-y-4 md:space-y-6">
+    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8 overflow-x-hidden">
+      <div className="w-full max-w-4xl mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
-              Finanzas del Negocio
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Resumen financiero del mes seleccionado
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">
+            Finanzas del Negocio
+          </h1>
+          <p className="text-muted-foreground text-xs md:text-sm mt-1">
+            Resumen financiero del mes seleccionado
+          </p>
         </div>
 
         {/* Month Selector */}
@@ -188,8 +186,8 @@ export default function Finances() {
           </Button>
         </div>
 
-        {/* Summary Cards - 2 col grid on mobile, 3 col on sm, 6 col on lg */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 md:gap-4">
+        {/* Summary Cards - 2 col mobile, 2 col tablet, 3 col desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {/* Ingresos */}
           <Card className="bg-green-50/80 border-green-200">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">

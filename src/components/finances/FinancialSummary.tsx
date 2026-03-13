@@ -89,7 +89,7 @@ export function FinancialSummary({ transactions, loading }: FinancialSummaryProp
         <CardTitle className="text-lg">Resumen Financiero del Mes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Column 1: Materials */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
