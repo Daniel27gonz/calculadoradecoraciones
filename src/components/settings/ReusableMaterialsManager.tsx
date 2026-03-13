@@ -159,6 +159,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
       name: material.name,
       material_cost: material.material_cost,
       cost_per_use: material.cost_per_use,
+      purchase_date: material.purchase_date ? new Date(material.purchase_date + 'T12:00:00') : null,
     });
     // Try to reverse-calculate percentage
     if (material.material_cost > 0) {
