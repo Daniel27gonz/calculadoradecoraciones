@@ -147,7 +147,7 @@ export function useFinancialData(): FinancialData {
             description: `Inversión en equipo: ${r.name || 'Material reutilizable'}`,
             category: 'Inversión en equipo',
             transaction_date: r.purchase_date,
-            source: 'material_purchase',
+            source: 'reusable_investment',
           });
         }
       }
