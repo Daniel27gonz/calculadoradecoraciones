@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Wallet, Calendar, Package, TrendingUp, DollarSign, CreditCard, Users, RefreshCw, Clock, FileText, CheckCircle, CalendarCheck } from 'lucide-react';
+import { Calculator, Wallet, Calendar, Package, TrendingUp, DollarSign, CreditCard, Users, RefreshCw, Clock, FileText, CheckCircle, CalendarCheck, ShoppingBag, Receipt } from 'lucide-react';
 import balloonBg from '@/assets/balloon-bg.jpg';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
@@ -22,7 +22,7 @@ export default function Home() {
   const { transactions: allTransactions } = useFinancialData();
 
   const now = new Date();
-  const { totalIncome, totalExpenses, balance } = useMonthlyFinancials(allTransactions, now.getMonth(), now.getFullYear());
+  const { totalIncome, totalExpenses, totalMaterialPurchases, totalIndirectExpenses, totalInvestments, balance } = useMonthlyFinancials(allTransactions, now.getMonth(), now.getFullYear());
 
   const currencySymbol = useMemo(() => {
     const currency = getCurrencyByCode(profile?.currency || 'USD');
@@ -180,7 +180,7 @@ export default function Home() {
                 {formatMoney(balance)}
               </p>
             </div>
-            {/* Income / Expenses */}
+            {/* Expense breakdown + Income */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-profit-high/10 rounded-xl p-3 border border-profit-high/20">
                 <div className="flex items-center gap-1.5 mb-0.5">
@@ -191,10 +191,24 @@ export default function Home() {
               </div>
               <div className="bg-destructive/10 rounded-xl p-3 border border-destructive/20">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <CreditCard className="w-3.5 h-3.5 text-destructive" />
-                  <span className="text-[10px] font-semibold text-destructive">Gastos</span>
+                  <Receipt className="w-3.5 h-3.5 text-destructive" />
+                  <span className="text-[10px] font-semibold text-destructive">Gastos del mes</span>
                 </div>
-                <p className="text-base font-bold text-destructive">{formatMoney(totalExpenses)}</p>
+                <p className="text-base font-bold text-destructive">{formatMoney(totalIndirectExpenses)}</p>
+              </div>
+              <div className="bg-orange-50/80 rounded-xl p-3 border border-orange-200">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <ShoppingBag className="w-3.5 h-3.5 text-orange-600" />
+                  <span className="text-[10px] font-semibold text-orange-600">Compras</span>
+                </div>
+                <p className="text-base font-bold text-orange-700">{formatMoney(totalMaterialPurchases)}</p>
+              </div>
+              <div className="bg-purple-50/80 rounded-xl p-3 border border-purple-200">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Package className="w-3.5 h-3.5 text-purple-600" />
+                  <span className="text-[10px] font-semibold text-purple-600">Inversión en equipo</span>
+                </div>
+                <p className="text-base font-bold text-purple-700">{formatMoney(totalInvestments)}</p>
               </div>
             </div>
           </CardContent>
@@ -308,20 +322,34 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               <div className="bg-profit-high/10 rounded-xl p-4 border border-profit-high/20">
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign className="w-4 h-4 text-profit-high" />
-                  <span className="text-xs font-medium text-muted-foreground">Ingresos del mes</span>
+                  <span className="text-xs font-medium text-muted-foreground">Ingresos</span>
                 </div>
                 <p className="text-xl font-bold text-profit-high">{formatMoney(totalIncome)}</p>
               </div>
               <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
                 <div className="flex items-center gap-2 mb-1">
-                  <CreditCard className="w-4 h-4 text-destructive" />
+                  <Receipt className="w-4 h-4 text-destructive" />
                   <span className="text-xs font-medium text-muted-foreground">Gastos del mes</span>
                 </div>
-                <p className="text-xl font-bold text-destructive">{formatMoney(totalExpenses)}</p>
+                <p className="text-xl font-bold text-destructive">{formatMoney(totalIndirectExpenses)}</p>
+              </div>
+              <div className="bg-orange-50/80 rounded-xl p-4 border border-orange-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShoppingBag className="w-4 h-4 text-orange-600" />
+                  <span className="text-xs font-medium text-muted-foreground">Compras</span>
+                </div>
+                <p className="text-xl font-bold text-orange-700">{formatMoney(totalMaterialPurchases)}</p>
+              </div>
+              <div className="bg-purple-50/80 rounded-xl p-4 border border-purple-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <Package className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-medium text-muted-foreground">Inversión en equipo</span>
+                </div>
+                <p className="text-xl font-bold text-purple-700">{formatMoney(totalInvestments)}</p>
               </div>
               <div className={`rounded-xl p-4 border ${balance >= 0 ? 'bg-blue-50/80 border-blue-200' : 'bg-orange-50/80 border-orange-200'}`}>
                 <div className="flex items-center gap-2 mb-1">
