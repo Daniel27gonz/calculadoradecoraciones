@@ -186,8 +186,8 @@ export default function Finances() {
           </Button>
         </div>
 
-        {/* Summary Cards - 2 col mobile, 2 col tablet, 3 col desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Summary Cards - auto-fit responsive grid */}
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
           {/* Ingresos */}
           <Card className="bg-green-50/80 border-green-200">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">
