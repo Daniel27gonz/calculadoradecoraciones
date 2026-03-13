@@ -189,16 +189,16 @@ export default function Finances() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-3 md:gap-4">
           <Card className="bg-green-50 border-green-200">
-            <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-green-100 rounded-full shrink-0">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
+            <CardContent className="p-2 sm:pt-5 sm:pb-5 sm:px-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-green-100 rounded-full shrink-0">
+                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs text-green-600 font-medium">Ingresos</p>
-                  <p className="text-sm sm:text-lg font-bold text-green-700 truncate">
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className="text-[9px] sm:text-xs text-green-600 font-medium">Ingresos</p>
+                  <p className="text-xs sm:text-lg font-bold text-green-700 truncate">
                     {currencySymbol}{totalIncome.toFixed(2)}
                   </p>
                 </div>
@@ -207,14 +207,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-red-100 rounded-full shrink-0">
-                  <Receipt className="w-4 h-4 text-red-600" />
+            <CardContent className="p-2 sm:pt-5 sm:pb-5 sm:px-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-red-100 rounded-full shrink-0">
+                  <Receipt className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs text-red-600 font-medium">Gastos del mes</p>
-                  <p className="text-sm sm:text-lg font-bold text-red-700 truncate">
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className="text-[9px] sm:text-xs text-red-600 font-medium">Gastos del mes</p>
+                  <p className="text-xs sm:text-lg font-bold text-red-700 truncate">
                     {currencySymbol}{totalIndirectExpenses.toFixed(2)}
                   </p>
                 </div>
@@ -223,14 +223,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-orange-100 rounded-full shrink-0">
-                  <ShoppingBag className="w-4 h-4 text-orange-600" />
+            <CardContent className="p-2 sm:pt-5 sm:pb-5 sm:px-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-orange-100 rounded-full shrink-0">
+                  <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Compras</p>
-                  <p className="text-sm sm:text-lg font-bold text-orange-700 truncate">
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className="text-[9px] sm:text-xs text-orange-600 font-medium">Compras</p>
+                  <p className="text-xs sm:text-lg font-bold text-orange-700 truncate">
                     {currencySymbol}{totalMaterialPurchases.toFixed(2)}
                   </p>
                 </div>
@@ -239,14 +239,14 @@ export default function Finances() {
           </Card>
 
           <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-full shrink-0">
-                  <Package className="w-4 h-4 text-purple-600" />
+            <CardContent className="p-2 sm:pt-5 sm:pb-5 sm:px-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-purple-100 rounded-full shrink-0">
+                  <Package className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs text-purple-600 font-medium">Inversión en equipo</p>
-                  <p className="text-sm sm:text-lg font-bold text-purple-700 truncate">
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className="text-[9px] sm:text-xs text-purple-600 font-medium leading-tight">Inversión equipo</p>
+                  <p className="text-xs sm:text-lg font-bold text-purple-700 truncate">
                     {currencySymbol}{totalInvestments.toFixed(2)}
                   </p>
                 </div>
@@ -255,16 +255,16 @@ export default function Finances() {
           </Card>
 
           <Card className={balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}>
-            <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`p-1.5 sm:p-2 rounded-full shrink-0 ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                  <DollarSign className={`w-4 h-4 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+            <CardContent className="p-2 sm:pt-5 sm:pb-5 sm:px-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-3">
+                <div className={`p-1 sm:p-2 rounded-full shrink-0 ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                  <DollarSign className={`w-3 h-3 sm:w-4 sm:h-4 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
                 </div>
-                <div className="min-w-0">
-                  <p className={`text-[10px] sm:text-xs font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className={`text-[9px] sm:text-xs font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {balance >= 0 ? 'Ganancia' : 'Pérdida'}
                   </p>
-                  <p className={`text-sm sm:text-lg font-bold truncate ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                  <p className={`text-xs sm:text-lg font-bold truncate ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                     {currencySymbol}{balance.toFixed(2)}
                   </p>
                 </div>
