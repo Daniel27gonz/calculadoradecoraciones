@@ -601,12 +601,26 @@ export default function Orders() {
       </div>
 
       <div className="mb-4">
-        <Input
-          placeholder="Buscar pedido..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="mb-3 w-full"
-        />
+        <div className="flex gap-2 mb-3">
+          <Input
+            placeholder="Buscar pedido..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <select
+            value={monthFilter}
+            onChange={e => setMonthFilter(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-2 text-xs min-w-[110px] focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="all">Todos los meses</option>
+            {availableMonths.map(m => {
+              const [y, mo] = m.split('-');
+              const label = format(new Date(parseInt(y), parseInt(mo) - 1, 1), 'MMM yyyy', { locale: es });
+              return <option key={m} value={m} className="capitalize">{label}</option>;
+            })}
+          </select>
+        </div>
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
             <TabsList className="w-max sm:w-full flex gap-1">
