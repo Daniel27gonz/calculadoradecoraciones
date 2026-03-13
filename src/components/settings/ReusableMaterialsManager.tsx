@@ -146,7 +146,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
 
   const openAddDialog = () => {
     setEditingMaterial(null);
-    setFormData({ name: '', material_cost: 0, cost_per_use: 0 });
+    setFormData({ name: '', material_cost: 0, cost_per_use: 0, purchase_date: null });
     setUsagePercentage('');
     setIsManualCostOverride(false);
     setUsefulLife('');
