@@ -51,6 +51,7 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
     name: '',
     material_cost: 0,
     cost_per_use: 0,
+    purchase_date: null as Date | null,
   });
   const [usagePercentage, setUsagePercentage] = useState<number | ''>('');
   const [isManualCostOverride, setIsManualCostOverride] = useState(false);
