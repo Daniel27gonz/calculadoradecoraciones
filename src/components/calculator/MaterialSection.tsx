@@ -184,7 +184,7 @@ export function MaterialSection({ materials, onChange, currencySymbol = '$' }: M
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              placeholder="Escribe el nombre del material para buscarlo"
+              placeholder="Escribe el nombre del material para agregarlo"
               className="h-12 text-base pl-9 bg-background"
             />
           </div>
