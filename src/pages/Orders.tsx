@@ -681,51 +681,42 @@ export default function Orders() {
                       )}
                     </div>
 
-                    {/* Status badges */}
-                    <div className="flex flex-wrap gap-1 mb-2.5">
+                    {/* Status badge - simplified */}
+                    <div className="mb-2.5">
                       {(() => {
-                        const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
-                        const isDelivered = quote.status === 'delivered';
                         const isCancelled = quote.status === 'cancelled';
-                        const isFullyPaid = totalPaid >= costs.finalPrice && costs.finalPrice > 0;
+                        const isDelivered = quote.status === 'delivered';
+                        const isFullyPaid = fullyPaidQuotes.has(quote.id);
 
                         if (isCancelled) {
-                          return <Badge variant="outline" className="text-[10px]">Cancelado</Badge>;
+                          return <Badge className="text-[10px] bg-red-100 text-red-700 border-red-200">Cancelado</Badge>;
                         }
-
-                        const badges = [];
-                        if (isDelivered) {
-                          badges.push(<Badge key="delivered" className="text-[10px] bg-blue-500/20 text-blue-700 border-blue-300 hover:bg-blue-500/30">Entregado</Badge>);
-                        } else {
-                          badges.push(<Badge key="status" variant="outline" className="text-[10px]">Pedido confirmado</Badge>);
+                        if (isFullyPaid && isDelivered) {
+                          return (
+                            <div className="flex gap-1">
+                              <Badge className="text-[10px] bg-green-100 text-green-700 border-green-200">Pagado</Badge>
+                              <Badge className="text-[10px] bg-blue-100 text-blue-700 border-blue-200">Entregado</Badge>
+                            </div>
+                          );
                         }
-                        if (isFullyPaid) {
-                          badges.push(<Badge key="paid" className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>);
-                        } else if (isDelivered && totalPaid > 0) {
-                          badges.push(<Badge key="partial" className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>);
-                        } else if (isDelivered && totalPaid === 0) {
-                          badges.push(<Badge key="nopay" className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>);
-                        } else if (totalPaid > 0) {
-                          badges.push(<Badge key="advance" className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>);
-                        } else {
-                          badges.push(<Badge key="noadv" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>);
-                        }
-                        return <>{badges}</>;
+                        if (isFullyPaid) return <Badge className="text-[10px] bg-green-100 text-green-700 border-green-200">Pagado</Badge>;
+                        if (isDelivered) return <Badge className="text-[10px] bg-blue-100 text-blue-700 border-blue-200">Entregado</Badge>;
+                        return <Badge variant="outline" className="text-[10px]">Pedido confirmado</Badge>;
                       })()}
                     </div>
 
-                    {/* Money blocks - 3 horizontal compact */}
+                    {/* Money blocks - 3 horizontal compact, gray bg, colored numbers only */}
                     <div className="grid grid-cols-3 gap-1.5">
-                      <div className="bg-muted/40 rounded-lg py-1.5 px-2 text-center">
+                      <div className="bg-muted/50 rounded-lg py-1.5 px-2 text-center">
                         <p className="text-[9px] text-muted-foreground leading-none mb-0.5">Total</p>
                         <p className="font-bold text-xs text-foreground">{currencySymbol}{costs.finalPrice.toFixed(2)}</p>
                       </div>
-                      <div className="bg-green-500/10 rounded-lg py-1.5 px-2 text-center">
-                        <p className="text-[9px] text-green-700 leading-none mb-0.5">Pagado</p>
+                      <div className="bg-muted/50 rounded-lg py-1.5 px-2 text-center">
+                        <p className="text-[9px] text-muted-foreground leading-none mb-0.5">Pagado</p>
                         <p className="font-bold text-xs text-green-600">{currencySymbol}{totalPaid.toFixed(2)}</p>
                       </div>
-                      <div className="bg-orange-500/10 rounded-lg py-1.5 px-2 text-center">
-                        <p className="text-[9px] text-orange-700 leading-none mb-0.5">Resta</p>
+                      <div className="bg-muted/50 rounded-lg py-1.5 px-2 text-center">
+                        <p className="text-[9px] text-muted-foreground leading-none mb-0.5">Resta</p>
                         <p className={`font-bold text-xs ${remaining <= 0 ? 'text-green-600' : 'text-orange-600'}`}>
                           {currencySymbol}{Math.max(0, remaining).toFixed(2)}
                         </p>
