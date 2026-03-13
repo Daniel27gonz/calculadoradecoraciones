@@ -272,15 +272,21 @@ export function ReusableMaterialsSection({
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              placeholder="Buscar material reutilizable..."
+              placeholder="Escribe el nombre del material para buscarlo"
               className="h-12 text-base pl-9 bg-background"
             />
           </div>
+          {searchQuery.trim() === '' && !isSearchFocused && (
+            <p className="text-xs text-muted-foreground mt-1.5 ml-1">
+              Escribe el nombre del material para encontrarlo.
+            </p>
+          )}
           {isSearchFocused && searchQuery.trim() !== '' && (
             <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-background shadow-md">
               {filteredMaterials.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                  No se encontraron materiales
+                <div className="px-3 py-3 text-center space-y-1">
+                  <p className="text-sm text-muted-foreground">No encontramos ese material.</p>
+                  <p className="text-xs text-muted-foreground">Puedes agregarlo en la sección Materiales.</p>
                 </div>
               ) : (
                 filteredMaterials.map((saved) => (
