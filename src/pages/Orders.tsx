@@ -588,16 +588,18 @@ export default function Orders() {
           placeholder="Buscar pedido..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="mb-3"
+          className="mb-3 w-full"
         />
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
-          <TabsList className="w-full">
-            <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Confirmados</TabsTrigger>
-            <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
-            <TabsTrigger value="paid" className="flex-1 text-xs">Pagados</TabsTrigger>
-            <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+            <TabsList className="w-max sm:w-full flex gap-1">
+              <TabsTrigger value="all" className="text-xs px-3">Todos</TabsTrigger>
+              <TabsTrigger value="approved" className="text-xs px-3">Confirmados</TabsTrigger>
+              <TabsTrigger value="delivered" className="text-xs px-3">Entregados</TabsTrigger>
+              <TabsTrigger value="paid" className="text-xs px-3">Pagados</TabsTrigger>
+              <TabsTrigger value="cancelled" className="text-xs px-3">Cancelados</TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
       </div>
 
@@ -623,86 +625,87 @@ export default function Orders() {
               <Card
                 key={quote.id}
                 id={`order-${quote.id}`}
-                className="overflow-hidden transition-all"
+                className="overflow-hidden transition-all rounded-2xl shadow-soft"
               >
                 <CardContent className="p-0">
-                  {/* Header */}
+                  {/* Header - Mobile optimized */}
                   <button
-                    className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
+                    className="w-full p-3 sm:p-4 text-left hover:bg-muted/30 transition-colors"
                     onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${getStatusColor(quote)}`} />
-                        {quote.folio && <span className="text-xs font-mono text-muted-foreground">#{String(quote.folio).padStart(4, '0')}</span>}
-                        <span className="font-semibold truncate">{quote.clientName}</span>
+                    {/* Client name + folio */}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusColor(quote)}`} />
+                        {quote.folio && <span className="text-[10px] font-mono text-muted-foreground">#{String(quote.folio).padStart(4, '0')}</span>}
+                        <span className="font-semibold text-sm truncate">{quote.clientName}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                        {quote.eventType && <span>{quote.eventType}</span>}
-                        {quote.eventDate && (
-                          <span>• {format(new Date(quote.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>
-                        )}
-                        {(() => {
-                          const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
-                          const isDelivered = quote.status === 'delivered';
-                          const isCancelled = quote.status === 'cancelled';
-                          const isFullyPaid = totalPaid >= costs.finalPrice && costs.finalPrice > 0;
-
-                          if (isCancelled) {
-                            return <Badge variant="outline" className="text-[10px]">Cancelado</Badge>;
-                          }
-
-                          const badges = [];
-
-                          if (isDelivered) {
-                            badges.push(<Badge key="delivered" className="text-[10px] bg-blue-500/20 text-blue-700 border-blue-300 hover:bg-blue-500/30">Entregado</Badge>);
-                          } else {
-                            badges.push(<Badge key="status" variant="outline" className="text-[10px]">Pedido confirmado</Badge>);
-                          }
-
-                          if (isFullyPaid) {
-                            badges.push(<Badge key="paid" className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>);
-                          } else if (isDelivered && totalPaid > 0) {
-                            badges.push(<Badge key="partial" className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>);
-                          } else if (isDelivered && totalPaid === 0) {
-                            badges.push(<Badge key="nopay" className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>);
-                          } else if (totalPaid > 0) {
-                            badges.push(<Badge key="advance" className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>);
-                          } else {
-                            badges.push(<Badge key="noadv" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>);
-                          }
-
-                          return <>{badges}</>;
-                        })()}
-                      </div>
+                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5 shrink-0" /> : <ChevronDown className="h-3.5 w-3.5 shrink-0" />}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">{currencySymbol}{costs.finalPrice.toFixed(2)}</span>
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+
+                    {/* Event date */}
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-2">
+                      {quote.eventType && <span>{quote.eventType}</span>}
+                      {quote.eventDate && (
+                        <span>• {format(new Date(quote.eventDate + 'T12:00:00'), 'dd MMM yyyy', { locale: es })}</span>
+                      )}
+                    </div>
+
+                    {/* Status badges */}
+                    <div className="flex flex-wrap gap-1 mb-2.5">
+                      {(() => {
+                        const totalPaid = (payments[quote.id] || []).reduce((sum, p) => sum + p.amount, 0);
+                        const isDelivered = quote.status === 'delivered';
+                        const isCancelled = quote.status === 'cancelled';
+                        const isFullyPaid = totalPaid >= costs.finalPrice && costs.finalPrice > 0;
+
+                        if (isCancelled) {
+                          return <Badge variant="outline" className="text-[10px]">Cancelado</Badge>;
+                        }
+
+                        const badges = [];
+                        if (isDelivered) {
+                          badges.push(<Badge key="delivered" className="text-[10px] bg-blue-500/20 text-blue-700 border-blue-300 hover:bg-blue-500/30">Entregado</Badge>);
+                        } else {
+                          badges.push(<Badge key="status" variant="outline" className="text-[10px]">Pedido confirmado</Badge>);
+                        }
+                        if (isFullyPaid) {
+                          badges.push(<Badge key="paid" className="text-[10px] bg-green-500/20 text-green-700 border-green-300 hover:bg-green-500/30">Pagado</Badge>);
+                        } else if (isDelivered && totalPaid > 0) {
+                          badges.push(<Badge key="partial" className="text-[10px] bg-orange-500/20 text-orange-700 border-orange-300 hover:bg-orange-500/30">Pago parcial</Badge>);
+                        } else if (isDelivered && totalPaid === 0) {
+                          badges.push(<Badge key="nopay" className="text-[10px] bg-red-500/20 text-red-700 border-red-300 hover:bg-red-500/30">Falta registrar pago</Badge>);
+                        } else if (totalPaid > 0) {
+                          badges.push(<Badge key="advance" className="text-[10px] bg-yellow-500/20 text-yellow-700 border-yellow-300 hover:bg-yellow-500/30">Anticipo {currencySymbol}{totalPaid.toFixed(2)}</Badge>);
+                        } else {
+                          badges.push(<Badge key="noadv" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/20">Sin anticipo</Badge>);
+                        }
+                        return <>{badges}</>;
+                      })()}
+                    </div>
+
+                    {/* Money blocks - 3 horizontal compact */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div className="bg-muted/40 rounded-lg py-1.5 px-2 text-center">
+                        <p className="text-[9px] text-muted-foreground leading-none mb-0.5">Total</p>
+                        <p className="font-bold text-xs text-foreground">{currencySymbol}{costs.finalPrice.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-green-500/10 rounded-lg py-1.5 px-2 text-center">
+                        <p className="text-[9px] text-green-700 leading-none mb-0.5">Pagado</p>
+                        <p className="font-bold text-xs text-green-600">{currencySymbol}{totalPaid.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-orange-500/10 rounded-lg py-1.5 px-2 text-center">
+                        <p className="text-[9px] text-orange-700 leading-none mb-0.5">Resta</p>
+                        <p className={`font-bold text-xs ${remaining <= 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                          {currencySymbol}{Math.max(0, remaining).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </button>
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div className="border-t p-4 space-y-4 bg-muted/10">
-                      {/* Summary */}
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="bg-card rounded-lg p-2">
-                          <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="font-bold text-sm">{currencySymbol}{costs.finalPrice.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-card rounded-lg p-2">
-                          <p className="text-xs text-muted-foreground">Pagado</p>
-                          <p className="font-bold text-sm text-green-600">{currencySymbol}{totalPaid.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-card rounded-lg p-2">
-                          <p className="text-xs text-muted-foreground">Resta</p>
-                          <p className={`font-bold text-sm ${remaining <= 0 ? 'text-green-600' : 'text-amber-600'}`}>
-                            {currencySymbol}{Math.max(0, remaining).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-
+                    <div className="border-t p-3 sm:p-4 space-y-3 bg-muted/10">
                       {/* Info */}
                       {quote.clientPhone && (
                         <p className="text-xs text-muted-foreground">📱 {quote.clientPhone}</p>
@@ -721,27 +724,17 @@ export default function Orders() {
                           <div className="space-y-1">
                             {quotePayments.map(p => (
                               <div key={p.id} className="flex items-center justify-between text-xs bg-card rounded p-2">
-                                <div>
+                                <div className="min-w-0 flex-1">
                                   <span className="font-medium">{currencySymbol}{p.amount.toFixed(2)}</span>
                                   <span className="text-muted-foreground ml-2">{format(new Date(p.payment_date + 'T12:00:00'), 'dd/MM/yy')}</span>
                                   {p.notes && <span className="text-muted-foreground ml-1">- {p.notes}</span>}
                                   {p.is_paid && <Badge className="ml-1 text-[9px] bg-green-100 text-green-700">Completo</Badge>}
                                 </div>
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => startEditPayment(p)}
-                                  >
+                                <div className="flex gap-1 shrink-0">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditPayment(p)}>
                                     <Pencil className="h-3 w-3 text-muted-foreground" />
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => deletePayment(p.id, quote.id)}
-                                  >
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deletePayment(p.id, quote.id)}>
                                     <Trash2 className="h-3 w-3 text-destructive" />
                                   </Button>
                                 </div>
@@ -751,13 +744,14 @@ export default function Orders() {
                         </div>
                       )}
 
-                      {/* Actions */}
-                      <div className="flex flex-wrap gap-2">
+                      {/* Actions - 2 rows on mobile */}
+                      <div className="space-y-2">
+                        {/* Row 1: Register payment */}
                         {(quote.status === 'approved' || quote.status === 'delivered') && !fullyPaidQuotes.has(quote.id) && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs"
+                            className="w-full text-xs"
                             onClick={() => {
                               setPaymentQuoteId(quote.id);
                               setShowPaymentDialog(true);
@@ -767,27 +761,28 @@ export default function Orders() {
                             Registrar pago
                           </Button>
                         )}
+                        {/* Row 2: Delivered + Cancel */}
                         {quote.status === 'approved' && (
-                          <>
+                          <div className="grid grid-cols-2 gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-xs"
+                              className="text-xs w-full"
                               onClick={() => markAsDelivered(quote)}
                             >
-                              <Truck className="h-3.5 w-3.5 mr-1" />
+                              <Truck className="h-3 w-3 mr-1" />
                               Decoración realizada
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-xs text-amber-700 border-amber-300 hover:bg-amber-50"
+                              className="text-xs w-full text-amber-700 border-amber-300 hover:bg-amber-50"
                               onClick={() => cancelOrder(quote)}
                             >
-                              <Ban className="h-3.5 w-3.5 mr-1" />
+                              <Ban className="h-3 w-3 mr-1" />
                               Cancelar pedido
                             </Button>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
