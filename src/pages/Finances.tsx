@@ -339,7 +339,7 @@ export default function Finances() {
               />
             </div>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-0 pb-0 w-full max-w-full overflow-x-hidden">
             {loadingTransactions ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando transacciones...
