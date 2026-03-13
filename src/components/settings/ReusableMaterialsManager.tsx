@@ -297,6 +297,9 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
 
   const handleDelete = async (id: string) => {
     try {
+      // Delete associated transaction
+      await supabase.from('transactions').delete().eq('reference_id', `reusable_${id}`).eq('user_id', user!.id);
+
       const { error } = await supabase
         .from('reusable_materials')
         .delete()
