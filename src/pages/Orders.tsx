@@ -39,6 +39,7 @@ export default function Orders() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'paid' | 'cancelled'>('all');
+  const [monthFilter, setMonthFilter] = useState<string>('all'); // 'all' or 'YYYY-MM'
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -81,9 +82,25 @@ export default function Orders() {
         (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'paid' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
-      return matchesSearch && matchesStatus;
+      const matchesMonth = monthFilter === 'all' || (() => {
+        if (!q.eventDate) return false;
+        const eventMonth = q.eventDate.substring(0, 7); // 'YYYY-MM'
+        return eventMonth === monthFilter;
+      })();
+      return matchesSearch && matchesStatus && matchesMonth;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [orderQuotes, searchTerm, statusFilter, fullyPaidQuotes]);
+  }, [orderQuotes, searchTerm, statusFilter, fullyPaidQuotes, monthFilter]);
+
+  // Available months from order event dates
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    orderQuotes.forEach(q => {
+      if (q.eventDate) {
+        months.add(q.eventDate.substring(0, 7));
+      }
+    });
+    return Array.from(months).sort().reverse();
+  }, [orderQuotes]);
 
   // All quotes for accordion selector (only pending ones that haven't been converted)
   const pendingQuotes = useMemo(() => {
@@ -584,12 +601,26 @@ export default function Orders() {
       </div>
 
       <div className="mb-4">
-        <Input
-          placeholder="Buscar pedido..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="mb-3 w-full"
-        />
+        <div className="flex gap-2 mb-3">
+          <Input
+            placeholder="Buscar pedido..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <select
+            value={monthFilter}
+            onChange={e => setMonthFilter(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-2 text-xs min-w-[110px] focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="all">Todos los meses</option>
+            {availableMonths.map(m => {
+              const [y, mo] = m.split('-');
+              const label = format(new Date(parseInt(y), parseInt(mo) - 1, 1), 'MMM yyyy', { locale: es });
+              return <option key={m} value={m} className="capitalize">{label}</option>;
+            })}
+          </select>
+        </div>
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
             <TabsList className="w-max sm:w-full flex gap-1">
