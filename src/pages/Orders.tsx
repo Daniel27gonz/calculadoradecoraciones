@@ -588,16 +588,18 @@ export default function Orders() {
           placeholder="Buscar pedido..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="mb-3"
+          className="mb-3 w-full"
         />
         <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
-          <TabsList className="w-full">
-            <TabsTrigger value="all" className="flex-1 text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1 text-xs">Confirmados</TabsTrigger>
-            <TabsTrigger value="delivered" className="flex-1 text-xs">Entregados</TabsTrigger>
-            <TabsTrigger value="paid" className="flex-1 text-xs">Pagados</TabsTrigger>
-            <TabsTrigger value="cancelled" className="flex-1 text-xs">Cancelados</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+            <TabsList className="w-max sm:w-full flex gap-1">
+              <TabsTrigger value="all" className="text-xs px-3">Todos</TabsTrigger>
+              <TabsTrigger value="approved" className="text-xs px-3">Confirmados</TabsTrigger>
+              <TabsTrigger value="delivered" className="text-xs px-3">Entregados</TabsTrigger>
+              <TabsTrigger value="paid" className="text-xs px-3">Pagados</TabsTrigger>
+              <TabsTrigger value="cancelled" className="text-xs px-3">Cancelados</TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
       </div>
 
