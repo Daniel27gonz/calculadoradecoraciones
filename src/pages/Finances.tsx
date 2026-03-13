@@ -269,7 +269,7 @@ export default function Finances() {
         <FinancialSummary transactions={summaryMonthTx} loading={loadingTransactions} />
 
         {/* Transactions List */}
-        <Card>
+        <Card className="w-full max-w-full overflow-hidden">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-base sm:text-lg font-bold">Historial de Transacciones</CardTitle>
