@@ -22,7 +22,7 @@ export default function Home() {
   const { transactions: allTransactions } = useFinancialData();
 
   const now = new Date();
-  const { totalIncome, totalExpenses, balance } = useMonthlyFinancials(allTransactions, now.getMonth(), now.getFullYear());
+  const { totalIncome, totalExpenses, totalMaterialPurchases, totalIndirectExpenses, totalInvestments, balance } = useMonthlyFinancials(allTransactions, now.getMonth(), now.getFullYear());
 
   const currencySymbol = useMemo(() => {
     const currency = getCurrencyByCode(profile?.currency || 'USD');
