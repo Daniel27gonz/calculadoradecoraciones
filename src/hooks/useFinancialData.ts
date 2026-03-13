@@ -183,10 +183,18 @@ export function useMonthlyFinancials(
     const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expenses = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
+    // Breakdown by source
+    const totalMaterialPurchases = monthTx.filter(t => t.source === 'material_purchase').reduce((s, t) => s + t.amount, 0);
+    const totalIndirectExpenses = monthTx.filter(t => t.source === 'indirect_expense').reduce((s, t) => s + t.amount, 0);
+    const totalInvestments = monthTx.filter(t => t.source === 'reusable_investment').reduce((s, t) => s + t.amount, 0);
+
     return {
       monthTransactions: monthTx,
       totalIncome: income,
       totalExpenses: expenses,
+      totalMaterialPurchases,
+      totalIndirectExpenses,
+      totalInvestments,
       balance: income - expenses,
     };
   }, [transactions, month, year]);
