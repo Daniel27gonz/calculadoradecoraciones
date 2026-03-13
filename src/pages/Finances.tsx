@@ -129,8 +129,8 @@ export default function Finances() {
   }
 
   return (
-    <div className="min-h-screen pt-16 md:pt-24 pb-24 md:pb-8 overflow-x-hidden">
-      <div className="w-full max-w-4xl mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
+    <div className="min-h-screen w-full max-w-full pt-16 md:pt-24 pb-24 md:pb-8 overflow-x-hidden">
+      <div className="w-full max-w-4xl min-w-0 mx-auto px-4 md:px-6 space-y-4 md:space-y-6 overflow-x-hidden">
         {/* Header */}
         <div>
           <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">
