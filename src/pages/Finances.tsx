@@ -6,7 +6,7 @@ import { PendingApproval } from '@/components/PendingApproval';
 import { CancelledSubscription } from '@/components/CancelledSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown, Receipt, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, FileText, CheckCircle, CalendarIcon, ChevronLeft, ChevronRight, ChevronDown, Receipt, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getCurrencyByCode } from '@/lib/currencies';
