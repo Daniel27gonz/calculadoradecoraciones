@@ -9,7 +9,7 @@ export interface FinancialTransaction {
   description: string;
   category: string | null;
   transaction_date: string;
-  source: 'quote_payment' | 'material_purchase' | 'indirect_expense';
+  source: 'quote_payment' | 'material_purchase' | 'indirect_expense' | 'reusable_investment';
   /** Extra metadata for detailed breakdowns */
   clientName?: string;
   isPaid?: boolean;
@@ -147,7 +147,7 @@ export function useFinancialData(): FinancialData {
             description: `Inversión en equipo: ${r.name || 'Material reutilizable'}`,
             category: 'Inversión en equipo',
             transaction_date: r.purchase_date,
-            source: 'material_purchase',
+            source: 'reusable_investment',
           });
         }
       }
