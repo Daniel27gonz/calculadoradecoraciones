@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Package, Info, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, Info, TrendingUp, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
