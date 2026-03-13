@@ -136,6 +136,21 @@ export function useFinancialData(): FinancialData {
         }
       }
 
+      // Expenses from reusable_materials (Inversiones)
+      if (reusablesRes.data) {
+        for (const r of reusablesRes.data) {
+          if (Number(r.material_cost) <= 0 || !r.purchase_date) continue;
+          allTx.push({
+            id: `rm_${r.id}`,
+            type: 'expense',
+            amount: Number(r.material_cost),
+            description: `Inversión: ${r.name || 'Material reutilizable'}`,
+            category: 'Inversiones',
+            transaction_date: r.purchase_date,
+            source: 'material_purchase',
+          });
+        }
+      }
       // Sort by date descending
       allTx.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
       setTransactions(allTx);
