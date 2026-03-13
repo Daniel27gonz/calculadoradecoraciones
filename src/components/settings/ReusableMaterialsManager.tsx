@@ -20,6 +20,7 @@ interface ReusableMaterial {
   name: string;
   material_cost: number;
   cost_per_use: number;
+  purchase_date: string | null;
 }
 
 interface RecoveryEvent {
