@@ -187,7 +187,7 @@ export default function Finances() {
         </div>
 
         {/* Summary Cards - auto-fit responsive grid */}
-        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
           {/* Ingresos */}
           <Card className="bg-green-50/80 border-green-200">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">
