@@ -500,6 +500,39 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
                 </p>
               </div>
 
+              {/* Purchase date */}
+              <div className="space-y-2">
+                <Label>Fecha de compra</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.purchase_date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.purchase_date
+                        ? format(formData.purchase_date, "PPP", { locale: es })
+                        : "Selecciona una fecha"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.purchase_date || undefined}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, purchase_date: date || null }))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Al registrar la fecha, el importe se enviará a Mi Dinero como inversión
+                </p>
+              </div>
+
               {/* Usage percentage */}
               <div className="space-y-2">
                 <Label htmlFor="usage_percentage">Porcentaje de uso por evento (%)</Label>
