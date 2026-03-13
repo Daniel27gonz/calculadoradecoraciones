@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrencyByCode } from '@/lib/currencies';
-import { ShoppingBag, Receipt, Banknote } from 'lucide-react';
+import { ShoppingBag, Receipt, Banknote, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { FinancialTransaction } from '@/hooks/useFinancialData';
 
@@ -57,10 +57,21 @@ export function FinancialSummary({ transactions, loading }: FinancialSummaryProp
     }));
   }, [transactions]);
 
+  // Derive reusable investments
+  const investments = useMemo(() => {
+    return transactions
+      .filter(t => t.source === 'reusable_investment')
+      .map(t => ({
+        name: t.description.replace('Inversión en equipo: ', ''),
+        amount: t.amount,
+      }));
+  }, [transactions]);
+
   const totalMaterials = materials.reduce((s, m) => s + m.total, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const totalDeposits = incomes.reduce((s, i) => s + i.deposits, 0);
   const totalIncomeEvents = incomes.reduce((s, i) => s + i.total, 0);
+  const totalInvestments = investments.reduce((s, i) => s + i.amount, 0);
 
   if (loading) {
     return (
@@ -78,7 +89,7 @@ export function FinancialSummary({ transactions, loading }: FinancialSummaryProp
         <CardTitle className="text-lg">Resumen Financiero del Mes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Column 1: Materials */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
@@ -127,7 +138,31 @@ export function FinancialSummary({ transactions, loading }: FinancialSummaryProp
             </div>
           </div>
 
-          {/* Column 3: Income */}
+          {/* Column 3: Inversión en equipo */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b">
+              <Package className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm">Inversión en equipo</h3>
+            </div>
+            {investments.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">Sin inversiones este mes</p>
+            ) : (
+              <div className="space-y-1">
+                {investments.map((inv, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span className="text-foreground">{idx + 1}. {inv.name}</span>
+                    <span className="font-medium">{currencySymbol}{inv.amount.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-between pt-2 border-t font-semibold text-sm">
+              <span>Total</span>
+              <span>{currencySymbol}{totalInvestments.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Column 4: Income */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-2 border-b">
               <Banknote className="w-4 h-4 text-primary" />
