@@ -82,9 +82,25 @@ export default function Orders() {
         (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'paid' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
-      return matchesSearch && matchesStatus;
+      const matchesMonth = monthFilter === 'all' || (() => {
+        if (!q.eventDate) return false;
+        const eventMonth = q.eventDate.substring(0, 7); // 'YYYY-MM'
+        return eventMonth === monthFilter;
+      })();
+      return matchesSearch && matchesStatus && matchesMonth;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [orderQuotes, searchTerm, statusFilter, fullyPaidQuotes]);
+  }, [orderQuotes, searchTerm, statusFilter, fullyPaidQuotes, monthFilter]);
+
+  // Available months from order event dates
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    orderQuotes.forEach(q => {
+      if (q.eventDate) {
+        months.add(q.eventDate.substring(0, 7));
+      }
+    });
+    return Array.from(months).sort().reverse();
+  }, [orderQuotes]);
 
   // All quotes for accordion selector (only pending ones that haven't been converted)
   const pendingQuotes = useMemo(() => {
