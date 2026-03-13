@@ -38,8 +38,8 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'delivered' | 'paid' | 'cancelled'>('all');
-  const [monthFilter, setMonthFilter] = useState<string>('all'); // 'all' or 'YYYY-MM'
+  const [statusFilter, setStatusFilter] = useState<'all' | 'delivered' | 'paid' | 'cancelled'>('all');
+  const [monthFilter, setMonthFilter] = useState<string>('all');
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [payments, setPayments] = useState<Record<string, QuotePayment[]>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -78,7 +78,6 @@ export default function Orders() {
         (q.eventType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (q.folio ? String(q.folio).includes(searchTerm) : false);
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'approved' && q.status === 'approved') ||
         (statusFilter === 'delivered' && q.status === 'delivered') ||
         (statusFilter === 'paid' && fullyPaidQuotes.has(q.id)) ||
         (statusFilter === 'cancelled' && q.status === 'cancelled');
@@ -625,7 +624,7 @@ export default function Orders() {
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
             <TabsList className="w-max sm:w-full flex gap-1">
               <TabsTrigger value="all" className="text-xs px-3">Todos</TabsTrigger>
-              <TabsTrigger value="approved" className="text-xs px-3">Confirmados</TabsTrigger>
+              
               <TabsTrigger value="delivered" className="text-xs px-3">Entregados</TabsTrigger>
               <TabsTrigger value="paid" className="text-xs px-3">Pagados</TabsTrigger>
               <TabsTrigger value="cancelled" className="text-xs px-3">Cancelados</TabsTrigger>
