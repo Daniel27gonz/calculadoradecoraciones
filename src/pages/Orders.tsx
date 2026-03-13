@@ -624,7 +624,7 @@ export default function Orders() {
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
             <TabsList className="w-max sm:w-full flex gap-1">
               <TabsTrigger value="all" className="text-xs px-3">Todos</TabsTrigger>
-              <TabsTrigger value="approved" className="text-xs px-3">Confirmados</TabsTrigger>
+              
               <TabsTrigger value="delivered" className="text-xs px-3">Entregados</TabsTrigger>
               <TabsTrigger value="paid" className="text-xs px-3">Pagados</TabsTrigger>
               <TabsTrigger value="cancelled" className="text-xs px-3">Cancelados</TabsTrigger>
