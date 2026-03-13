@@ -186,8 +186,8 @@ export default function Finances() {
           </Button>
         </div>
 
-        {/* Summary Cards - 2 col grid on mobile, 3 col on sm, 6 col on lg */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 md:gap-4">
+        {/* Summary Cards - 2 col mobile, 2 col tablet, 3 col desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {/* Ingresos */}
           <Card className="bg-green-50/80 border-green-200">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center">
