@@ -213,6 +213,10 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
   const handleSave = async () => {
     if (!user || !formData.name.trim()) return;
 
+    const purchaseDateStr = formData.purchase_date
+      ? format(formData.purchase_date, 'yyyy-MM-dd')
+      : null;
+
     try {
       if (editingMaterial) {
         const { error } = await supabase
@@ -221,22 +225,61 @@ export function ReusableMaterialsManager({ currencySymbol }: ReusableMaterialsMa
             name: formData.name.trim(),
             material_cost: formData.material_cost,
             cost_per_use: formData.cost_per_use,
+            purchase_date: purchaseDateStr,
           })
           .eq('id', editingMaterial.id);
 
         if (error) throw error;
+
+        // Update transaction if purchase_date and cost exist
+        if (purchaseDateStr && formData.material_cost > 0) {
+          const refId = `reusable_${editingMaterial.id}`;
+          // Delete old transaction first, then re-insert
+          await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            type: 'expense',
+            amount: formData.material_cost,
+            description: `Inversión: ${formData.name.trim()}`,
+            category: 'Inversiones',
+            transaction_date: purchaseDateStr,
+            reference_id: refId,
+          });
+        } else {
+          // Remove transaction if no date
+          const refId = `reusable_${editingMaterial.id}`;
+          await supabase.from('transactions').delete().eq('reference_id', refId).eq('user_id', user.id);
+        }
+
         toast({ title: 'Guardado', description: 'Material actualizado correctamente' });
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('reusable_materials')
           .insert({
             user_id: user.id,
             name: formData.name.trim(),
             material_cost: formData.material_cost,
             cost_per_use: formData.cost_per_use,
-          });
+            purchase_date: purchaseDateStr,
+          })
+          .select('id')
+          .single();
 
         if (error) throw error;
+
+        // Create transaction for investment
+        if (inserted && purchaseDateStr && formData.material_cost > 0) {
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            type: 'expense',
+            amount: formData.material_cost,
+            description: `Inversión: ${formData.name.trim()}`,
+            category: 'Inversiones',
+            transaction_date: purchaseDateStr,
+            reference_id: `reusable_${inserted.id}`,
+          });
+        }
+
         toast({ title: 'Guardado', description: 'Material agregado correctamente' });
       }
 
