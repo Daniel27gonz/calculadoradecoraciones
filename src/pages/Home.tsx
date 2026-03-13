@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, Wallet, Calendar, Package, TrendingUp, DollarSign, CreditCard, Users, RefreshCw, Clock, FileText, CheckCircle, CalendarCheck } from 'lucide-react';
+import { Calculator, Wallet, Calendar, Package, TrendingUp, DollarSign, CreditCard, Users, RefreshCw, Clock, FileText, CheckCircle, CalendarCheck, ShoppingBag, Receipt } from 'lucide-react';
 import balloonBg from '@/assets/balloon-bg.jpg';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuote } from '@/contexts/QuoteContext';
