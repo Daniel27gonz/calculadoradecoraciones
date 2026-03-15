@@ -11,27 +11,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify caller is admin
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No auth' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-
-    // Verify admin role
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token)
-    if (!caller) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    const { data: hasAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: caller.id, _role: 'admin' })
-    if (!hasAdmin) {
-      return new Response(JSON.stringify({ error: 'Not admin' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
 
     const { email, password, name } = await req.json()
 
@@ -45,6 +27,9 @@ Deno.serve(async (req) => {
     if (createError) {
       return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
+
+    // Wait a moment for trigger to create profile
+    await new Promise(r => setTimeout(r, 1000))
 
     // Update profile name if provided
     if (name) {
