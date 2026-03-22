@@ -138,7 +138,7 @@ export default function Auth() {
             <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg text-center">
                 <p className="font-bold text-primary text-base mb-2">🔐 ¿Es tu primer acceso?</p>
                 <p className="text-sm text-foreground/80 mb-2">
-                  Ingresa con el correo electrónico que utilizaste en la compra y usa tu <span className="font-semibold">número de teléfono registrado</span> como contraseña temporal. Ejemplo: <span className="font-semibold">521234567890</span>
+                  Ingresa con el correo electrónico que utilizaste en la compra y usa la contraseña temporal: <span className="font-semibold">Acceso123</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Luego podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
