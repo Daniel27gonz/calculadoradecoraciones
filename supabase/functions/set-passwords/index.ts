@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,10 +12,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const emails = [
       "castilloheilyn10@gmail.com",
@@ -22,7 +23,12 @@ Deno.serve(async (req) => {
       "paseodelasaves@hotmail.com"
     ];
 
+    const password = "Acceso123";
     const results: any[] = [];
+
+    // Hash the password with bcrypt
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
 
     for (const email of emails) {
       // Find user
@@ -38,13 +44,22 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Try updating password
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-        password: "Acceso123"
+      // Try updating password using direct API call with password_hash
+      const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password_hash: passwordHash,
+        }),
       });
 
-      if (updateError) {
-        results.push({ email, error: updateError.message });
+      if (!response.ok) {
+        const errorBody = await response.text();
+        results.push({ email, error: `Status ${response.status}: ${errorBody}` });
       } else {
         results.push({ email, success: true });
       }
