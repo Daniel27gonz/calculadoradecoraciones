@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       // If action is update_password, update the user's password
       if (body.action === 'update_password') {
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userExists.id, {
-          password: cleanPhone,
+          password: defaultPassword,
         })
         if (updateError) {
           return new Response(
@@ -99,11 +99,12 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create user with email and phone as temporary password
+    // Create user with default password
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: cleanPhone,
+      password: defaultPassword,
       email_confirm: true,
+      user_metadata: { name: buyerName || undefined },
     })
 
     if (createError) {
