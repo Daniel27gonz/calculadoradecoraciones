@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     // Default password for all new users
-    const defaultPassword = 'Acceso123'
+    const defaultPassword = 'DecoControl2024!'
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
