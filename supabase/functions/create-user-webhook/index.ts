@@ -52,11 +52,9 @@ Deno.serve(async (req) => {
     // Hotmart v2 format: data.buyer.email, data.buyer.checkout_phone
     const buyer = body.data?.buyer || body.buyer || {}
     const email = buyer.email || body.email || body.customer?.email
-    const phone = buyer.checkout_phone || buyer.phone || buyer.telephone || buyer.cel ||
-                  body.phone || body.telephone || body.cel || 
-                  body.customer?.phone || body.customer?.telephone || body.customer?.cel
+    const buyerName = buyer.name || body.name || body.customer?.name || ''
 
-    console.log('Extracted data:', { email, phone: phone ? 'present' : 'missing' })
+    console.log('Extracted data:', { email, name: buyerName || 'not provided' })
 
     if (!email) {
       return new Response(
@@ -65,15 +63,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!phone) {
-      return new Response(
-        JSON.stringify({ error: 'Phone number is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Clean phone: keep only digits
-    const cleanPhone = phone.replace(/\D/g, '')
+    // Default password for all new users
+    const defaultPassword = 'Acceso123'
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
